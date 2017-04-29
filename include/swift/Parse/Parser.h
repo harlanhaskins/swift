@@ -916,7 +916,7 @@ public:
                                          const TypeAttributes &attrs,
                                          Optional<Scope> &GenericsScope);
   
-  ParserResult<TupleTypeRepr> parseTypeTupleBody();
+  ParserResult<TupleTypeRepr> parseTypeTupleBody(bool ParsingEnumCase = false);
   ParserResult<TypeRepr> parseTypeArray(TypeRepr *Base);
 
   /// Parse a collection type.
