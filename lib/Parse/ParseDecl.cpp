@@ -5034,7 +5034,7 @@ Parser::parseDeclEnumCase(ParseDeclOptions Flags,
     // See if there's a following argument type.
     ParserResult<TypeRepr> ArgType;
     if (Tok.isFollowingLParen()) {
-      ArgType = parseTypeTupleBody();
+      ArgType = parseTypeTupleBody(/*ParsingEnumCase*/true);
       if (ArgType.hasCodeCompletion()) {
         Status.setHasCodeCompletion();
         return Status;

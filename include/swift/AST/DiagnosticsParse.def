@@ -683,6 +683,10 @@ ERROR(expected_expr_enum_case_raw_value,PointsToFirstBadToken,
       "expected expression after '=' in 'case'", ())
 ERROR(nonliteral_enum_case_raw_value,PointsToFirstBadToken,
       "raw value for enum case must be a literal", ())
+ERROR(empty_enum_type_needs_void,PointsToFirstBadToken,
+      "empty tuple may be unexpected here; use 'Void' explicitly", ())
+WARNING(warn_empty_enum_type_needs_void,PointsToFirstBadToken,
+        "empty tuple may be unexpected here; use 'Void' explicitly", ())
 
 // Collection Types
 ERROR(new_array_syntax,none,

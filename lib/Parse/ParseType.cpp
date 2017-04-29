@@ -767,7 +767,7 @@ ParserResult<TypeRepr> Parser::parseOldStyleProtocolComposition() {
 ///   type-tuple-element:
 ///     identifier ':' type
 ///     type
-ParserResult<TupleTypeRepr> Parser::parseTypeTupleBody() {
+ParserResult<TupleTypeRepr> Parser::parseTypeTupleBody(bool ParsingEnumCase) {
   Parser::StructureMarkerRAII ParsingTypeTuple(*this, Tok);
   SourceLoc RPLoc, LPLoc = consumeToken(tok::l_paren);
   SourceLoc EllipsisLoc;
@@ -883,8 +883,15 @@ ParserResult<TupleTypeRepr> Parser::parseTypeTupleBody() {
     return makeParserSuccess();
   });
 
-  if (EllipsisLoc.isValid() && ElementsR.empty()) {
-    EllipsisLoc = SourceLoc();
+  if (ElementsR.empty()) {
+    if (EllipsisLoc.isValid())
+      EllipsisLoc = SourceLoc();
+    if (ParsingEnumCase && !Context.isSwiftVersion3()) {
+      auto diag = Context.isSwiftVersion3()
+                ? diag::warn_empty_enum_type_needs_void
+                : diag::empty_enum_type_needs_void;
+      diagnose(LPLoc, diag).fixItInsertAfter(LPLoc, "Void");
+    }
   }
 
   if (EllipsisLoc.isInvalid())
