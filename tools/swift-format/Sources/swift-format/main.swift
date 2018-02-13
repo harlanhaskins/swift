@@ -15,17 +15,27 @@ struct X {
 }
 
 extension Syntax {
-  /// Walks to the root of the Syntax tree and computes a list of all ancestors
-  /// of the receiver.
-  var ancestors: [Syntax] {
-    var nodes = [Syntax]()
-    var current: Syntax = self
-    while let parent = current.parent {
-      nodes.append(current)
-      current = parent
+    /// Walks to the root of the Syntax tree and computes a list of all ancestors
+    /// of the receiver.
+    var ancestors: [Syntax] {
+        var nodes = [Syntax]()
+        var current: Syntax = self
+        while let parent = current.parent {
+            nodes.append(current)
+            current = parent
+        }
+        return nodes
     }
-    return nodes
-  }
+
+    var pathFromRoot: [Int] {
+        var path = [Int]()
+        var current: Syntax = self
+        while let parent = current.parent {
+            path.insert(current.indexInParent, at: 0)
+            current = parent
+        }
+        return path
+    }
 }
 
 func genericFunc<T : Collection, U: Collection>(x: T, y: U) -> (T.Element?, U.Element?)
@@ -131,9 +141,16 @@ extension SourceLoc : CustomDebugStringConvertible {
 }
 
 struct Node {
-    init<T : Syntax & Hashable>(_ x: T) {
+    init(_ x: Syntax) {
         syntax = x
-        id = x.id
+
+        // For non-hashable nodes, fall back to mixing the path from that node
+        // to the root of the tree as its identifier.
+        if let hashableNode = x as? AnyHashable {
+            id = hashableNode.hashValue
+        } else {
+            id = x.pathFromRoot.reduce(0) { $0 ^ _mixInt($1) }
+        }
     }
 
     var kind: Syntax.Type {
@@ -278,7 +295,7 @@ final class Reparser : SyntaxVisitor {
             .closeGroup(matchingOpenIndex: unmatchedOpenGroups.removeLast()))
     }
 
-    func apply<T : Syntax & Hashable>(_ a: inout Injections, to s: T) {
+    func apply(_ a: inout Injections, to s: Node) {
         if let i = a.removeValue(forKey: s.id) {
             for _ in 0..<i.closeGroups { closeGroup() }
 
@@ -289,15 +306,6 @@ final class Reparser : SyntaxVisitor {
         }
     }
 
-    func visitChildren<T : Syntax & Hashable, R>(
-        _ node: T, _ body: ()->R
-    ) -> R {
-        apply(&before, to: node)
-        let r = body()
-        apply(&after, to: node)
-        return r
-    }
-
     func injectMandatoryNewlines(in statements: CodeBlockItemListSyntax) {
         for s in statements.dropLast() {
             if s.semicolon != nil { continue }
@@ -305,206 +313,66 @@ final class Reparser : SyntaxVisitor {
         }
     }
 
-    override func visit(_ node: UnknownDeclSyntax) {
-        visitChildren(node) { super.visit(node) }
+    override func visitPre(_ node: Syntax) {
+        apply(&before, to: Node(node))
     }
 
-    override func visit(_ node: UnknownExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: UnknownStmtSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: UnknownTypeSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: UnknownPatternSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: InOutExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: PoundColumnExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: TryExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: DeclNameArgumentSyntax) {
-        visitChildren(node) { super.visit(node) }
+    override func visitPost(_ node: Syntax) {
+        apply(&after, to: Node(node))
     }
 
     override func visit(_ node: DeclNameArgumentsSyntax) {
         after[node.leftParen.id].openGroups += 1
         before[node.rightParen.id].closeGroups += 1
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: IdentifierExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: SuperRefExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: NilLiteralExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: DiscardAssignmentExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: AssignmentExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: SequenceExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: PoundLineExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: PoundFileExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: PoundFunctionExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: PoundDsohandleExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: SymbolicReferenceExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: PrefixOperatorExprSyntax) {
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: BinaryOperatorExprSyntax) {
         before[node.operatorToken.id].whitespaceRequired = true
         after[node.operatorToken.id].whitespaceRequired = true
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: FloatLiteralExprSyntax) {
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: TupleExprSyntax) {
         after[node.leftParen.id].openGroups += 1
         before[node.rightParen.id].closeGroups += 1
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: ArrayExprSyntax) {
         after[node.leftSquare.id].openGroups += 1
         before[node.rightSquare.id].closeGroups += 1
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: DictionaryExprSyntax) {
         after[node.leftSquare.id].openGroups += 1
         before[node.rightSquare.id].closeGroups += 1
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: ImplicitMemberExprSyntax) {
         before[node.id].whitespaceRequired = true
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: FunctionCallArgumentSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: TupleElementSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: ArrayElementSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: DictionaryElementSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: IntegerLiteralExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: StringLiteralExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: BooleanLiteralExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: TernaryExprSyntax) {
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: MemberAccessExprSyntax) {
         before[node.dot.id].openGroups += 1
         let closer: SyntaxID
         if let top = node.parent as? FunctionCallExprSyntax {
-          closer = top.id
+            closer = top.id
         } else {
-          closer = node.id
+            closer = node.id
         }
         after[closer].closeGroups += 1
 
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: DotSelfExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: IsExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: AsExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: TypeExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: ClosureCaptureItemSyntax) {
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: ClosureCaptureSignatureSyntax) {
         after[node.leftSquare.id].openGroups += 1
         before[node.rightSquare.id].closeGroups += 1
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: ClosureParamSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: ClosureSignatureSyntax) {
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: ClosureExprSyntax) {
@@ -513,11 +381,7 @@ final class Reparser : SyntaxVisitor {
         after[node.leftBrace.id].whitespaceRequired = true
         before[node.rightBrace.id].closeGroups += 1
         before[node.rightBrace.id].whitespaceRequired = true
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: UnresolvedPatternExprSyntax) {
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: FunctionCallExprSyntax) {
@@ -525,125 +389,53 @@ final class Reparser : SyntaxVisitor {
             after[l.id].openGroups += 1
             before[r.id].closeGroups += 1
         }
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: SubscriptExprSyntax) {
         after[node.leftBracket.id].openGroups += 1
         before[node.rightBracket.id].closeGroups += 1
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: OptionalChainingExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: ForcedValueExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: PostfixUnaryExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: StringSegmentSyntax) {
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: ExpressionSegmentSyntax) {
         after[node.leftParen.id].openGroups += 1
         before[node.rightParen.id].closeGroups += 1
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: StringInterpolationExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: KeyPathExprSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: ObjcNamePieceSyntax) {
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: ObjcKeyPathExprSyntax) {
         after[node.leftParen.id].openGroups += 1
         before[node.rightParen.id].closeGroups += 1
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: EditorPlaceholderExprSyntax) {
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: ObjectLiteralExprSyntax) {
         after[node.leftParen.id].openGroups += 1
         before[node.rightParen.id].closeGroups += 1
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: TypeInitializerClauseSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: TypealiasDeclSyntax) {
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: ParameterClauseSyntax) {
         after[node.leftParen.id].openGroups += 1
         before[node.rightParen.id].closeGroups += 1
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: ReturnClauseSyntax) {
         after[node.arrow.id].whitespaceRequired = true
         before[node.arrow.id].whitespaceRequired = true
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: FunctionSignatureSyntax) {
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: ElseifDirectiveClauseSyntax) {
         injectMandatoryNewlines(in: node.body)
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: IfConfigDeclSyntax) {
         injectMandatoryNewlines(in: node.body)
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: DeclModifierSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: InheritedTypeSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: TypeInheritanceClauseSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: ClassDeclSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: StructDeclSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: ProtocolDeclSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: ExtensionDeclSyntax) {
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: MemberDeclBlockSyntax) {
@@ -652,29 +444,17 @@ final class Reparser : SyntaxVisitor {
         before[node.leftBrace.id].whitespaceRequired = true
         before[node.rightBrace.id].closeGroups += 1
         before[node.rightBrace.id].whitespaceRequired = true
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: SourceFileSyntax) {
         injectMandatoryNewlines(in: node.items)
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: InitializerClauseSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: FunctionParameterSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: FunctionDeclSyntax) {
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: ElseDirectiveClauseSyntax) {
         injectMandatoryNewlines(in: node.body)
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: AccessLevelModifierSyntax) {
@@ -682,25 +462,13 @@ final class Reparser : SyntaxVisitor {
             after[l.id].openGroups += 1
             before[r.id].closeGroups += 1
         }
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: AccessPathComponentSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: ImportDeclSyntax) {
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: AccessorParameterSyntax) {
         after[node.leftParen.id].openGroups += 1
         before[node.rightParen.id].closeGroups += 1
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: AccessorDeclSyntax) {
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: AccessorBlockSyntax) {
@@ -708,71 +476,7 @@ final class Reparser : SyntaxVisitor {
         after[node.leftBrace.id].whitespaceRequired = true
         before[node.rightBrace.id].closeGroups += 1
         before[node.rightBrace.id].whitespaceRequired = true
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: PatternBindingSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: VariableDeclSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: AttributeSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: ContinueStmtSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: WhileStmtSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: DeferStmtSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: ExpressionStmtSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: RepeatWhileStmtSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: GuardStmtSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: WhereClauseSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: ForInStmtSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: SwitchStmtSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: DoStmtSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: ReturnStmtSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: FallthroughStmtSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: BreakStmtSyntax) {
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: CodeBlockSyntax) {
@@ -782,206 +486,58 @@ final class Reparser : SyntaxVisitor {
         before[node.openBrace.id].whitespaceRequired = true
         before[node.closeBrace.id].closeGroups += 1
         before[node.closeBrace.id].whitespaceRequired = true
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: ConditionElementSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: AvailabilityConditionSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: MatchingPatternConditionSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: OptionalBindingConditionSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: DeclarationStmtSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: ThrowStmtSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: IfStmtSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: ElseIfContinuationSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: ElseBlockSyntax) {
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: SwitchCaseSyntax) {
         injectMandatoryNewlines(in: node.body)
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: SwitchDefaultLabelSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: CaseItemSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: SwitchCaseLabelSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: CatchClauseSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: GenericWhereClauseSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: SameTypeRequirementSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: GenericParameterSyntax) {
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: GenericParameterClauseSyntax) {
         after[node.leftAngleBracket.id].openGroups += 1
         before[node.rightAngleBracket.id].closeGroups += 1
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: ConformanceRequirementSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: SimpleTypeIdentifierSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: MemberTypeIdentifierSyntax) {
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: ArrayTypeSyntax) {
         after[node.leftSquareBracket.id].openGroups += 1
         before[node.rightSquareBracket.id].closeGroups += 1
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: DictionaryTypeSyntax) {
         after[node.leftSquareBracket.id].openGroups += 1
         before[node.rightSquareBracket.id].closeGroups += 1
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: MetatypeTypeSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: OptionalTypeSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: ImplicitlyUnwrappedOptionalTypeSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: CompositionTypeElementSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: CompositionTypeSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: TupleTypeElementSyntax) {
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: TupleTypeSyntax) {
         after[node.leftParen.id].openGroups += 1
         before[node.rightParen.id].closeGroups += 1
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: FunctionTypeSyntax) {
         after[node.leftParen.id].openGroups += 1
         before[node.rightParen.id].closeGroups += 1
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: AttributedTypeSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: GenericArgumentSyntax) {
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: GenericArgumentClauseSyntax) {
         after[node.leftAngleBracket.id].openGroups += 1
         before[node.rightAngleBracket.id].closeGroups += 1
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: TypeAnnotationSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: EnumCasePatternSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: IsTypePatternSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: OptionalPatternSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: IdentifierPatternSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: AsTypePatternSyntax) {
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ node: TuplePatternSyntax) {
         after[node.openParen.id].openGroups += 1
         before[node.closeParen.id].closeGroups += 1
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: WildcardPatternSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: TuplePatternElementSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: ExpressionPatternSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: ValueBindingPatternSyntax) {
-        visitChildren(node) { super.visit(node) }
+        super.visit(node)
     }
 
     override func visit(_ tok: TokenSyntax) {
-        apply(&before, to: tok)
+        apply(&before, to: Node(tok))
 
         switch tok.tokenKind {
         case .rightParen, .rightBrace, .rightSquareBracket, .rightAngle:
@@ -1013,12 +569,7 @@ final class Reparser : SyntaxVisitor {
             """
         )
 #endif
-        content.append(
-            .token(
-                syntax: tok/*,
-                location: inputLocation*/
-            )
-        )
+        content.append(.token(syntax: tok))
 
         for t in tok.trailingTrivia {
             inputLocation.traverse(t)
@@ -1032,7 +583,7 @@ final class Reparser : SyntaxVisitor {
         default: break
         }
 
-        apply(&after, to: tok)
+        apply(&after, to: Node(tok))
         previousToken = tok
     }
 }
@@ -1132,7 +683,7 @@ for x in p.content {
         }
     case .newline:
         flushLineBuffer()
-    case .token(let t/*, _, _*/):
+    case .token(let t):
         let s = whitespaceRequired ? 1 : 0
         let w = t.text.count
         if lineWidth + s + w > columnLimit {
