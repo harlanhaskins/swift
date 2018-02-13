@@ -14,6 +14,20 @@ struct X {
     var myself: X { return self }
 }
 
+extension Syntax {
+  /// Walks to the root of the Syntax tree and computes a list of all ancestors
+  /// of the receiver.
+  var ancestors: [Syntax] {
+    var nodes = [Syntax]()
+    var current: Syntax = self
+    while let parent = current.parent {
+      nodes.append(current)
+      current = parent
+    }
+    return nodes
+  }
+}
+
 func genericFunc<T : Collection, U: Collection>(x: T, y: U) -> (T.Element?, U.Element?)
 where T.Index == U.Index, U.Iterator == IndexingIterator<[Int]> {
     _ = 3 * 4 + (5 * 6)
@@ -202,7 +216,7 @@ enum OutputElement {
     case closeGroup(matchingOpenIndex: Int)
     case whitespace
     case newline
-    case token(syntax: TokenSyntax/*, location: SourceLoc, ancestors: [Node]*/)
+    case token(syntax: TokenSyntax/*, location: SourceLoc*/)
 }
 
 typealias SyntaxID = Int
@@ -244,7 +258,6 @@ final class Reparser : SyntaxVisitor {
     var unmatchedOpenGroups: [Int] = []
 
     var inputLocation = SourceLoc()
-    var ancestors: [Node] = []
     var previousToken: TokenSyntax? = nil
     typealias Injections = LazyDictionary<SyntaxID, Injection>
 
@@ -280,9 +293,7 @@ final class Reparser : SyntaxVisitor {
         _ node: T, _ body: ()->R
     ) -> R {
         apply(&before, to: node)
-        ancestors.append(Node(node))
         let r = body()
-        ancestors.removeLast()
         apply(&after, to: node)
         return r
     }
@@ -451,9 +462,12 @@ final class Reparser : SyntaxVisitor {
 
     override func visit(_ node: MemberAccessExprSyntax) {
         before[node.dot.id].openGroups += 1
-        let top = ancestors.last!
-        let closer = top.syntax is FunctionCallExprSyntax
-            ? top.id : node.id
+        let closer: SyntaxID
+        if let top = node.parent as? FunctionCallExprSyntax {
+          closer = top.id
+        } else {
+          closer = node.id
+        }
         after[closer].closeGroups += 1
 
         visitChildren(node) { super.visit(node) }
@@ -971,7 +985,7 @@ final class Reparser : SyntaxVisitor {
 
         switch tok.tokenKind {
         case .rightParen, .rightBrace, .rightSquareBracket, .rightAngle:
-            if ancestors.last!.syntax is UnknownStmtSyntax { closeGroup() }
+            if tok.parent is UnknownStmtSyntax { closeGroup() }
 
         default: break
         }
@@ -995,15 +1009,14 @@ final class Reparser : SyntaxVisitor {
         print("""
             \(#file):\(tokenLocation)-\(endLocation):,\t\
             \(String(repeating: "    ", count: nestingLevel)) \
-            '\(tok.text)' \t\t -> \(ancestors)
+            '\(tok.text)' \t\t -> \(tok.ancestors)
             """
         )
 #endif
         content.append(
             .token(
                 syntax: tok/*,
-                location: inputLocation,
-                ancestors: ancestors*/
+                location: inputLocation*/
             )
         )
 
@@ -1013,7 +1026,7 @@ final class Reparser : SyntaxVisitor {
 
         switch tok.tokenKind {
         case .leftParen, .leftBrace, .leftSquareBracket, .leftAngle:
-            if ancestors.last!.syntax is UnknownStmtSyntax { openGroup() }
+            if tok.parent is UnknownStmtSyntax { openGroup() }
         case .comma:
             content.append(.whitespace)
         default: break
