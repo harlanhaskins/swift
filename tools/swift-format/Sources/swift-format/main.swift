@@ -198,11 +198,11 @@ struct Injection {
 }
 
 enum OutputElement {
-case openGroup
-case closeGroup(matchingOpenIndex: Int)
-case whitespace
-case newline
-case token(syntax: TokenSyntax/*, location: SourceLoc, ancestors: [Node]*/)
+    case openGroup
+    case closeGroup(matchingOpenIndex: Int)
+    case whitespace
+    case newline
+    case token(syntax: TokenSyntax/*, location: SourceLoc, ancestors: [Node]*/)
 }
 
 typealias SyntaxID = Int
@@ -210,27 +210,6 @@ typealias SyntaxID = Int
 extension Syntax where Self : Hashable {
     var id: SyntaxID { return hashValue }
 }
-
-protocol _StmtSyntax : StmtSyntax {
-    var semicolon: SwiftSyntax.TokenSyntax? { get }
-    var id: Int { get }
-}
-extension BreakStmtSyntax : _StmtSyntax {}
-extension ContinueStmtSyntax : _StmtSyntax {}
-extension DeclarationStmtSyntax : _StmtSyntax {}
-extension DeferStmtSyntax : _StmtSyntax {}
-extension DoStmtSyntax : _StmtSyntax {}
-extension ExpressionStmtSyntax : _StmtSyntax {}
-extension FallthroughStmtSyntax : _StmtSyntax {}
-extension ForInStmtSyntax : _StmtSyntax {}
-extension GuardStmtSyntax : _StmtSyntax {}
-extension IfStmtSyntax : _StmtSyntax {}
-extension RepeatWhileStmtSyntax : _StmtSyntax {}
-extension ReturnStmtSyntax : _StmtSyntax {}
-extension SwitchStmtSyntax : _StmtSyntax {}
-extension ThrowStmtSyntax : _StmtSyntax {}
-//extension UnknownStmtSyntax : _StmtSyntax {}
-extension WhileStmtSyntax : _StmtSyntax {}
 
 struct LazyDictionary<K : Hashable, V> {
     init(default: V) {
@@ -308,213 +287,213 @@ final class Reparser : SyntaxVisitor {
         return r
     }
 
-    func injectMandatoryNewlines(in statements: StmtListSyntax) {
+    func injectMandatoryNewlines(in statements: CodeBlockItemListSyntax) {
         for s in statements.dropLast() {
-            if (s as? _StmtSyntax)?.semicolon != nil { continue }
-            after[(s as! AnyHashable).hashValue].newlineRequired = true
+            if s.semicolon != nil { continue }
+            after[s.id].newlineRequired = true
         }
     }
 
-    override func visit(_ node: SwiftSyntax.UnknownDeclSyntax) {
+    override func visit(_ node: UnknownDeclSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.UnknownExprSyntax) {
+    override func visit(_ node: UnknownExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.UnknownStmtSyntax) {
+    override func visit(_ node: UnknownStmtSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.UnknownTypeSyntax) {
+    override func visit(_ node: UnknownTypeSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.UnknownPatternSyntax) {
+    override func visit(_ node: UnknownPatternSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.InOutExprSyntax) {
+    override func visit(_ node: InOutExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.PoundColumnExprSyntax) {
+    override func visit(_ node: PoundColumnExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.TryExprSyntax) {
+    override func visit(_ node: TryExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.DeclNameArgumentSyntax) {
+    override func visit(_ node: DeclNameArgumentSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.DeclNameArgumentsSyntax) {
+    override func visit(_ node: DeclNameArgumentsSyntax) {
         after[node.leftParen.id].openGroups += 1
         before[node.rightParen.id].closeGroups += 1
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.IdentifierExprSyntax) {
+    override func visit(_ node: IdentifierExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.SuperRefExprSyntax) {
+    override func visit(_ node: SuperRefExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.NilLiteralExprSyntax) {
+    override func visit(_ node: NilLiteralExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.DiscardAssignmentExprSyntax) {
+    override func visit(_ node: DiscardAssignmentExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.AssignmentExprSyntax) {
+    override func visit(_ node: AssignmentExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.SequenceExprSyntax) {
+    override func visit(_ node: SequenceExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.PoundLineExprSyntax) {
+    override func visit(_ node: PoundLineExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.PoundFileExprSyntax) {
+    override func visit(_ node: PoundFileExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.PoundFunctionExprSyntax) {
+    override func visit(_ node: PoundFunctionExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.PoundDsohandleExprSyntax) {
+    override func visit(_ node: PoundDsohandleExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.SymbolicReferenceExprSyntax) {
+    override func visit(_ node: SymbolicReferenceExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.PrefixOperatorExprSyntax) {
+    override func visit(_ node: PrefixOperatorExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.BinaryOperatorExprSyntax) {
+    override func visit(_ node: BinaryOperatorExprSyntax) {
         before[node.operatorToken.id].whitespaceRequired = true
         after[node.operatorToken.id].whitespaceRequired = true
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.FloatLiteralExprSyntax) {
+    override func visit(_ node: FloatLiteralExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.TupleExprSyntax) {
+    override func visit(_ node: TupleExprSyntax) {
         after[node.leftParen.id].openGroups += 1
         before[node.rightParen.id].closeGroups += 1
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ArrayExprSyntax) {
+    override func visit(_ node: ArrayExprSyntax) {
         after[node.leftSquare.id].openGroups += 1
         before[node.rightSquare.id].closeGroups += 1
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.DictionaryExprSyntax) {
+    override func visit(_ node: DictionaryExprSyntax) {
         after[node.leftSquare.id].openGroups += 1
         before[node.rightSquare.id].closeGroups += 1
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ImplicitMemberExprSyntax) {
+    override func visit(_ node: ImplicitMemberExprSyntax) {
         before[node.id].whitespaceRequired = true
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.FunctionCallArgumentSyntax) {
+    override func visit(_ node: FunctionCallArgumentSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.TupleElementSyntax) {
+    override func visit(_ node: TupleElementSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ArrayElementSyntax) {
+    override func visit(_ node: ArrayElementSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.DictionaryElementSyntax) {
+    override func visit(_ node: DictionaryElementSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.IntegerLiteralExprSyntax) {
+    override func visit(_ node: IntegerLiteralExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.StringLiteralExprSyntax) {
+    override func visit(_ node: StringLiteralExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.BooleanLiteralExprSyntax) {
+    override func visit(_ node: BooleanLiteralExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.TernaryExprSyntax) {
+    override func visit(_ node: TernaryExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.MemberAccessExprSyntax) {
+    override func visit(_ node: MemberAccessExprSyntax) {
         before[node.dot.id].openGroups += 1
         let top = ancestors.last!
-        let closer = top.syntax is SwiftSyntax.FunctionCallExprSyntax
+        let closer = top.syntax is FunctionCallExprSyntax
             ? top.id : node.id
         after[closer].closeGroups += 1
 
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.DotSelfExprSyntax) {
+    override func visit(_ node: DotSelfExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.IsExprSyntax) {
+    override func visit(_ node: IsExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.AsExprSyntax) {
+    override func visit(_ node: AsExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.TypeExprSyntax) {
+    override func visit(_ node: TypeExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ClosureCaptureItemSyntax) {
+    override func visit(_ node: ClosureCaptureItemSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ClosureCaptureSignatureSyntax) {
+    override func visit(_ node: ClosureCaptureSignatureSyntax) {
         after[node.leftSquare.id].openGroups += 1
         before[node.rightSquare.id].closeGroups += 1
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ClosureParamSyntax) {
+    override func visit(_ node: ClosureParamSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ClosureSignatureSyntax) {
+    override func visit(_ node: ClosureSignatureSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ClosureExprSyntax) {
+    override func visit(_ node: ClosureExprSyntax) {
         injectMandatoryNewlines(in: node.statements)
         after[node.signature.map { $0.id } ?? node.leftBrace.id].openGroups += 1
         after[node.leftBrace.id].whitespaceRequired = true
@@ -523,11 +502,11 @@ final class Reparser : SyntaxVisitor {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.UnresolvedPatternExprSyntax) {
+    override func visit(_ node: UnresolvedPatternExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.FunctionCallExprSyntax) {
+    override func visit(_ node: FunctionCallExprSyntax) {
         if let l = node.leftParen, let r = node.rightParen {
             after[l.id].openGroups += 1
             before[r.id].closeGroups += 1
@@ -535,125 +514,125 @@ final class Reparser : SyntaxVisitor {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.SubscriptExprSyntax) {
+    override func visit(_ node: SubscriptExprSyntax) {
         after[node.leftBracket.id].openGroups += 1
         before[node.rightBracket.id].closeGroups += 1
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.OptionalChainingExprSyntax) {
+    override func visit(_ node: OptionalChainingExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ForcedValueExprSyntax) {
+    override func visit(_ node: ForcedValueExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.PostfixUnaryExprSyntax) {
+    override func visit(_ node: PostfixUnaryExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.StringSegmentSyntax) {
+    override func visit(_ node: StringSegmentSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ExpressionSegmentSyntax) {
+    override func visit(_ node: ExpressionSegmentSyntax) {
         after[node.leftParen.id].openGroups += 1
         before[node.rightParen.id].closeGroups += 1
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.StringInterpolationExprSyntax) {
+    override func visit(_ node: StringInterpolationExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.KeyPathExprSyntax) {
+    override func visit(_ node: KeyPathExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ObjcNamePieceSyntax) {
+    override func visit(_ node: ObjcNamePieceSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ObjcKeyPathExprSyntax) {
+    override func visit(_ node: ObjcKeyPathExprSyntax) {
         after[node.leftParen.id].openGroups += 1
         before[node.rightParen.id].closeGroups += 1
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.EditorPlaceholderExprSyntax) {
+    override func visit(_ node: EditorPlaceholderExprSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ObjectLiteralExprSyntax) {
+    override func visit(_ node: ObjectLiteralExprSyntax) {
         after[node.leftParen.id].openGroups += 1
         before[node.rightParen.id].closeGroups += 1
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.TypeInitializerClauseSyntax) {
+    override func visit(_ node: TypeInitializerClauseSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.TypealiasDeclSyntax) {
+    override func visit(_ node: TypealiasDeclSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ParameterClauseSyntax) {
+    override func visit(_ node: ParameterClauseSyntax) {
         after[node.leftParen.id].openGroups += 1
         before[node.rightParen.id].closeGroups += 1
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ReturnClauseSyntax) {
+    override func visit(_ node: ReturnClauseSyntax) {
         after[node.arrow.id].whitespaceRequired = true
         before[node.arrow.id].whitespaceRequired = true
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.FunctionSignatureSyntax) {
+    override func visit(_ node: FunctionSignatureSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ElseifDirectiveClauseSyntax) {
+    override func visit(_ node: ElseifDirectiveClauseSyntax) {
         injectMandatoryNewlines(in: node.body)
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.IfConfigDeclSyntax) {
+    override func visit(_ node: IfConfigDeclSyntax) {
         injectMandatoryNewlines(in: node.body)
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.DeclModifierSyntax) {
+    override func visit(_ node: DeclModifierSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.InheritedTypeSyntax) {
+    override func visit(_ node: InheritedTypeSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.TypeInheritanceClauseSyntax) {
+    override func visit(_ node: TypeInheritanceClauseSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ClassDeclSyntax) {
+    override func visit(_ node: ClassDeclSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.StructDeclSyntax) {
+    override func visit(_ node: StructDeclSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ProtocolDeclSyntax) {
+    override func visit(_ node: ProtocolDeclSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ExtensionDeclSyntax) {
+    override func visit(_ node: ExtensionDeclSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.MemberDeclBlockSyntax) {
+    override func visit(_ node: MemberDeclBlockSyntax) {
         after[node.leftBrace.id].openGroups += 1
         after[node.leftBrace.id].whitespaceRequired = true
         before[node.leftBrace.id].whitespaceRequired = true
@@ -662,33 +641,29 @@ final class Reparser : SyntaxVisitor {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.SourceFileSyntax) {
+    override func visit(_ node: SourceFileSyntax) {
+        injectMandatoryNewlines(in: node.items)
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.TopLevelCodeDeclSyntax) {
+    override func visit(_ node: InitializerClauseSyntax) {
+        visitChildren(node) { super.visit(node) }
+    }
+
+    override func visit(_ node: FunctionParameterSyntax) {
+        visitChildren(node) { super.visit(node) }
+    }
+
+    override func visit(_ node: FunctionDeclSyntax) {
+        visitChildren(node) { super.visit(node) }
+    }
+
+    override func visit(_ node: ElseDirectiveClauseSyntax) {
         injectMandatoryNewlines(in: node.body)
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.InitializerClauseSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: SwiftSyntax.FunctionParameterSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: SwiftSyntax.FunctionDeclSyntax) {
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: SwiftSyntax.ElseDirectiveClauseSyntax) {
-        injectMandatoryNewlines(in: node.body)
-        visitChildren(node) { super.visit(node) }
-    }
-
-    override func visit(_ node: SwiftSyntax.AccessLevelModifierSyntax) {
+    override func visit(_ node: AccessLevelModifierSyntax) {
         if let l = node.openParen, let r = node.closeParen {
             after[l.id].openGroups += 1
             before[r.id].closeGroups += 1
@@ -696,25 +671,25 @@ final class Reparser : SyntaxVisitor {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.AccessPathComponentSyntax) {
+    override func visit(_ node: AccessPathComponentSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ImportDeclSyntax) {
+    override func visit(_ node: ImportDeclSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.AccessorParameterSyntax) {
+    override func visit(_ node: AccessorParameterSyntax) {
         after[node.leftParen.id].openGroups += 1
         before[node.rightParen.id].closeGroups += 1
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.AccessorDeclSyntax) {
+    override func visit(_ node: AccessorDeclSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.AccessorBlockSyntax) {
+    override func visit(_ node: AccessorBlockSyntax) {
         after[node.leftBrace.id].openGroups += 1
         after[node.leftBrace.id].whitespaceRequired = true
         before[node.rightBrace.id].closeGroups += 1
@@ -722,71 +697,71 @@ final class Reparser : SyntaxVisitor {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.PatternBindingSyntax) {
+    override func visit(_ node: PatternBindingSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.VariableDeclSyntax) {
+    override func visit(_ node: VariableDeclSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.AttributeSyntax) {
+    override func visit(_ node: AttributeSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ContinueStmtSyntax) {
+    override func visit(_ node: ContinueStmtSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.WhileStmtSyntax) {
+    override func visit(_ node: WhileStmtSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.DeferStmtSyntax) {
+    override func visit(_ node: DeferStmtSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ExpressionStmtSyntax) {
+    override func visit(_ node: ExpressionStmtSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.RepeatWhileStmtSyntax) {
+    override func visit(_ node: RepeatWhileStmtSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.GuardStmtSyntax) {
+    override func visit(_ node: GuardStmtSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.WhereClauseSyntax) {
+    override func visit(_ node: WhereClauseSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ForInStmtSyntax) {
+    override func visit(_ node: ForInStmtSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.SwitchStmtSyntax) {
+    override func visit(_ node: SwitchStmtSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.DoStmtSyntax) {
+    override func visit(_ node: DoStmtSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ReturnStmtSyntax) {
+    override func visit(_ node: ReturnStmtSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.FallthroughStmtSyntax) {
+    override func visit(_ node: FallthroughStmtSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.BreakStmtSyntax) {
+    override func visit(_ node: BreakStmtSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.CodeBlockSyntax) {
+    override func visit(_ node: CodeBlockSyntax) {
         injectMandatoryNewlines(in: node.statements)
         after[node.openBrace.id].openGroups += 1
         after[node.openBrace.id].whitespaceRequired = true
@@ -796,198 +771,198 @@ final class Reparser : SyntaxVisitor {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ConditionElementSyntax) {
+    override func visit(_ node: ConditionElementSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.AvailabilityConditionSyntax) {
+    override func visit(_ node: AvailabilityConditionSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.MatchingPatternConditionSyntax) {
+    override func visit(_ node: MatchingPatternConditionSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.OptionalBindingConditionSyntax) {
+    override func visit(_ node: OptionalBindingConditionSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.DeclarationStmtSyntax) {
+    override func visit(_ node: DeclarationStmtSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ThrowStmtSyntax) {
+    override func visit(_ node: ThrowStmtSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.IfStmtSyntax) {
+    override func visit(_ node: IfStmtSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ElseIfContinuationSyntax) {
+    override func visit(_ node: ElseIfContinuationSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ElseBlockSyntax) {
+    override func visit(_ node: ElseBlockSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.SwitchCaseSyntax) {
+    override func visit(_ node: SwitchCaseSyntax) {
         injectMandatoryNewlines(in: node.body)
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.SwitchDefaultLabelSyntax) {
+    override func visit(_ node: SwitchDefaultLabelSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.CaseItemSyntax) {
+    override func visit(_ node: CaseItemSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.SwitchCaseLabelSyntax) {
+    override func visit(_ node: SwitchCaseLabelSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.CatchClauseSyntax) {
+    override func visit(_ node: CatchClauseSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.GenericWhereClauseSyntax) {
+    override func visit(_ node: GenericWhereClauseSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.SameTypeRequirementSyntax) {
+    override func visit(_ node: SameTypeRequirementSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.GenericParameterSyntax) {
+    override func visit(_ node: GenericParameterSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.GenericParameterClauseSyntax) {
+    override func visit(_ node: GenericParameterClauseSyntax) {
         after[node.leftAngleBracket.id].openGroups += 1
         before[node.rightAngleBracket.id].closeGroups += 1
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ConformanceRequirementSyntax) {
+    override func visit(_ node: ConformanceRequirementSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.SimpleTypeIdentifierSyntax) {
+    override func visit(_ node: SimpleTypeIdentifierSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.MemberTypeIdentifierSyntax) {
+    override func visit(_ node: MemberTypeIdentifierSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ArrayTypeSyntax) {
+    override func visit(_ node: ArrayTypeSyntax) {
         after[node.leftSquareBracket.id].openGroups += 1
         before[node.rightSquareBracket.id].closeGroups += 1
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.DictionaryTypeSyntax) {
+    override func visit(_ node: DictionaryTypeSyntax) {
         after[node.leftSquareBracket.id].openGroups += 1
         before[node.rightSquareBracket.id].closeGroups += 1
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.MetatypeTypeSyntax) {
+    override func visit(_ node: MetatypeTypeSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.OptionalTypeSyntax) {
+    override func visit(_ node: OptionalTypeSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ImplicitlyUnwrappedOptionalTypeSyntax) {
+    override func visit(_ node: ImplicitlyUnwrappedOptionalTypeSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.CompositionTypeElementSyntax) {
+    override func visit(_ node: CompositionTypeElementSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.CompositionTypeSyntax) {
+    override func visit(_ node: CompositionTypeSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.TupleTypeElementSyntax) {
+    override func visit(_ node: TupleTypeElementSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.TupleTypeSyntax) {
+    override func visit(_ node: TupleTypeSyntax) {
         after[node.leftParen.id].openGroups += 1
         before[node.rightParen.id].closeGroups += 1
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.FunctionTypeSyntax) {
+    override func visit(_ node: FunctionTypeSyntax) {
         after[node.leftParen.id].openGroups += 1
         before[node.rightParen.id].closeGroups += 1
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.AttributedTypeSyntax) {
+    override func visit(_ node: AttributedTypeSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.GenericArgumentSyntax) {
+    override func visit(_ node: GenericArgumentSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.GenericArgumentClauseSyntax) {
+    override func visit(_ node: GenericArgumentClauseSyntax) {
         after[node.leftAngleBracket.id].openGroups += 1
         before[node.rightAngleBracket.id].closeGroups += 1
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.TypeAnnotationSyntax) {
+    override func visit(_ node: TypeAnnotationSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.EnumCasePatternSyntax) {
+    override func visit(_ node: EnumCasePatternSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.IsTypePatternSyntax) {
+    override func visit(_ node: IsTypePatternSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.OptionalPatternSyntax) {
+    override func visit(_ node: OptionalPatternSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.IdentifierPatternSyntax) {
+    override func visit(_ node: IdentifierPatternSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.AsTypePatternSyntax) {
+    override func visit(_ node: AsTypePatternSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.TuplePatternSyntax) {
+    override func visit(_ node: TuplePatternSyntax) {
         after[node.openParen.id].openGroups += 1
         before[node.closeParen.id].closeGroups += 1
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.WildcardPatternSyntax) {
+    override func visit(_ node: WildcardPatternSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.TuplePatternElementSyntax) {
+    override func visit(_ node: TuplePatternElementSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ExpressionPatternSyntax) {
+    override func visit(_ node: ExpressionPatternSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 
-    override func visit(_ node: SwiftSyntax.ValueBindingPatternSyntax) {
+    override func visit(_ node: ValueBindingPatternSyntax) {
         visitChildren(node) { super.visit(node) }
     }
 

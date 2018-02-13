@@ -90,7 +90,7 @@ struct PrettyPrinter {
         printStack = []
     }
 
-    public mutating func scanToken(_ t: Token) {
+    mutating func scanToken(_ t: Token) {
         switch t {
         case .eof:
             if !scanStack.isEmpty {
