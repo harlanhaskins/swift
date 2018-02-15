@@ -267,6 +267,17 @@ struct LazyDictionary<K : Hashable, V> {
     var impl: [K : V] = [:]
 }
 
+extension LazyDictionary where K == SyntaxID {
+    subscript<T: Syntax & Hashable>(node: T) -> V {
+        get {
+            return self[node.id]
+        }
+        set {
+            self[node.id] = newValue
+        }
+    }
+}
+
 final class Reparser : SyntaxVisitor {
     var content: [OutputElement] = []
 
@@ -309,7 +320,7 @@ final class Reparser : SyntaxVisitor {
     func injectMandatoryNewlines(in statements: CodeBlockItemListSyntax) {
         for s in statements.dropLast() {
             if s.semicolon != nil { continue }
-            after[s.id].newlineRequired = true
+            after[s].newlineRequired = true
         }
     }
 
@@ -322,42 +333,47 @@ final class Reparser : SyntaxVisitor {
     }
 
     override func visit(_ node: DeclNameArgumentsSyntax) {
-        after[node.leftParen.id].openGroups += 1
-        before[node.rightParen.id].closeGroups += 1
+        after[node.leftParen].openGroups += 1
+        before[node.rightParen].closeGroups += 1
         super.visit(node)
     }
 
     override func visit(_ node: BinaryOperatorExprSyntax) {
-        before[node.operatorToken.id].whitespaceRequired = true
-        after[node.operatorToken.id].whitespaceRequired = true
+        before[node.operatorToken].whitespaceRequired = true
+        after[node.operatorToken].whitespaceRequired = true
         super.visit(node)
     }
 
     override func visit(_ node: TupleExprSyntax) {
-        after[node.leftParen.id].openGroups += 1
-        before[node.rightParen.id].closeGroups += 1
+        after[node.leftParen].openGroups += 1
+        before[node.rightParen].closeGroups += 1
         super.visit(node)
     }
 
     override func visit(_ node: ArrayExprSyntax) {
-        after[node.leftSquare.id].openGroups += 1
-        before[node.rightSquare.id].closeGroups += 1
+        after[node.leftSquare].openGroups += 1
+        before[node.rightSquare].closeGroups += 1
         super.visit(node)
     }
 
     override func visit(_ node: DictionaryExprSyntax) {
-        after[node.leftSquare.id].openGroups += 1
-        before[node.rightSquare.id].closeGroups += 1
+        after[node.leftSquare].openGroups += 1
+        before[node.rightSquare].closeGroups += 1
         super.visit(node)
     }
 
     override func visit(_ node: ImplicitMemberExprSyntax) {
-        before[node.id].whitespaceRequired = true
+        before[node].whitespaceRequired = true
+        super.visit(node)
+    }
+
+    override func visit(_ node: FunctionParameterSyntax) {
+        after[node.colon].whitespaceRequired = true
         super.visit(node)
     }
 
     override func visit(_ node: MemberAccessExprSyntax) {
-        before[node.dot.id].openGroups += 1
+        before[node.dot].openGroups += 1
         let closer: SyntaxID
         if let top = node.parent as? FunctionCallExprSyntax {
             closer = top.id
@@ -370,61 +386,80 @@ final class Reparser : SyntaxVisitor {
     }
 
     override func visit(_ node: ClosureCaptureSignatureSyntax) {
-        after[node.leftSquare.id].openGroups += 1
-        before[node.rightSquare.id].closeGroups += 1
+        after[node.leftSquare].openGroups += 1
+        before[node.rightSquare].closeGroups += 1
         super.visit(node)
     }
 
     override func visit(_ node: ClosureExprSyntax) {
         injectMandatoryNewlines(in: node.statements)
         after[node.signature.map { $0.id } ?? node.leftBrace.id].openGroups += 1
-        after[node.leftBrace.id].whitespaceRequired = true
-        before[node.rightBrace.id].closeGroups += 1
-        before[node.rightBrace.id].whitespaceRequired = true
+        after[node.leftBrace].whitespaceRequired = true
+        before[node.rightBrace].closeGroups += 1
+        before[node.rightBrace].whitespaceRequired = true
+        after[node.rightBrace].newlineRequired = true
         super.visit(node)
     }
 
     override func visit(_ node: FunctionCallExprSyntax) {
         if let l = node.leftParen, let r = node.rightParen {
-            after[l.id].openGroups += 1
-            before[r.id].closeGroups += 1
+            after[l].openGroups += 1
+            before[r].closeGroups += 1
         }
         super.visit(node)
     }
 
     override func visit(_ node: SubscriptExprSyntax) {
-        after[node.leftBracket.id].openGroups += 1
-        before[node.rightBracket.id].closeGroups += 1
+        after[node.leftBracket].openGroups += 1
+        before[node.rightBracket].closeGroups += 1
         super.visit(node)
     }
 
     override func visit(_ node: ExpressionSegmentSyntax) {
-        after[node.leftParen.id].openGroups += 1
-        before[node.rightParen.id].closeGroups += 1
+        after[node.leftParen].openGroups += 1
+        before[node.rightParen].closeGroups += 1
+        super.visit(node)
+    }
+
+    override func visit(_ node: SwitchCaseLabelSyntax) {
+        after[node.caseKeyword].whitespaceRequired = true
+        after[node.colon].openGroups += 1
+        after[node.colon].newlineRequired = true
+        super.visit(node)
+    }
+
+    override func visit(_ node: SwitchDefaultLabelSyntax) {
+        after[node.colon].newlineRequired = true
         super.visit(node)
     }
 
     override func visit(_ node: ObjcKeyPathExprSyntax) {
-        after[node.leftParen.id].openGroups += 1
-        before[node.rightParen.id].closeGroups += 1
+        after[node.leftParen].openGroups += 1
+        before[node.rightParen].closeGroups += 1
+        super.visit(node)
+    }
+    
+    override func visit(_ node: AssignmentExprSyntax) {
+        after[node.assignToken].whitespaceRequired = true
+        before[node.assignToken].whitespaceRequired = true
         super.visit(node)
     }
 
     override func visit(_ node: ObjectLiteralExprSyntax) {
-        after[node.leftParen.id].openGroups += 1
-        before[node.rightParen.id].closeGroups += 1
+        after[node.leftParen].openGroups += 1
+        before[node.rightParen].closeGroups += 1
         super.visit(node)
     }
 
     override func visit(_ node: ParameterClauseSyntax) {
-        after[node.leftParen.id].openGroups += 1
-        before[node.rightParen.id].closeGroups += 1
+        after[node.leftParen].openGroups += 1
+        before[node.rightParen].closeGroups += 1
         super.visit(node)
     }
 
     override func visit(_ node: ReturnClauseSyntax) {
-        after[node.arrow.id].whitespaceRequired = true
-        before[node.arrow.id].whitespaceRequired = true
+        after[node.arrow].whitespaceRequired = true
+        before[node.arrow].whitespaceRequired = true
         super.visit(node)
     }
 
@@ -439,11 +474,11 @@ final class Reparser : SyntaxVisitor {
     }
 
     override func visit(_ node: MemberDeclBlockSyntax) {
-        after[node.leftBrace.id].openGroups += 1
-        after[node.leftBrace.id].whitespaceRequired = true
-        before[node.leftBrace.id].whitespaceRequired = true
-        before[node.rightBrace.id].closeGroups += 1
-        before[node.rightBrace.id].whitespaceRequired = true
+        after[node.leftBrace].openGroups += 1
+        after[node.leftBrace].whitespaceRequired = true
+        before[node.leftBrace].whitespaceRequired = true
+        before[node.rightBrace].closeGroups += 1
+        before[node.rightBrace].whitespaceRequired = true
         super.visit(node)
     }
 
@@ -459,33 +494,34 @@ final class Reparser : SyntaxVisitor {
 
     override func visit(_ node: AccessLevelModifierSyntax) {
         if let l = node.openParen, let r = node.closeParen {
-            after[l.id].openGroups += 1
-            before[r.id].closeGroups += 1
+            after[l].openGroups += 1
+            before[r].closeGroups += 1
         }
         super.visit(node)
     }
 
     override func visit(_ node: AccessorParameterSyntax) {
-        after[node.leftParen.id].openGroups += 1
-        before[node.rightParen.id].closeGroups += 1
+        after[node.leftParen].openGroups += 1
+        before[node.rightParen].closeGroups += 1
         super.visit(node)
     }
 
     override func visit(_ node: AccessorBlockSyntax) {
-        after[node.leftBrace.id].openGroups += 1
-        after[node.leftBrace.id].whitespaceRequired = true
-        before[node.rightBrace.id].closeGroups += 1
-        before[node.rightBrace.id].whitespaceRequired = true
+        after[node.leftBrace].openGroups += 1
+        after[node.leftBrace].whitespaceRequired = true
+        before[node.rightBrace].closeGroups += 1
+        before[node.rightBrace].whitespaceRequired = true
         super.visit(node)
     }
 
     override func visit(_ node: CodeBlockSyntax) {
         injectMandatoryNewlines(in: node.statements)
-        after[node.openBrace.id].openGroups += 1
-        after[node.openBrace.id].whitespaceRequired = true
-        before[node.openBrace.id].whitespaceRequired = true
-        before[node.closeBrace.id].closeGroups += 1
-        before[node.closeBrace.id].whitespaceRequired = true
+        after[node.openBrace].openGroups += 1
+        after[node.openBrace].whitespaceRequired = true
+        before[node.openBrace].whitespaceRequired = true
+        before[node.closeBrace].closeGroups += 1
+        before[node.closeBrace].whitespaceRequired = true
+        after[node.closeBrace].newlineRequired = true
         super.visit(node)
     }
 
@@ -495,44 +531,524 @@ final class Reparser : SyntaxVisitor {
     }
 
     override func visit(_ node: GenericParameterClauseSyntax) {
-        after[node.leftAngleBracket.id].openGroups += 1
-        before[node.rightAngleBracket.id].closeGroups += 1
+        after[node.leftAngleBracket].openGroups += 1
+        before[node.rightAngleBracket].closeGroups += 1
         super.visit(node)
     }
 
     override func visit(_ node: ArrayTypeSyntax) {
-        after[node.leftSquareBracket.id].openGroups += 1
-        before[node.rightSquareBracket.id].closeGroups += 1
+        after[node.leftSquareBracket].openGroups += 1
+        before[node.rightSquareBracket].closeGroups += 1
         super.visit(node)
     }
 
     override func visit(_ node: DictionaryTypeSyntax) {
-        after[node.leftSquareBracket.id].openGroups += 1
-        before[node.rightSquareBracket.id].closeGroups += 1
+        after[node.leftSquareBracket].openGroups += 1
+        before[node.rightSquareBracket].closeGroups += 1
         super.visit(node)
     }
 
     override func visit(_ node: TupleTypeSyntax) {
-        after[node.leftParen.id].openGroups += 1
-        before[node.rightParen.id].closeGroups += 1
+        after[node.leftParen].openGroups += 1
+        before[node.rightParen].closeGroups += 1
         super.visit(node)
     }
 
     override func visit(_ node: FunctionTypeSyntax) {
-        after[node.leftParen.id].openGroups += 1
-        before[node.rightParen.id].closeGroups += 1
+        after[node.leftParen].openGroups += 1
+        before[node.rightParen].closeGroups += 1
         super.visit(node)
     }
 
     override func visit(_ node: GenericArgumentClauseSyntax) {
-        after[node.leftAngleBracket.id].openGroups += 1
-        before[node.rightAngleBracket.id].closeGroups += 1
+        after[node.leftAngleBracket].openGroups += 1
+        before[node.rightAngleBracket].closeGroups += 1
         super.visit(node)
     }
 
     override func visit(_ node: TuplePatternSyntax) {
-        after[node.openParen.id].openGroups += 1
-        before[node.closeParen.id].closeGroups += 1
+        after[node.openParen].openGroups += 1
+        before[node.closeParen].closeGroups += 1
+        super.visit(node)
+    }
+
+    override func visit(_ node: AsExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: DoStmtSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: IfStmtSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: IsExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: TryExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: CaseItemSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: TypeExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: ArrowExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: AttributeSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: BreakStmtSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: ClassDeclSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: DeferStmtSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: ElseBlockSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: ForInStmtSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: GuardStmtSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: InOutExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: ThrowStmtSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: WhileStmtSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: ImportDeclSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: ReturnStmtSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: StructDeclSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: SwitchStmtSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: CatchClauseSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: DotSelfExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: KeyPathExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: TernaryExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: UnknownDeclSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: UnknownExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: UnknownStmtSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: UnknownTypeSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: WhereClauseSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: AccessorDeclSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: ArrayElementSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: ClosureParamSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: ContinueStmtSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: DeclModifierSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: FunctionDeclSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: MetatypeTypeSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: OptionalTypeSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: ProtocolDeclSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: SequenceExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: SuperRefExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: TupleElementSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: VariableDeclSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: AsTypePatternSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: CodeBlockItemSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: ExtensionDeclSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: InheritedTypeSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: IsTypePatternSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: ObjcNamePieceSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: PoundFileExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: PoundLineExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: StringSegmentSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: SubscriptDeclSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: TypealiasDeclSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: AttributedTypeSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: ExpressionStmtSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: IdentifierExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: NilLiteralExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: PatternBindingSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: PoundErrorDeclSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: SpecializeExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: TypeAnnotationSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: UnknownPatternSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: CompositionTypeSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: DeclarationStmtSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: EnumCasePatternSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: FallthroughStmtSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: ForcedValueExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: GenericArgumentSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: InitializerDeclSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: OptionalPatternSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: PoundColumnExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: RepeatWhileStmtSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: WildcardPatternSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: ClosureSignatureSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: ConditionElementSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: DeclNameArgumentSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: FloatLiteralExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: GenericParameterSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: PostfixUnaryExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: PoundWarningDeclSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: TupleTypeElementSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: DeinitializerDeclSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: DictionaryElementSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: ExpressionPatternSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: ValueBindingPatternSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: FunctionSignatureSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: IdentifierPatternSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: InitializerClauseSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: PoundFunctionExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: StringLiteralExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: AssociatedtypeDeclSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: BooleanLiteralExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: ClosureCaptureItemSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: ElseIfContinuationSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: GenericWhereClauseSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: IntegerLiteralExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: PoundDsohandleExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: PrefixOperatorExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: AccessPathComponentSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: SameTypeRequirementSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: TuplePatternElementSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: FunctionCallArgumentSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: MemberTypeIdentifierSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: OptionalChainingExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: SimpleTypeIdentifierSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: AvailabilityConditionSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: DiscardAssignmentExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: EditorPlaceholderExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: SymbolicReferenceExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: TypeInheritanceClauseSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: TypeInitializerClauseSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: UnresolvedPatternExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: CompositionTypeElementSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: ConformanceRequirementSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: StringInterpolationExprSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: MatchingPatternConditionSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: OptionalBindingConditionSyntax) {
+        super.visit(node)
+    }
+
+    override func visit(_ node: ImplicitlyUnwrappedOptionalTypeSyntax) {
         super.visit(node)
     }
 
@@ -542,7 +1058,6 @@ final class Reparser : SyntaxVisitor {
         switch tok.tokenKind {
         case .rightParen, .rightBrace, .rightSquareBracket, .rightAngle:
             if tok.parent is UnknownStmtSyntax { closeGroup() }
-
         default: break
         }
 
@@ -588,114 +1103,118 @@ final class Reparser : SyntaxVisitor {
     }
 }
 
-let p = Reparser()
+func main() {
+    let p = Reparser()
 
-// Parse a .swift file
-let currentFile = URL(fileURLWithPath: #file)
-do {
-    // let currentFileContents = try String(contentsOf: currentFile)
-    let parsed = try SourceFileSyntax.parse(currentFile)
-    p.visit(parsed)
-} catch ParserError.swiftcFailed(let n, let message) {
-    print(message)
-    exit(n == 0 ? 1 : Int32(n))
-}
-catch {
-    print(error)
-    exit(1)
-}
-
-let indentSpaces = 4
-let columnLimit = 70
-
-/// For each currently-open group, the indentation level of the line on which it
-/// starts.
-var groupIndentLevels = [0]
-var lineBuffer = [OutputElement]()
-var lineWidth = 0
-/// The indentation at the beginning of this line
-var bolIndentation = 0
-/// The group nesting level at beginning of this line
-var bolGrouping = groupIndentLevels.count
-var whitespaceRequired = false
-var lineUnmatchedIndices: [Int] = []
-
-func outputLine() {
-    var b = String(repeating: " ", count: bolIndentation * indentSpaces)
-    var grouping = bolGrouping
-
-    // flush through the first unmatched open grouping delimiter
-    let flushCount = lineUnmatchedIndices.first.map { $0 + 1 } ?? lineBuffer.count
-    for x in lineBuffer[..<flushCount] {
-        switch x {
-        case .openGroup:
-            groupIndentLevels.append(bolIndentation)
-            grouping += 1
-            if grouping == bolGrouping { bolIndentation += 1 }
-            // b += "〈"
-        case .closeGroup:
-            bolIndentation = groupIndentLevels.removeLast()
-            grouping -= 1
-            // b += "〉"
-        case .whitespace:
-            b += " "
-        case .newline:
-            break
-        case .token(let t/*, _, _*/):
-            b += t.text
-        }
+    // Parse a .swift file
+    let currentFile = URL(fileURLWithPath: #file)
+    do {
+        // let currentFileContents = try String(contentsOf: currentFile)
+        let parsed = try SourceFileSyntax.parse(currentFile)
+        p.visit(parsed)
+    } catch ParserError.swiftcFailed(let n, let message) {
+        print(message)
+        exit(n == 0 ? 1 : Int32(n))
     }
-    lineBuffer.removeFirst(flushCount)
-    if !lineUnmatchedIndices.isEmpty {
-        for i in 1..<lineUnmatchedIndices.count {
-            lineUnmatchedIndices[i - 1] = lineUnmatchedIndices[i] - flushCount
-        }
-        lineUnmatchedIndices.removeLast()
+    catch {
+        print(error)
+        exit(1)
     }
 
-    print(b)
-    if grouping > bolGrouping { bolIndentation += 1 }
-    bolGrouping = grouping
-    whitespaceRequired = false
-    lineWidth = bolIndentation * indentSpaces
-}
+    let indentSpaces = 2
+    let columnLimit = 80
 
-func flushLineBuffer() {
-    while !lineBuffer.isEmpty { outputLine() }
-}
+    /// For each currently-open group, the indentation level of the line on which it
+    /// starts.
+    var groupIndentLevels = [0]
+    var lineBuffer = [OutputElement]()
+    var lineWidth = 0
+    /// The indentation at the beginning of this line
+    var bolIndentation = 0
+    /// The group nesting level at beginning of this line
+    var bolGrouping = groupIndentLevels.count
+    var whitespaceRequired = false
+    var lineUnmatchedIndices: [Int] = []
 
-for x in p.content {
-    switch x {
-    case .openGroup:
-        lineUnmatchedIndices.append(lineBuffer.count)
-        lineBuffer.append(x)
-    case .closeGroup:
-        lineBuffer.append(x)
+    func outputLine() {
+        var b = String(repeating: " ", count: bolIndentation * indentSpaces)
+        var grouping = bolGrouping
+
+        // flush through the first unmatched open grouping delimiter
+        let flushCount = lineUnmatchedIndices.first.map { $0 + 1 } ?? lineBuffer.count
+        for x in lineBuffer[..<flushCount] {
+            switch x {
+            case .openGroup:
+                groupIndentLevels.append(bolIndentation)
+                grouping += 1
+                if grouping == bolGrouping { bolIndentation += 1 }
+                // b += "〈"
+            case .closeGroup:
+                bolIndentation = groupIndentLevels.removeLast()
+                grouping -= 1
+                // b += "〉"
+            case .whitespace:
+                b += " "
+            case .newline:
+                break
+            case .token(let t/*, _, _*/):
+                b += t.text
+            }
+        }
+        lineBuffer.removeFirst(flushCount)
         if !lineUnmatchedIndices.isEmpty {
+            for i in 1..<lineUnmatchedIndices.count {
+                lineUnmatchedIndices[i - 1] = lineUnmatchedIndices[i] - flushCount
+            }
             lineUnmatchedIndices.removeLast()
         }
-        if groupIndentLevels.count == bolGrouping {
-            flushLineBuffer()
-        }
-    case .whitespace:
-        if !lineBuffer.isEmpty {
-            whitespaceRequired = true
-        }
-    case .newline:
-        flushLineBuffer()
-    case .token(let t):
-        let s = whitespaceRequired ? 1 : 0
-        let w = t.text.count
-        if lineWidth + s + w > columnLimit {
-            outputLine()
-        }
-        else if whitespaceRequired {
-            lineBuffer.append(.whitespace)
-            lineWidth += 1
-        }
-        lineWidth += w
-        lineBuffer.append(x)
+
+        print(b)
+        if grouping > bolGrouping { bolIndentation += 1 }
+        bolGrouping = grouping
         whitespaceRequired = false
-   }
+        lineWidth = bolIndentation * indentSpaces
+    }
+
+    func flushLineBuffer() {
+        while !lineBuffer.isEmpty { outputLine() }
+    }
+
+    for x in p.content {
+        switch x {
+        case .openGroup:
+            lineUnmatchedIndices.append(lineBuffer.count)
+            lineBuffer.append(x)
+        case .closeGroup:
+            lineBuffer.append(x)
+            if !lineUnmatchedIndices.isEmpty {
+                lineUnmatchedIndices.removeLast()
+            }
+            if groupIndentLevels.count == bolGrouping {
+                flushLineBuffer()
+            }
+        case .whitespace:
+            if !lineBuffer.isEmpty {
+                whitespaceRequired = true
+            }
+        case .newline:
+            flushLineBuffer()
+        case .token(let t):
+            let s = whitespaceRequired ? 1 : 0
+            let w = t.text.count
+            if lineWidth + s + w > columnLimit {
+                outputLine()
+            }
+            else if whitespaceRequired {
+                lineBuffer.append(.whitespace)
+                lineWidth += 1
+            }
+            lineWidth += w
+            lineBuffer.append(x)
+            whitespaceRequired = false
+       }
+    }
+    flushLineBuffer()
 }
-flushLineBuffer()
+
+main()
