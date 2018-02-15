@@ -15,18 +15,6 @@ struct X {
 }
 
 extension Syntax {
-    /// Walks to the root of the Syntax tree and computes a list of all ancestors
-    /// of the receiver.
-    var ancestors: [Syntax] {
-        var nodes = [Syntax]()
-        var current: Syntax = self
-        while let parent = current.parent {
-            nodes.append(current)
-            current = parent
-        }
-        return nodes
-    }
-
     var pathFromRoot: [Int] {
         var path = [Int]()
         var current: Syntax = self
@@ -1080,7 +1068,7 @@ final class Reparser : SyntaxVisitor {
         print("""
             \(#file):\(tokenLocation)-\(endLocation):,\t\
             \(String(repeating: "    ", count: nestingLevel)) \
-            '\(tok.text)' \t\t -> \(tok.ancestors)
+            '\(tok.text)'
             """
         )
 #endif
