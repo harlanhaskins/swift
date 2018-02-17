@@ -2,8 +2,8 @@
 
 import Foundation
 
-enum Token {
-    enum Break {
+public enum Token {
+    public enum Break {
         case consistent, inconsistent
     }
 
@@ -53,27 +53,30 @@ enum Token {
     }
 }
 
-enum PrintBreak {
+public enum PrintBreak {
     case fits, consistent, inconsistent
 }
 
-struct PrettyPrinter {
+public struct PrettyPrinter {
     var margin: Int
     var space: Int
     var tokens: RingBuffer<Token>
 
-    // A parallel array of `tokens` that stores each token's "associated
-    // length".
-    //
-    // Each token case stores a different "associated length":
-    // - `.string` is the length of the string.
-    // - `.begin` is the length of the block it begins.
-    // - `.end` is 0.
-    // - `.blank` is 1 + the length of the next block.
-    //
-    // To compute the length for `.openBlock` and `.blank` requires
-    // looking ahead.
+    /// A parallel array of `tokens` that stores each token's "associated
+    /// length".
+    ///
+    /// Each token case stores a different "associated length":
+    /// - `.string` is the length of the string.
+    /// - `.begin` is the length of the block it begins.
+    /// - `.end` is 0.
+    /// - `.blank` is 1 + the length of the next block.
+    ///
+    /// To compute the length for `.openBlock` and `.blank` requires
+    /// looking ahead.
     var sizes: RingBuffer<Int>
+
+    /// The total number of spaces required to print the tokens up to the
+    ///
     var leftTotal: Int = 0
     var rightTotal: Int = 0
     var scanStack: RingBuffer<Int>
@@ -101,8 +104,8 @@ struct PrettyPrinter {
         case .begin:
             if scanStack.isEmpty {
                 (leftTotal, rightTotal) = (1, 1)
-                tokens.removeAll() // this isn't in scan psuedo code
-                sizes.removeAll() // this isn't in scan psuedo code
+//                tokens.removeAll() // this isn't in scan psuedo code
+//                sizes.removeAll() // this isn't in scan psuedo code
             } else {
                 scanStack.append(tokens.endIndex)
                 tokens.append(t)
@@ -119,8 +122,8 @@ struct PrettyPrinter {
         case let .break(blankSpace, _):
             if scanStack.isEmpty {
                 (leftTotal, rightTotal) = (1, 1)
-                tokens.removeAll() // this isn't in scan psuedo code
-                sizes.removeAll() // this isn't in scan psuedo code
+//                tokens.removeAll() // this isn't in scan psuedo code
+//                sizes.removeAll() // this isn't in scan psuedo code
             } else {
                 checkStack()
                 scanStack.append(tokens.endIndex)
@@ -178,7 +181,7 @@ struct PrettyPrinter {
     /// un-finalized buffered tokens will be finalized.
     private mutating func checkStack() {
         var k = 0 // nesting level
-        
+
         while let i = scanStack.popLast() {
             switch tokens[i] {
             case .begin:
@@ -198,16 +201,17 @@ struct PrettyPrinter {
 
     /// Prints a newline and indents `amount` spaces.
     private func printNewLine(_ amount: Int) {
-
+      print()
+      indent(amount)
     }
 
     /// Prints `amount` spaces.
     private func indent(_ amount: Int) {
-
+      print(String(repeating: " ", count: amount), terminator: "")
     }
 
     private func printString(_ string: String) {
-
+      print(string, terminator: "")
     }
 
     private mutating func printToken(_ x: Token, length l: Int) {
@@ -248,96 +252,9 @@ struct PrettyPrinter {
     }
 }
 
-extension Character {
-    // Cache character construction
-    static let space = " " as Character
-    static let tab = "\t" as Character
-    static let vtab = "\u{000B}" as Character
-    static let ffeed = "\u{000C}" as Character
-    static let null = "\0" as Character
-    static let lf = "\n" as Character
-    static let cr = "\r" as Character
-    static let crlf = "\r\n" as Character
-
-    var isBlank: Bool {
-        switch self {
-        case .space, .tab, .vtab, .ffeed, .null, .lf, .cr, .crlf:
-            return true
-        default:
-            return false
-        }
-    }
-
-    // Cache character construction
-    static let lbrace = "{" as Character
-    static let rbrace = "}" as Character
-    static let lsquare = "[" as Character
-    static let rsquare = "]" as Character
-    static let lparen = "(" as Character
-    static let rparen = ")" as Character
-
-    var isOpenBlock: Bool {
-        switch self {
-        case .lbrace, .lsquare, .lparen:
-            return true
-        default:
-            return false
-        }
-    }
-
-    var isCloseBlock: Bool {
-        switch self {
-        case .rbrace, .rsquare, .rparen:
-            return true
-        default:
-            return false
-        }
-    }
-
+public func prettyPrint(tokens: [Token]) throws {
+  var pprint = PrettyPrinter(lineWidth: 20)
+  for token in tokens {
+    pprint.scanToken(token)
+  }
 }
-
-/*
-var lines: [String] = []
-let args = CommandLine.arguments
-let path = CommandLine.arguments[1]
-let fileContents = try String(contentsOfFile: path)
-
-var string = ""
-var tokens: [Token] = []
-for c in fileContents {
-    string.append(c)
-    if c.isBlank {
-        // TODO: we don't want to actually include newlines in the string
-        tokens.append(.string(string))
-        tokens.append(.blank)
-    } else if c.isOpenBlock {
-        tokens.append(.string(string))
-        tokens.append(.openBlock)
-    } else if c.isCloseBlock {
-        tokens.append(.string(string))
-        tokens.append(.closeBlock)
-    }
-}
-
-
-
-// scan()
-
-
-
-
-
-for arg in args[1...] {
-    let paths = arg.absolutePathsBelow.filter { $0.pathExtension == "swift" || $0.pathExtension == "gyb" }
-    for path in paths {
-        let contents = try String(contentsOfFile: path)
-        for line in contents.split(separator: "\n") {
-            lines.append(String(line))
-        }
-    }
-}
-
-print("Hello, World!")
-
-*/
-
