@@ -1210,10 +1210,8 @@ func main() {
 try prettyPrint(tokens: [
     .string("func"),
     .break(blankSpace: 1, offset: 0),
-    .string("foo"),
-    .break(blankSpace: 0, offset: 0),
-    .string("("),
-    .begin(offset: 2, breakType: .inconsistent),
+    .string("foo("),
+    .begin(offset: 2, breakType: .consistent),
     .string("_"),
     .break(blankSpace: 1, offset: 0),
     .string("foo"),

@@ -104,33 +104,31 @@ public struct PrettyPrinter {
         case .begin:
             if scanStack.isEmpty {
                 (leftTotal, rightTotal) = (1, 1)
-//                tokens.removeAll() // this isn't in scan psuedo code
-//                sizes.removeAll() // this isn't in scan psuedo code
-            } else {
-                scanStack.append(tokens.endIndex)
-                tokens.append(t)
-                sizes.append(-rightTotal)
+                tokens.removeAll() // this isn't in scan psuedo code
+                sizes.removeAll() // this isn't in scan psuedo code
             }
+            tokens.append(t)
+            sizes.append(-rightTotal)
+            scanStack.append(tokens.endIndex)
         case .end:
             if scanStack.isEmpty {
                 printToken(t, length: 0)
             } else {
-                scanStack.append(tokens.endIndex)
                 tokens.append(t)
                 sizes.append(-1)
+                scanStack.append(tokens.endIndex)
             }
         case let .break(blankSpace, _):
             if scanStack.isEmpty {
                 (leftTotal, rightTotal) = (1, 1)
-//                tokens.removeAll() // this isn't in scan psuedo code
-//                sizes.removeAll() // this isn't in scan psuedo code
-            } else {
-                checkStack()
-                scanStack.append(tokens.endIndex)
-                tokens.append(t)
-                sizes.append(-rightTotal)
-                rightTotal += blankSpace
+                tokens.removeAll() // this isn't in scan psuedo code
+                sizes.removeAll() // this isn't in scan psuedo code
             }
+            checkStack()
+            tokens.append(t)
+            sizes.append(-rightTotal)
+            scanStack.append(tokens.endIndex)
+            rightTotal += blankSpace
         case let .string(s):
             if scanStack.isEmpty {
                 printToken(t, length: s.count)
@@ -246,8 +244,8 @@ public struct PrettyPrinter {
             assert(l <= space, "Line too long")
             space -= l
             printString(string)
-        default:
-            fatalError("unreachable")
+        case .eof:
+          fatalError("eof should never be reached")
         }
     }
 }
