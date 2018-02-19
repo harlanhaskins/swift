@@ -2,7 +2,7 @@
 
 import Foundation
 
-public enum Token {
+public enum Token: CustomStringConvertible {
     public enum Break {
         case consistent, inconsistent
     }
@@ -51,6 +51,16 @@ public enum Token {
         if case .begin(let x) = self { return x }
         return nil
     }
+
+    public var description: String {
+        switch self {
+        case .begin: return "⟦"
+        case .end: return "⟧"
+        case .break: return "<brk>"
+        case .string(let s): return s
+        case .eof: return "EOF"
+        }
+    }
 }
 
 public enum PrintBreak {
@@ -60,10 +70,7 @@ public enum PrintBreak {
 public struct PrettyPrinter {
     var margin: Int
     var space: Int
-    var tokens: RingBuffer<Token>
-
-    /// A parallel array of `tokens` that stores each token's "associated
-    /// length".
+    /// An array of `tokens` and each token's "associated length".
     ///
     /// Each token case stores a different "associated length":
     /// - `.string` is the length of the string.
@@ -73,7 +80,7 @@ public struct PrettyPrinter {
     ///
     /// To compute the length for `.openBlock` and `.blank` requires
     /// looking ahead.
-    var sizes: RingBuffer<Int>
+    var tokens: RingBuffer<(token: Token, length: Int)>
 
     /// The total number of spaces required to print the tokens up to the
     ///
@@ -87,8 +94,7 @@ public struct PrettyPrinter {
         space = lineWidth
 
         let n = 3 * lineWidth
-        tokens = RingBuffer(repeating: .eof, count: n)
-        sizes = RingBuffer(repeating: 0, count: n)
+        tokens = RingBuffer(repeating: (token: .eof, length: 0), count: n)
         scanStack = RingBuffer(repeating: 0, count: n)
         printStack = []
     }
@@ -104,41 +110,40 @@ public struct PrettyPrinter {
         case .begin:
             if scanStack.isEmpty {
                 (leftTotal, rightTotal) = (1, 1)
-                tokens.removeAll() // this isn't in scan psuedo code
-                sizes.removeAll() // this isn't in scan psuedo code
+                // equivalent to left <- right <- 0 in pseudo code
+                tokens.removeAll()
             }
-            tokens.append(t)
-            sizes.append(-rightTotal)
-            scanStack.append(tokens.endIndex)
+            addToken(t, length: -rightTotal)
         case .end:
             if scanStack.isEmpty {
                 printToken(t, length: 0)
             } else {
-                tokens.append(t)
-                sizes.append(-1)
-                scanStack.append(tokens.endIndex)
+                addToken(t, length: -1)
             }
         case let .break(blankSpace, _):
             if scanStack.isEmpty {
                 (leftTotal, rightTotal) = (1, 1)
-                tokens.removeAll() // this isn't in scan psuedo code
-                sizes.removeAll() // this isn't in scan psuedo code
+                // equivalent to left <- right <- 0 in pseudo code
+                tokens.removeAll()
             }
             checkStack()
-            tokens.append(t)
-            sizes.append(-rightTotal)
-            scanStack.append(tokens.endIndex)
+            addToken(t, length: -rightTotal)
             rightTotal += blankSpace
         case let .string(s):
             if scanStack.isEmpty {
                 printToken(t, length: s.count)
             } else {
-                tokens.append(t)
-                sizes.append(s.count)
+                // explicitly do not add to scan stack
+                tokens.append((token: t, length: s.count))
                 rightTotal += s.count
                 checkStream()
             }
         }
+    }
+
+    private mutating func addToken(_ token: Token, length: Int) {
+        scanStack.append(tokens.endIndex)
+        tokens.append((token: token, length: length))
     }
 
     // If the elements in `tokens` can't fit in the space remaining on the
@@ -149,7 +154,7 @@ public struct PrettyPrinter {
     private mutating func checkStream() {
         while rightTotal - leftTotal > space {
             if let bottom = scanStack.first, bottom == 0 {
-                sizes[scanStack.removeFirst()] = Int.max
+                tokens[scanStack.removeFirst()].length = Int.max
             }
             advanceLeft()
             if tokens.isEmpty { break }
@@ -158,12 +163,11 @@ public struct PrettyPrinter {
 
     /// Print all finalized tokens at the left of the buffer.
     private mutating func advanceLeft() {
-        assert(!sizes.isEmpty) // sanity check
+        assert(!tokens.isEmpty) // sanity check
         
-        while let l = sizes.first, l >= 0 {
-            let x = tokens.removeFirst()
-            sizes.removeFirst()
-            
+        while let (x, l) = tokens.first, l >= 0 {
+            tokens.removeFirst()
+
             printToken(x, length: l)
 
             leftTotal += x.break?.blankSpace ?? x.string.map { _ in l } ?? 0
@@ -181,42 +185,56 @@ public struct PrettyPrinter {
         var k = 0 // nesting level
 
         while let i = scanStack.popLast() {
-            switch tokens[i] {
+            switch tokens[i].token {
             case .begin:
                 if k == 0 { scanStack.append(i); return }
-                sizes[i] += rightTotal
+                tokens[i].length += rightTotal
                 k -= 1
             case .end:
-                sizes[i] += 1
+                tokens[i].length += 1
                 k += 1
             default:
-                assert(tokens[i].break != nil) // sanity check
-                sizes[i] += rightTotal
+                assert(tokens[i].token.break != nil) // sanity check
+                tokens[i].length += rightTotal
                 if k == 0 { return }
             }
         }
     }
 
+    @available(*, deprecated, message: "Only for use in the debugger")
+    private func dump() {
+        print("====== PrettyPrint ======")
+        print("tokens:")
+        print("  \(tokens.map { $0.token })")
+        print("printStack:")
+        print("  \(printStack)")
+        print("scanStack:")
+        print("  \(Array(scanStack))")
+        print("==== End PrettyPrint ====")
+    }
+
     /// Prints a newline and indents `amount` spaces.
     private func printNewLine(_ amount: Int) {
-      print()
-      indent(amount)
+//      print()
+//      indent(amount)
     }
 
     /// Prints `amount` spaces.
     private func indent(_ amount: Int) {
-      print(String(repeating: " ", count: amount), terminator: "")
+//      print(String(repeating: " ", count: amount), terminator: "")
     }
 
     private func printString(_ string: String) {
-      print(string, terminator: "")
+//      print(string, terminator: "")
     }
 
     private mutating func printToken(_ x: Token, length l: Int) {
         switch x {
         case let .begin(offset, breakType):
             if l > space {
-                printStack.append((space - offset, breakType == .consistent ? PrintBreak.consistent : .inconsistent))
+                let printBreak: PrintBreak =
+                    breakType == .consistent ? .consistent : .inconsistent
+                printStack.append((space - offset, printBreak))
             } else {
                 printStack.append((0, .fits))
             }
