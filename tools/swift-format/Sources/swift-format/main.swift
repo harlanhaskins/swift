@@ -1208,23 +1208,19 @@ func main() {
 
 
 try prettyPrint(tokens: [
-    .string("func"),
-    .break(blankSpace: 1, offset: 0),
-    .string("foo("),
+    .string("func foo("),
     .begin(offset: 2, breakType: .consistent),
-    .string("_"),
-    .break(blankSpace: 1, offset: 0),
-    .string("foo"),
     .break(blankSpace: 0, offset: 0),
-    .string(":"),
+    .string("_ foo : Int"),
     .break(blankSpace: 1, offset: 0),
-    .string("Int"),
     .end,
-    .string(")"),
+    .string(") -> Int {"),
+    .begin(offset: 2, breakType: .consistent),
     .break(blankSpace: 1, offset: 0),
-    .string("->"),
+    .string("return 3"),
     .break(blankSpace: 1, offset: 0),
-    .string("Void"),
-    .break(blankSpace: 1, offset: 0),
-    .string("{}")
+    .end,
+    .string("}"),
+    .eof
 ])
+print()

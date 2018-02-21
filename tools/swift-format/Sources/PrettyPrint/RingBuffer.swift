@@ -77,9 +77,10 @@ extension RingBuffer {
     }
     
     public mutating func append(_ newElement: Element) {
-        right = right + 1 % storage.count
-        precondition(left != right, "Can't append. RingBuffer is full.")
+        let newIdx = right + 1 % storage.count
+        precondition(left != newIdx, "Can't append. RingBuffer is full.")
         storage[right] = newElement
+        right = newIdx
     }
 
     public mutating func insertFirst(_ newElement: Element) {

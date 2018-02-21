@@ -35,7 +35,7 @@ public enum Token: CustomStringConvertible {
     case eof
 
     /// A required line break.
-    static var linebreak: Token {
+    public static var linebreak: Token {
         return .break(blankSpace: Int.max, offset: 0)
     }
 
@@ -149,8 +149,7 @@ public struct PrettyPrinter {
     // If the elements in `tokens` can't fit in the space remaining on the
     // current line, force a break at the earliest opportunity (the bottom of
     // `scanStack`) by setting its associated length to `Int.max`. Then print
-    // tokens until the elements in
-    // `tokens` can fit on a line again.
+    // tokens until the elements in `tokens` can fit on a line again.
     private mutating func checkStream() {
         while rightTotal - leftTotal > space {
             if let bottom = scanStack.first, bottom == 0 {
@@ -183,7 +182,6 @@ public struct PrettyPrinter {
     /// un-finalized buffered tokens will be finalized.
     private mutating func checkStack() {
         var k = 0 // nesting level
-
         while let i = scanStack.popLast() {
             switch tokens[i].token {
             case .begin:
@@ -215,17 +213,17 @@ public struct PrettyPrinter {
 
     /// Prints a newline and indents `amount` spaces.
     private func printNewLine(_ amount: Int) {
-//      print()
-//      indent(amount)
+      print()
+      indent(amount)
     }
 
     /// Prints `amount` spaces.
     private func indent(_ amount: Int) {
-//      print(String(repeating: " ", count: amount), terminator: "")
+      print(String(repeating: " ", count: amount), terminator: "")
     }
 
     private func printString(_ string: String) {
-//      print(string, terminator: "")
+      print(string, terminator: "")
     }
 
     private mutating func printToken(_ x: Token, length l: Int) {
@@ -241,16 +239,19 @@ public struct PrettyPrinter {
         case .end:
             printStack.removeLast()
         case let .break(blankSpace, offset):
-            switch printStack.last!.break {
+            guard let lastPrint = printStack.last else {
+                fatalError("empty print stack when printing a break")
+            }
+            switch lastPrint.break {
             case .fits:
                 space -= blankSpace
                 indent(blankSpace)
             case .consistent:
-                space = printStack.last!.offset - offset
+                space = lastPrint.offset - offset
                 printNewLine(margin - space)
             case .inconsistent:
                 if l > space {
-                    space = printStack.last!.offset - offset
+                    space = lastPrint.offset - offset
                     printNewLine(margin - space)
                 } else {
                     space -= blankSpace
@@ -269,7 +270,7 @@ public struct PrettyPrinter {
 }
 
 public func prettyPrint(tokens: [Token]) throws {
-  var pprint = PrettyPrinter(lineWidth: 20)
+  var pprint = PrettyPrinter(lineWidth: 79)
   for token in tokens {
     pprint.scanToken(token)
   }
