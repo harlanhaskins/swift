@@ -9,6 +9,7 @@ func main() throws {
   }
   let pipeline = PassPipeline()
   pipeline.schedule(ForLoopWhereClauseRewriter())
+  pipeline.schedule(ColonSpaceFixingRewriter())
   for file in options.sourceFiles {
     let syntax = try SourceFileSyntax.parse(file)
     let rewritten = pipeline.rewrite(syntax)
