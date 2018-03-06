@@ -1,5 +1,6 @@
 import SwiftSyntax
 import Foundation
+import SwiftFormat
 
 func main() throws {
   let engine = DiagnosticEngine()

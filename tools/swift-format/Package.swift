@@ -8,7 +8,13 @@ let package = Package(
   ],
   targets: [
     .target(
-      name: "swift-format",
+      name: "SwiftFormat",
       dependencies: []),
+    .target(
+      name: "swift-format",
+      dependencies: ["SwiftFormat"]),
+    .testTarget(
+      name: "SwiftFormatTests",
+      dependencies: ["SwiftFormat"]),
   ]
 )

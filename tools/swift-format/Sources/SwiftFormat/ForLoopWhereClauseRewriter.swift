@@ -19,8 +19,8 @@ import SwiftSyntax
 ///     print(i)
 /// }
 /// ```
-final class ForLoopWhereClauseRewriter: SyntaxRewriter {
-  override func visit(_ node: ForInStmtSyntax) -> StmtSyntax {
+public final class ForLoopWhereClauseRewriter: SyntaxRewriter {
+  public override func visit(_ node: ForInStmtSyntax) -> StmtSyntax {
     // Extract IfStmt node if it's the only node in the function's body.
     guard node.body.statements.count == 1 else { return node }
     let stmt = node.body.statements.first!

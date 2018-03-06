@@ -3,7 +3,7 @@ import SwiftSyntax
 
 /// A PassPipeline contains an array of SyntaxRewriter passes that will
 /// transform a given Syntax tree many times in succession.
-final class PassPipeline {
+public final class PassPipeline {
   /// The list of passes to apply, in order.
   private var passes = [SyntaxRewriter]()
 
