@@ -38,7 +38,9 @@ public final class ForLoopWhereClauseRewriter: SyntaxRewriter {
     }
 
     // Construct a new `where` clause with the condition.
+    let lastToken = node.sequenceExpr.lastToken
     let whereKeyword = SyntaxFactory.makeWhereKeyword(
+      leadingTrivia: lastToken?.trailingTrivia.withOneSpace() ?? .spaces(1),
       trailingTrivia: .spaces(1)
     )
     let whereClause = SyntaxFactory.makeWhereClause(

@@ -11,6 +11,29 @@ extension Syntax {
     }
     return nil
   }
+
+  var lastToken: TokenSyntax? {
+    if let tok = self as? TokenSyntax { return tok }
+    for child in children.reversed() {
+      if let tok = child.lastToken { return tok }
+    }
+    return nil
+  }
+
+  /// Walks up from the current node to find the nearest node that is an
+  /// Expr, Stmt, or Decl.
+  var containingExprStmtOrDecl: Syntax? {
+    var node: Syntax? = self
+    while let parent = node?.parent {
+      if parent is ExprSyntax ||
+         parent is StmtSyntax ||
+         parent is DeclSyntax {
+        return parent
+      }
+      node = parent
+    }
+    return nil
+  }
 }
 
 extension TokenSyntax {
@@ -18,13 +41,19 @@ extension TokenSyntax {
   /// after this token.
   var nextToken: TokenSyntax? {
     var current: Syntax? = self
-
-    /// Walk up the parent chain, checking adjacent siblings after each node
-    /// until we find a node with a 'first token'.
+    
+    // Walk up the parent chain, checking adjacent siblings after each node
+    // until we find a node with a 'first token'.
     while let node = current {
+      // Ask for the next sibling in this parent's children list.
       let nextChild = node.parent?.child(at: node.indexInParent + 1)
+
+      // If there's a token, we're good.
       if let child = nextChild?.firstToken { return child }
-      current = node.parent
+
+      // Otherwise, start searching the sibling. If we've exhausted siblings,
+      // move up to the parent.
+      current = nextChild ?? node.parent
     }
     return nil
   }
