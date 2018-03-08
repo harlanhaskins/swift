@@ -24,7 +24,7 @@ public final class VoidReturnTypeRewriter: SyntaxRewriter {
       leadingTrivia: tup.leftParen.leadingTrivia,
       trailingTrivia: tup.rightParen.trailingTrivia
     )
-    return node.withReturnType(id)
+    return super.visit(node.withReturnType(id))
   }
 
   /// In closure signatures, replace a returned `()` with `Void`.

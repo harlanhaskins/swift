@@ -43,11 +43,11 @@ public final class ForLoopWhereClauseRewriter: SyntaxRewriter {
       guard let condition = conditionElement.condition as? ExprSyntax else {
         return node
       }
-      return updateWithWhereCondition(
+      return super.visit(updateWithWhereCondition(
         node: node,
         condition: condition,
         statements: ifStmt.body.statements
-      )
+      ))
     case let guardStmt as GuardStmtSyntax
       where guardStmt.conditions.count == 1 &&
             guardStmt.body.statements.count == 1 &&
@@ -57,11 +57,11 @@ public final class ForLoopWhereClauseRewriter: SyntaxRewriter {
       guard let condition = conditionElement.condition as? ExprSyntax else {
         return node
       }
-      return updateWithWhereCondition(
+      return super.visit(updateWithWhereCondition(
         node: node,
         condition: condition,
         statements: node.body.statements.removingFirst()
-      )
+      ))
     default:
       return node
     }

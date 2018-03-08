@@ -30,7 +30,7 @@ public final class SplitVariableDeclarationsRewriter: SyntaxRewriter {
       let newUnderlyingItem = visit(codeBlockItem.item)
       newItems.append(codeBlockItem.withItem(newUnderlyingItem))
     }
-    return node.withStatements(
-      SyntaxFactory.makeCodeBlockItemList(newItems))
+    return super.visit(node.withStatements(
+      SyntaxFactory.makeCodeBlockItemList(newItems)))
   }
 }

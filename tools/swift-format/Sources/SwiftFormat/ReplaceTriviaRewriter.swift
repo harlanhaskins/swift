@@ -6,19 +6,19 @@ import SwiftSyntax
 final class ReplaceTriviaRewriter: SyntaxRewriter {
   let leadingTrivia: Trivia?
   let trailingTrivia: Trivia?
-  let lastToken: TokenSyntax?
+  let token: TokenSyntax?
 
-  init(lastToken: TokenSyntax?,
+  init(token: TokenSyntax?,
     leadingTrivia: Trivia? = nil,
     trailingTrivia: Trivia? = nil
   ) {
-    self.lastToken = lastToken
+    self.token = token
     self.leadingTrivia = leadingTrivia
     self.trailingTrivia = trailingTrivia
   }
 
   override func visit(_ token: TokenSyntax) -> Syntax {
-    guard token == lastToken else { return token }
+    guard token == self.token else { return token }
     return token.withLeadingTrivia(leadingTrivia ?? token.leadingTrivia)
                 .withTrailingTrivia(trailingTrivia ?? token.trailingTrivia)
   }
