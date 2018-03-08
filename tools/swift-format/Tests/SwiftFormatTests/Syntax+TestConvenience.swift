@@ -1,7 +1,23 @@
 import Foundation
 import SwiftSyntax
+import XCTest
 
 let tmpDir = URL(fileURLWithPath: NSTemporaryDirectory())
+
+func XCTAssertFormatting(_ formatter: SyntaxRewriter,
+                         input: String, expected: String,
+                         file: StaticString = #file, line: UInt = #line) {
+  do {
+    let syntax =
+      try SourceFileSyntax.parse(input)
+    let result = formatter.visit(syntax)
+
+    XCTAssertEqual(result.description, expected,
+                   file: file, line: line)
+  } catch {
+    XCTFail("\(error)", file: file, line: line)
+  }
+}
 
 extension SourceFileSyntax {
   /// Copies the text into a temporary file, parses that, and then deletes the

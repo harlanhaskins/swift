@@ -4,29 +4,30 @@ import SwiftSyntax
 
 final class ForLoopWhereTests: XCTestCase {
   func testSimpleForLoop() {
-    let original =
-      """
-      for i in [0, 1, 2, 3] {
-        if i > 30 {
-          print(i)
-        }
-      }
-      """
-    let expected =
-      """
-      for i in [0, 1, 2, 3] where i > 30 {
-          print(i)
-      }
-      """
-    do {
-      let syntax =
-        try SourceFileSyntax.parse(original)
-      let result = ForLoopWhereClauseRewriter().visit(syntax)
+    XCTAssertFormatting(ForLoopWhereClauseRewriter(),
+      input: """
+             for i in [0, 1, 2, 3] {
+               if i > 30 {
+                 print(i)
+               }
+             }
 
-      XCTAssertEqual(result.description, expected)
-    } catch {
-      XCTFail("\(error)")
-    }
+             for i in [0, 1, 2, 3] {
+               guard i > 30 else {
+                 continue
+               }
+               print(i)
+             }
+             """,
+      expected: """
+                for i in [0, 1, 2, 3] where i > 30 {
+                    print(i)
+                }
+
+                for i in [0, 1, 2, 3] where i > 30 {
+                  print(i)
+                }
+                """)
   }
 
   #if !os(macOS)

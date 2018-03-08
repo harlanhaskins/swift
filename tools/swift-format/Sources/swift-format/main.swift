@@ -9,12 +9,12 @@ func main() throws {
     return
   }
   let pipeline = PassPipeline()
-  pipeline.schedule(SplitVariableDeclarationsRewriter())
+//  pipeline.schedule(SplitVariableDeclarationsRewriter())
 //  pipeline.schedule(ForLoopWhereClauseRewriter())
 //  pipeline.schedule(ColonSpaceFixingRewriter())
 //  pipeline.schedule(BraceSpaceFixingRewriter())
 //  pipeline.schedule(BalancedTokenSpaceFixingRewriter())
-//  pipeline.schedule(VoidReturnTypeRewriter())
+  pipeline.schedule(VoidReturnTypeRewriter())
   for file in options.sourceFiles {
     let syntax = try SourceFileSyntax.parse(file)
     let rewritten = pipeline.rewrite(syntax)

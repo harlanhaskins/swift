@@ -6,6 +6,7 @@ extension Trivia {
   func withoutSpaces() -> Trivia {
     return Trivia(pieces: filter {
       if case .spaces = $0 { return false }
+      if case .tabs = $0 { return true }
       return true
     })
   }
@@ -32,6 +33,15 @@ extension Trivia {
   var containsNewlines: Bool {
     return contains(where: {
       if case .newlines = $0 { return true }
+      return false
+    })
+  }
+
+  /// Returns `true` if this trivia contains any spaces.
+  var containsSpaces: Bool {
+    return contains(where: {
+      if case .spaces = $0 { return true }
+      if case .tabs = $0 { return true }
       return false
     })
   }

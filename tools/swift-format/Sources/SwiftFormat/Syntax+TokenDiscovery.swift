@@ -45,6 +45,9 @@ extension TokenSyntax {
     // Walk up the parent chain, checking adjacent siblings after each node
     // until we find a node with a 'first token'.
     while let node = current {
+      // FIXME(hbh): This is not the best way to do this. The best way is to
+      //             iterate over each child, rather than stopping at the first
+      //             `nil` child.
       // Ask for the next sibling in this parent's children list.
       let nextChild = node.parent?.child(at: node.indexInParent + 1)
 
