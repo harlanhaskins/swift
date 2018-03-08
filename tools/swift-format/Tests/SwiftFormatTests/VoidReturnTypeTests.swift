@@ -13,7 +13,7 @@ final class VoidReturnTypeTests: XCTestCase {
              func foo() -> () {
              }
 
-             func test() -> (){
+             func test() -> Void{
              }
              """,
       expected: """

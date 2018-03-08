@@ -14,7 +14,8 @@ func main() throws {
 //  pipeline.schedule(ColonSpaceFixingRewriter())
 //  pipeline.schedule(BraceSpaceFixingRewriter())
 //  pipeline.schedule(BalancedTokenSpaceFixingRewriter())
-  pipeline.schedule(VoidReturnTypeRewriter())
+//  pipeline.schedule(VoidReturnTypeRewriter())
+  pipeline.schedule(ParenthesizedConditionRewriter())
   for file in options.sourceFiles {
     let syntax = try SourceFileSyntax.parse(file)
     let rewritten = pipeline.rewrite(syntax)

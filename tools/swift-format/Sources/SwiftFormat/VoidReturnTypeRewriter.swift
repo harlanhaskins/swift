@@ -5,11 +5,15 @@ public final class VoidReturnTypeRewriter: SyntaxRewriter {
   /// Remove the `-> Void` return type for function signatures. Do not remove
   /// it for closure signatures, because that may introduce an ambiguity.
   public override func visit(_ node: FunctionSignatureSyntax) -> Syntax {
-    guard let tup = node.output?.returnType as? TupleTypeSyntax,
-          tup.elements.isEmpty else {
-      return node
+    if let ret = node.output?.returnType as? SimpleTypeIdentifierSyntax,
+        ret.name.text == "Void" {
+      return node.withOutput(nil)
     }
-    return node.withOutput(nil)
+    if let tup = node.output?.returnType as? TupleTypeSyntax,
+           tup.elements.isEmpty {
+      return node.withOutput(nil)
+    }
+    return node
   }
 
   /// In function types, replace a returned `()` with `Void`.
