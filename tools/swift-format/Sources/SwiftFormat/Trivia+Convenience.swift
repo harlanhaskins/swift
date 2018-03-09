@@ -19,14 +19,26 @@ extension Trivia {
     })
   }
 
-  /// Returns this set of trivia, with all spaces removed except for one.
-  func withOneSpace() -> Trivia {
-    return withoutSpaces().appending(.spaces(1))
+  /// Returns this set of trivia, with all spaces removed except for one at the
+  /// end.
+  func withOneTrailingSpace() -> Trivia {
+    return withoutSpaces() + .spaces(1)
+  }
+
+  /// Returns this set of trivia, with all spaces removed except for one at the
+  /// beginning.
+  func withOneLeadingSpace() -> Trivia {
+    return .spaces(1) + withoutSpaces()
   }
 
   /// Returns this set of trivia, with all newlines removed except for one.
-  func withOneNewline() -> Trivia {
+  func withOneLeadingNewline() -> Trivia {
     return .newlines(1) + withoutNewlines()
+  }
+
+  /// Returns this set of trivia, with all newlines removed except for one.
+  func withOneTrailingNewline() -> Trivia {
+    return withoutNewlines() + .newlines(1)
   }
 
   /// Returns `true` if this trivia contains any newlines.

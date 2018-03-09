@@ -11,7 +11,8 @@ func allowedSingleLineContainer(_ token: TokenSyntax) -> Syntax? {
   }
   guard stmtContainer.statements.count <= 1 else { return nil }
   if stmtContainer is ClosureExprSyntax ||
-     stmtContainer is AccessorDeclSyntax {
+     stmtContainer is AccessorDeclSyntax ||
+     stmtContainer is DeferStmtSyntax {
     return container
   }
   return nil
@@ -20,18 +21,20 @@ func allowedSingleLineContainer(_ token: TokenSyntax) -> Syntax? {
 public final class BraceSpaceFixingRewriter: SyntaxRewriter {
   public override func visit(_ token: TokenSyntax) -> Syntax {
     let next = token.nextToken
-    if next?.tokenKind == .leftBrace {
-      return token.withTrailingTrivia(token.trailingTrivia.withOneSpace())
+    if let n = next, n.tokenKind == .leftBrace {
+      return token.withTrailingTrivia(
+        token.trailingTrivia.withOneTrailingSpace())
     }
 
     if token.tokenKind == .leftBrace {
-      return token.withLeadingTrivia(token.leadingTrivia.withoutNewlines())
+      return token.withLeadingTrivia(
+        token.leadingTrivia.withoutSpaces().withoutNewlines())
     }
 
     if token.tokenKind == .rightBrace {
       var newLeadingTrivia = token.leadingTrivia
       if allowedSingleLineContainer(token) == nil {
-        newLeadingTrivia = token.leadingTrivia.withOneNewline()
+        newLeadingTrivia = token.leadingTrivia.withOneLeadingNewline()
       }
       return token.withLeadingTrivia(newLeadingTrivia)
     }
