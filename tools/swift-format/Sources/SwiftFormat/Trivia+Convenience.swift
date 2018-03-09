@@ -26,7 +26,7 @@ extension Trivia {
 
   /// Returns this set of trivia, with all newlines removed except for one.
   func withOneNewline() -> Trivia {
-    return withoutNewlines().appending(.newlines(1))
+    return .newlines(1) + withoutNewlines()
   }
 
   /// Returns `true` if this trivia contains any newlines.
