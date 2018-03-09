@@ -25,13 +25,7 @@ public final class BraceSpaceFixingRewriter: SyntaxRewriter {
     }
 
     if token.tokenKind == .leftBrace {
-      var newTrailingTrivia = token.trailingTrivia
-      if allowedSingleLineContainer(token) == nil &&
-         next?.leadingTrivia.containsNewlines == false {
-        newTrailingTrivia = token.trailingTrivia.withOneNewline()
-      }
       return token.withLeadingTrivia(token.leadingTrivia.withoutNewlines())
-                  .withTrailingTrivia(newTrailingTrivia)
     }
 
     if token.tokenKind == .rightBrace {

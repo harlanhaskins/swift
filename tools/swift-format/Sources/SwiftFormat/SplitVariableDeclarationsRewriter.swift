@@ -15,22 +15,44 @@ import SwiftSyntax
 /// var g = "hello"
 /// ```
 public final class SplitVariableDeclarationsRewriter: SyntaxRewriter {
-  public override func visit(_ node: CodeBlockSyntax) -> Syntax {
+  public func splitVariableDecls(
+    _ items: CodeBlockItemListSyntax) -> CodeBlockItemListSyntax {
     var newItems = [CodeBlockItemSyntax]()
-    for codeBlockItem in node.statements {
+    for codeBlockItem in items {
       if let varDecl = codeBlockItem.item as? VariableDeclSyntax {
+        // The first binding corresponds to the original `var`/`let`
+        // declaration, so it should not have its trivia replaced.
+        var isFirst = true
         for binding in varDecl.bindings {
           let newBinding = binding.withTrailingComma(nil)
           let newDecl = varDecl.withBindings(
             SyntaxFactory.makePatternBindingList([newBinding]))
-          newItems.append(codeBlockItem.withItem(newDecl))
+          var finalDecl: Syntax = newDecl
+          // Only add a newline if this is a brand new binding.
+          if !isFirst {
+            finalDecl =
+              ReplaceTriviaRewriter(
+                token: newDecl.firstToken,
+                leadingTrivia: .newlines(1)).visit(finalDecl)
+          }
+          newItems.append(codeBlockItem.withItem(finalDecl))
+          isFirst = false
         }
         continue
       }
       let newUnderlyingItem = visit(codeBlockItem.item)
       newItems.append(codeBlockItem.withItem(newUnderlyingItem))
     }
-    return super.visit(node.withStatements(
-      SyntaxFactory.makeCodeBlockItemList(newItems)))
+    return SyntaxFactory.makeCodeBlockItemList(newItems)
+  }
+
+  public override func visit(_ node: CodeBlockSyntax) -> Syntax {
+    let newStmts = splitVariableDecls(node.statements)
+    return super.visit(node.withStatements(newStmts))
+  }
+
+  public override func visit(_ node: SourceFileSyntax) -> Syntax {
+    let newStmts = splitVariableDecls(node.statements)
+    return super.visit(node.withStatements(newStmts))
   }
 }
