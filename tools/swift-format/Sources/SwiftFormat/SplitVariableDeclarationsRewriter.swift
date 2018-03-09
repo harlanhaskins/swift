@@ -30,10 +30,13 @@ public final class SplitVariableDeclarationsRewriter: SyntaxRewriter {
           var finalDecl: Syntax = newDecl
           // Only add a newline if this is a brand new binding.
           if !isFirst {
+            let firstTok = newDecl.firstToken
+            let origLeading = firstTok?.leadingTrivia.withoutNewlines() ?? []
             finalDecl =
               ReplaceTriviaRewriter(
                 token: newDecl.firstToken,
-                leadingTrivia: .newlines(1)).visit(finalDecl)
+                leadingTrivia: .newlines(1) + origLeading)
+              .visit(finalDecl)
           }
           newItems.append(codeBlockItem.withItem(finalDecl))
           isFirst = false
