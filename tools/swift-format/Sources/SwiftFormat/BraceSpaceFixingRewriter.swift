@@ -9,7 +9,7 @@ func allowedSingleLineContainer(_ token: TokenSyntax) -> Syntax? {
   guard let stmtContainer = container as? WithStatementsSyntax else {
     return nil
   }
-  guard stmtContainer.statements.count == 1 else { return nil }
+  guard stmtContainer.statements.count <= 1 else { return nil }
   if stmtContainer is ClosureExprSyntax ||
      stmtContainer is AccessorDeclSyntax {
     return container
