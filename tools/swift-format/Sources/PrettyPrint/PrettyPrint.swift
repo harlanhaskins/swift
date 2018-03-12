@@ -264,6 +264,7 @@ public struct PrettyPrinter {
             space -= l
             printString(string)
         case .eof:
+          dump()
           fatalError("eof should never be reached")
         }
     }

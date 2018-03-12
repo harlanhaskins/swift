@@ -453,12 +453,12 @@ final class Reparser : SyntaxVisitor {
     }
 
     override func visit(_ node: ElseifDirectiveClauseSyntax) {
-        injectMandatoryNewlines(in: node.body)
+        injectMandatoryNewlines(in: node.statements)
         super.visit(node)
     }
 
     override func visit(_ node: IfConfigDeclSyntax) {
-        injectMandatoryNewlines(in: node.body)
+        injectMandatoryNewlines(in: node.statements)
         super.visit(node)
     }
 
@@ -472,17 +472,17 @@ final class Reparser : SyntaxVisitor {
     }
 
     override func visit(_ node: SourceFileSyntax) {
-        injectMandatoryNewlines(in: node.items)
+        injectMandatoryNewlines(in: node.statements)
         super.visit(node)
     }
 
     override func visit(_ node: ElseDirectiveClauseSyntax) {
-        injectMandatoryNewlines(in: node.body)
+        injectMandatoryNewlines(in: node.statements)
         super.visit(node)
     }
 
     override func visit(_ node: AccessLevelModifierSyntax) {
-        if let l = node.openParen, let r = node.closeParen {
+        if let l = node.leftParen, let r = node.rightParen {
             after[l].openGroups += 1
             before[r].closeGroups += 1
         }
@@ -505,17 +505,17 @@ final class Reparser : SyntaxVisitor {
 
     override func visit(_ node: CodeBlockSyntax) {
         injectMandatoryNewlines(in: node.statements)
-        after[node.openBrace].openGroups += 1
-        after[node.openBrace].whitespaceRequired = true
-        before[node.openBrace].whitespaceRequired = true
-        before[node.closeBrace].closeGroups += 1
-        before[node.closeBrace].whitespaceRequired = true
-        after[node.closeBrace].newlineRequired = true
+        after[node.leftBrace].openGroups += 1
+        after[node.leftBrace].whitespaceRequired = true
+        before[node.leftBrace].whitespaceRequired = true
+        before[node.rightBrace].closeGroups += 1
+        before[node.rightBrace].whitespaceRequired = true
+        after[node.rightBrace].newlineRequired = true
         super.visit(node)
     }
 
     override func visit(_ node: SwitchCaseSyntax) {
-        injectMandatoryNewlines(in: node.body)
+        injectMandatoryNewlines(in: node.statements)
         super.visit(node)
     }
 
@@ -556,8 +556,8 @@ final class Reparser : SyntaxVisitor {
     }
 
     override func visit(_ node: TuplePatternSyntax) {
-        after[node.openParen].openGroups += 1
-        before[node.closeParen].closeGroups += 1
+        after[node.leftParen].openGroups += 1
+        before[node.rightParen].closeGroups += 1
         super.visit(node)
     }
 
@@ -1208,6 +1208,71 @@ func main() {
 
 
 try prettyPrint(tokens: [
+    .string("func foo("),
+    .begin(offset: 2, breakType: .consistent),
+    .break(blankSpace: 0, offset: 0),
+    .string("_ foo : Int"),
+    .break(blankSpace: 1, offset: 0),
+    .end,
+    .string(") -> Int {"),
+    .begin(offset: 2, breakType: .consistent),
+    .break(blankSpace: 1, offset: 0),
+    .string("return 3"),
+    .break(blankSpace: 1, offset: 0),
+    .end,
+    .string("}"),
+    .string("func foo("),
+    .begin(offset: 2, breakType: .consistent),
+    .break(blankSpace: 0, offset: 0),
+    .string("_ foo : Int"),
+    .break(blankSpace: 1, offset: 0),
+    .end,
+    .string(") -> Int {"),
+    .begin(offset: 2, breakType: .consistent),
+    .break(blankSpace: 1, offset: 0),
+    .string("return 3"),
+    .break(blankSpace: 1, offset: 0),
+    .end,
+    .string("}"),
+    .string("func foo("),
+    .begin(offset: 2, breakType: .consistent),
+    .break(blankSpace: 0, offset: 0),
+    .string("_ foo : Int"),
+    .break(blankSpace: 1, offset: 0),
+    .end,
+    .string(") -> Int {"),
+    .begin(offset: 2, breakType: .consistent),
+    .break(blankSpace: 1, offset: 0),
+    .string("return 3"),
+    .break(blankSpace: 1, offset: 0),
+    .end,
+    .string("}"),
+    .string("func foo("),
+    .begin(offset: 2, breakType: .consistent),
+    .break(blankSpace: 0, offset: 0),
+    .string("_ foo : Int"),
+    .break(blankSpace: 1, offset: 0),
+    .end,
+    .string(") -> Int {"),
+    .begin(offset: 2, breakType: .consistent),
+    .break(blankSpace: 1, offset: 0),
+    .string("return 3"),
+    .break(blankSpace: 1, offset: 0),
+    .end,
+    .string("}"),
+    .string("func foo("),
+    .begin(offset: 2, breakType: .consistent),
+    .break(blankSpace: 0, offset: 0),
+    .string("_ foo : Int"),
+    .break(blankSpace: 1, offset: 0),
+    .end,
+    .string(") -> Int {"),
+    .begin(offset: 2, breakType: .consistent),
+    .break(blankSpace: 1, offset: 0),
+    .string("return 3"),
+    .break(blankSpace: 1, offset: 0),
+    .end,
+    .string("}"),
     .string("func foo("),
     .begin(offset: 2, breakType: .consistent),
     .break(blankSpace: 0, offset: 0),
