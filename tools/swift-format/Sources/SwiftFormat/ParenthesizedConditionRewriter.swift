@@ -20,6 +20,13 @@ public final class ParenthesizedConditionRewriter: SyntaxRewriter {
     ).visit(expr) as! ExprSyntax
   }
 
+  public override func visit(_ node: IfStmtSyntax) -> StmtSyntax {
+    let conditions = visit(node.conditions) as! ConditionElementListSyntax
+    return
+      node.withIfKeyword(node.ifKeyword.withOneTrailingSpace())
+          .withConditions(conditions)
+  }
+
   public override func visit(_ node: ConditionElementSyntax) -> Syntax {
     guard let tup = node.condition as? TupleExprSyntax,
           tup.elementList.count == 1 else {
@@ -35,5 +42,14 @@ public final class ParenthesizedConditionRewriter: SyntaxRewriter {
       return node
     }
     return super.visit(node.withExpression(extractExpr(tup)))
+  }
+
+  public override func visit(_ node: RepeatWhileStmtSyntax) -> StmtSyntax {
+    guard let tup = node.condition as? TupleExprSyntax,
+      tup.elementList.count == 1 else {
+      return node
+    }
+    return node.withCondition(extractExpr(tup))
+               .withWhileKeyword(node.whileKeyword.withOneTrailingSpace())
   }
 }

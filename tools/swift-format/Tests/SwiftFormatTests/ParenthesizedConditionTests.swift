@@ -10,6 +10,7 @@ final class ParenthesizedConditionTests: XCTestCase {
              while (x) {}
              guard (x), (y), (x == 3) else {}
              if (foo { x }) {}
+             repeat {} while(x)
              switch (4) { default: break } // TODO: Parse SwitchStmt
              """,
       expected: """
@@ -17,6 +18,7 @@ final class ParenthesizedConditionTests: XCTestCase {
                 while x {}
                 guard x, y, x == 3 else {}
                 if (foo { x }) {}
+                repeat {} while x
                 switch (4) { default: break } // TODO: Parse SwitchStmt
                 """)
   }

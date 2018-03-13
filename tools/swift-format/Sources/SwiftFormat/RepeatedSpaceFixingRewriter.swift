@@ -6,7 +6,7 @@ extension Trivia {
   /// beginning of a line).
   func removingRepeatedSpaces() -> Trivia {
     if containsNewlines { return self }
-    return Trivia(pieces: map {
+    return Trivia(pieces: condensed().map {
       if case .spaces = $0 {
         return .spaces(1)
       }

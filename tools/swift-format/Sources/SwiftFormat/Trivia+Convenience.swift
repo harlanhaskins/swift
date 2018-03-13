@@ -41,6 +41,41 @@ extension Trivia {
     return withoutNewlines() + .newlines(1)
   }
 
+  /// Walks through trivia looking for multiple separate trivia entities with
+  /// the same base kind, and condenses them.
+  /// `[.spaces(1), .spaces(2)]` becomes `[.spaces(3)]`.
+  func condensed() -> Trivia {
+    guard var prev = first else { return self }
+    var pieces = [TriviaPiece]()
+    for piece in dropFirst() {
+      switch (prev, piece) {
+      case (.spaces(let l), .spaces(let r)):
+        prev = .spaces(l + r)
+      case (.tabs(let l), .tabs(let r)):
+        prev = .tabs(l + r)
+      case (.newlines(let l), .newlines(let r)):
+        prev = .newlines(l + r)
+      case (.carriageReturns(let l), .carriageReturns(let r)):
+        prev = .carriageReturns(l + r)
+      case (.carriageReturnLineFeeds(let l), .carriageReturnLineFeeds(let r)):
+        prev = .carriageReturnLineFeeds(l + r)
+      case (.verticalTabs(let l), .verticalTabs(let r)):
+        prev = .verticalTabs(l + r)
+      case (.garbageText(let l), .garbageText(let r)):
+        prev = .garbageText(l + r)
+      case (.backticks(let l), .backticks(let r)):
+        prev = .backticks(l + r)
+      case (.formfeeds(let l), .formfeeds(let r)):
+        prev = .formfeeds(l + r)
+      default:
+        pieces.append(prev)
+        prev = piece
+      }
+    }
+    pieces.append(prev)
+    return Trivia(pieces: pieces)
+  }
+
   /// Returns `true` if this trivia contains any newlines.
   var containsNewlines: Bool {
     return contains(where: {
