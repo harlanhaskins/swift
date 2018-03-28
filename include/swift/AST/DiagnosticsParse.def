@@ -1242,6 +1242,8 @@ ERROR(expr_selector_expected_property_expr,PointsToFirstBadToken,
       "expected expression naming a property within '#selector(...)'", ())
 ERROR(expr_selector_expected_rparen,PointsToFirstBadToken,
       "expected ')' to complete '#selector' expression", ())
+ERROR(expr_lolcode_expected_rparen,PointsToFirstBadToken,
+      "expected ')' to complete '#lolcode' expression", ())
 
 // Type-of expressions.
 ERROR(expr_typeof_expected_label_of,PointsToFirstBadToken,
