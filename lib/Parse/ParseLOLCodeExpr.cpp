@@ -35,12 +35,142 @@
 using namespace swift;
 using namespace swift::syntax;
 
-Expr *Parser::parseLOLCodeBuiltinOpExpr() {
-  return nullptr;
+static StringRef nameForLOLCodeOp(tok token, bool isBothSaem) {
+  StringRef ret;
+  switch (token) {
+  #define FUNC_MAP(TOK, SUFFIX) \
+    case tok::kw_##TOK: \
+      return "__lolcode_" #SUFFIX;
+  FUNC_MAP(SUM, sum)
+  FUNC_MAP(DIFF, diff)
+  FUNC_MAP(PRODUKT, produkt)
+  FUNC_MAP(QUOSHUNT, quoshunt)
+  FUNC_MAP(MOD, mod)
+  FUNC_MAP(BIGGR, biggr)
+  FUNC_MAP(SMALLR, smallr)
+  FUNC_MAP(EITHER, either)
+  FUNC_MAP(WON, won_of)
+  FUNC_MAP(ANY, any_of)
+  FUNC_MAP(ALL, all_of)
+  FUNC_MAP(DIFFRINT, diffrint)
+  FUNC_MAP(SMOOSH, smoosh)
+  FUNC_MAP(NOT, not)
+  FUNC_MAP(VISIBLE, visible)
+  FUNC_MAP(GIMMEH, gimmeh)
+  #undef FUNC_MAP
+  case tok::BOTH:
+    return isBothSaem ? "_lolcode_both_saem" : "_lolcode_both_of";
+  default:
+    llvm_unreachable("invalid lolcode op");
+  }
+}
+
+static CallExpr *makeLOLCodeCall(ASTContext &C, tok lolcodeOp, bool isBothSaem,
+  SourceLoc loc, const SmallVectorImpl<Expr *> &args) {
+  auto name = nameForLOLCodeOp(lolcodeOp, isBothSaem);
+  DeclNameLoc()
+  auto declRef = new (C) UnresolvedDeclRefExpr(
+    C.getIdentifier(funcName), DeclRefKind::Ordinary, DeclNameLoc());
+  auto args = TupleExpr(SourceLoc(), args, {}, {},
+                        SourceLoc(), false, true, Type());
+  return new (C) CallExpr(declRef, args, true, {}, {}, false, Type());
+}
+
+ParserStatus Parser::parseLOLCodeParameters(SmallVectorImpl<Expr *> &Exprs) {
+  while (true) {
+    ParserResult<Expr> result = parseLOLCodeExpr();
+    if (result.isNull()) return makeParserError();
+    Exprs.push_back(result.get());
+
+    if (!consumeIf(tok::kw_AN)) break;
+  }
+  if (!consumeIf(tok::kw_MKAY)) break;
+  return makeParserSuccess();
+}
+
+ParserStatus parseBinaryLOLCodeArguments(
+  Parser &P, SmallVectorImpl<Expr *> &exprs) {
+    auto lhs = P.parseLOLCodeExpr();
+    if (lhs.isNull()) return P.makeParserError();
+    args.push_back(lhs.get());
+
+    if (!P.consumeIf(tok::kw_AN)) {
+      P.diagnose(Tok, diag::expected_expr_lolcode);
+      return P.makeParserError();
+    }
+
+    auto rhs = P.parseLOLCodeExpr();
+    if (rhs.isNull()) return P.makeParserError();
+    args.push_back(rhs.get());
+
+    return P.makeParserSuccess()
+}
+
+ParserResult<Expr> Parser::parseLOLCodeBuiltinOpExpr() {
+  tok kind = Tok.getKind();
+  SmallVector<Expr *, 5> args;
+  SourceLoc loc = consumeToken();
+  bool isBothSaem = false;
+
+  switch (kind) {
+  // Unary operator
+  case tok::kw_NOT: {
+    auto expr = parseLOLCodeExpr();
+    if (expr.isNull()) return makeParserError();
+    args.push_back(expr.get());
+    break;
+  }
+
+  // Binary operators
+  case tok::kw_BIGGR:
+  case tok::kw_SMALLR:
+  case tok::kw_EITHER:
+  case tok::kw_WON:
+  case tok::kw_SUM:
+  case tok::kw_DIFF:
+  case tok::kw_PRODUKT:
+  case tok::kw_QUOSHUNT:
+  case tok::kw_MOD: {
+    if (!consumeIf(tok::kw_OF)) {
+      diagnose(Tok, diag::expected_expr_lolcode);
+      return makeParserError();
+    }
+    LLVM_FALLTHROUGH;
+  case tok::kw_DIFFRINT:
+    auto result = parseBinaryLOLCodeArguments(*this, exprs);
+    if (!result) return makeParserError();
+    break;
+  }
+  case tok::kw_BOTH:
+    if (consumeIf(tok::kw_SAEM)) {
+      isBothSaem = true;
+    } else if (consumeIf(tok::kw_OF)) {
+      /* do nothing */
+    } else {
+      diagnose(Tok, diag::expected_expr_lolcode);
+      return makeParserError();
+    }
+    auto result = parseBinaryLOLCodeArguments(*this, exprs);
+    if (!result) return makeParserError();
+    break;
+  case tok::kw_ANY:
+  case tok::kw_ALL:
+    if (!consumeIf(tok::kw_OF)) {
+      diagnose(Tok, diag::expected_expr_lolcode);
+      return makeParserError();
+    }
+    LLVM_FALLTHROUGH;
+  case tok::kw_SMOOSH: {
+    auto result = parseLOLCodeParameters(args);
+    if (!result) return makeParserError();
+  }
+  default:
+    llvm_unreachable("not at start of lolcode builtin op")
+  }
+  return makeParserResult(makeLOLCodeCall(kind, isBothSaem, loc, args));
 }
 
 ParserResult<Expr> Parser::parseLOLCodeExpr() {
-  SyntaxParsingContext ExprContext(SyntaxContext, SyntaxContextKind::Expr);
   switch (Tok.getKind()) {
   case tok::integer_literal: {
     StringRef Text = Tok.getText();
@@ -76,12 +206,12 @@ ParserResult<Expr> Parser::parseLOLCodeExpr() {
   // by the lexer, so there is no reason to emit another diagnostic.
   case tok::unknown:
     consumeToken(tok::unknown);
-    return nullptr;
+    return makeParserError;
 
   case tok::kw_BOTH:
     if (!peekToken().is(tok::kw_SAEM)) {
       diagnose(Tok, diag::expected_expr_lolcode);
-      return nullptr;
+      return makeParserError();
     }
     return makeParserResult(parseLOLCodeBuiltinOpExpr());
   case tok::kw_SUM:
@@ -97,7 +227,7 @@ ParserResult<Expr> Parser::parseLOLCodeExpr() {
   case tok::kw_ALL:
     if (!peekToken().is(tok::kw_OF)) {
       diagnose(Tok, diag::expected_expr_lolcode);
-      return nullptr;
+      return makeParserError;
     }
     LLVM_FALLTHROUGH;
   case tok::kw_DIFFRINT:
@@ -108,7 +238,7 @@ ParserResult<Expr> Parser::parseLOLCodeExpr() {
   default:
     checkForInputIncomplete();
     diagnose(Tok, diag::expected_expr_lolcode);
-    return nullptr;
+    return makeParserError;
   }
 }
 

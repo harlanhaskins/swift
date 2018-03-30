@@ -1195,8 +1195,9 @@ public:
   ParserResult<Expr> parseLOLCodeExprShed();
   ParserResult<Expr> parseLOLCodeShedExpr();
   ParserResult<Expr> parseLOLCodeExpr();
-  Expr *parseLOLCodeBuiltinOpExpr();
+  ParserResult<Expr> parseLOLCodeBuiltinOpExpr();
 
+  ParserStatus parseLOLCodeParameters(SmallVectorImpl<Expr *> &Exprs);
   ParserStatus parseStringSegments(SmallVectorImpl<Lexer::StringSegment> &Segments,
                                    SmallVectorImpl<Expr*> &Exprs,
                                    Token EntireTok);

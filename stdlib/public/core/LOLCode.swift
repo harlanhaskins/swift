@@ -13,14 +13,14 @@
 public enum _LOLCodeType: String {
   case yarn, numbar, numbr, noob, bukkit, troof
 
-  var defaultValue: Any {
+  var defaultValue: _LOLCodeValue {
     switch self {
-    case .bukkit: return [Any]()
-    case .noob: return ()
-    case .numbar: return 0.0
-    case .numbr: return 0
-    case .troof: return false
-    case .yarn: return ""
+    case .bukkit: return .bukkit([])
+    case .noob: return .noob
+    case .numbar: return .numbar(0.0)
+    case .numbr: return .numbr(0)
+    case .troof: return .troof(false)
+    case .yarn: return .yarn("")
     }
   }
 }
