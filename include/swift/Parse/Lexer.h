@@ -94,9 +94,14 @@ class Lexer {
 
   Token NextToken;
   
-  /// \brief This is true if we're lexing a .sil file instead of a .swift
+  /// This is true if we're lexing a .sil file instead of a .swift
   /// file.  This enables the 'sil' keyword.
   const bool InSILMode;
+
+  /// This is true once we see '#lolcode' '(', and remains true until
+  /// we see ')'. There are no parentheses in LOLCode, so we will never
+  /// terminate this early.
+  bool inLOLCodeBody = false;
 
   const CommentRetentionMode RetainComments;
 

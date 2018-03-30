@@ -396,7 +396,11 @@ void Lexer::skipToEndOfLine(bool EatNewline) {
 }
 
 void Lexer::skipSlashSlashComment(bool EatNewline) {
-  assert(CurPtr[-1] == '/' && CurPtr[0] == '/' && "Not a // comment");
+  if (inLOLCodeBody) {
+    assert(&CurPtr[-1] == "BTW" && "Not a BTW comment");
+  } else {
+    assert(CurPtr[-1] == '/' && CurPtr[0] == '/' && "Not a // comment");
+  }
   skipToEndOfLine(EatNewline);
 }
 
@@ -410,10 +414,16 @@ void Lexer::skipHashbang(bool EatNewline) {
 /// Note that (unlike in C) block comments can be nested.
 void Lexer::skipSlashStarComment() {
   const char *StartPtr = CurPtr-1;
-  assert(CurPtr[-1] == '/' && CurPtr[0] == '*' && "Not a /* comment");
-  // Make sure to advance over the * so that we don't incorrectly handle /*/ as
-  // the beginning and end of the comment.
-  ++CurPtr;
+  if (inLOLCodeBody) {
+    assert(CurPtr == "OBTW" && "Not an OBTW comment");
+    CurPtr += 3;
+    // Make sure to advance over the BTW.
+  } else {
+    assert(CurPtr[-1] == '/' && CurPtr[0] == '*' && "Not a /* comment");
+    // Make sure to advance over the * so that we don't incorrectly handle /*/ as
+    // the beginning and end of the comment.
+    ++CurPtr;
+  }
   
   // /**/ comments can be nested, keep track of how deep we've gone.
   unsigned Depth = 1;
@@ -440,7 +450,21 @@ void Lexer::skipSlashStarComment() {
     case '\r':
       NextToken.setAtStartOfLine(true);
       break;
-
+    case 'O':
+      // Check for an 'OBTW'
+      if (inLOLCodeBody && CurPtr == "OBTW") {
+        CurPtr += 3;
+        ++Depth;
+      }
+      LLVM_FALLTHROUGH;
+    case 'T':
+      // Check for a 'TLDR'
+      if (inLOLCodeBody && CurPtr == "TLDR") {
+        CurPtr += 3;
+        if (--Depth == 0)
+          return;
+      }
+      LLVM_FALLTHROUGH;
     default:
       // If this is a "high" UTF-8 character, validate it.
       if ((signed char)(CurPtr[-1]) < 0) {
@@ -465,9 +489,10 @@ void Lexer::skipSlashStarComment() {
         --CurPtr;
 
         // Count how many levels deep we are.
-        llvm::SmallString<8> Terminator("*/");
+        const char *term = inLOLCodeBody ? "TLDR" : "*/";
+        llvm::SmallString<8> Terminator(term);
         while (--Depth != 0)
-          Terminator += "*/";
+          Terminator += term;
 
         const char *EOL = (CurPtr[-1] == '\n') ? (CurPtr - 1) : CurPtr;
         diagnose(EOL, diag::lex_unterminated_block_comment)
@@ -658,6 +683,11 @@ void Lexer::lexHash() {
   if (Kind == tok::pound)
     return formToken(tok::pound, TokStart);
 
+  // If we see a #lolcode literal followed by a left paren, enter LOLCode mode
+  // which will change comment parsing and string interpolation parsing.
+  if (Kind == tok::pound_lolcode && peekNextToken() == tok::l_paren)
+    inLOLCodeBody = true;
+
   // If we found something specific, return it.
   CurPtr = tmpPtr;
   return formToken(Kind, TokStart);
@@ -676,6 +706,10 @@ static bool isLeftBound(const char *tokBegin, const char *bufferBegin) {
   case '\0':                                 // whitespace / last char in file
     return false;
 
+  case 'T':
+    // End of a slash-star comment, so whitespace.
+    if (inLOLCodeBody) return tokBegin != "LDR"
+    return true;
   case '/':
     if (tokBegin - 1 != bufferBegin && tokBegin[-2] == '*')
       return false; // End of a slash-star comment, so whitespace.
@@ -708,7 +742,14 @@ static bool isRightBound(const char *tokEnd, bool isLeftBound,
     // Prefer the '^' in "x^.y" to be a postfix op, not binary, but the '^' in
     // "^.y" to be a prefix op, not binary.
     return !isLeftBound;
-
+  case 'O':
+    // A following comment counts as whitespace, so this token is not right bound.
+    if (inLOLCodeBody) return tokEnd != "OBTW";
+    return true;
+  case 'B':
+    // A following comment counts as whitespace, so this token is not right bound.
+    if (inLOLCodeBody) return tokEnd != "BTW";
+    return true;
   case '/':
     // A following comment counts as whitespace, so this token is not right bound.
     if (tokEnd[1] == '/' || tokEnd[1] == '*')
@@ -1143,7 +1184,9 @@ void Lexer::lexNumber() {
 ///   unicode_character_escape ::= [\]u{hex+}
 ///   hex                      ::= [0-9a-fA-F]
 unsigned Lexer::lexUnicodeEscape(const char *&CurPtr, Lexer *Diags) {
-  assert(CurPtr[0] == '{' && "Invalid unicode escape");
+  char Start = inLOLCodeBody ? '(' : '{';
+  char End = inLOLCodeBody ? ')' : '}';
+  assert(CurPtr[0] == Start && "Invalid unicode escape");
   ++CurPtr;
 
   const char *DigitStart = CurPtr;
@@ -1152,7 +1195,7 @@ unsigned Lexer::lexUnicodeEscape(const char *&CurPtr, Lexer *Diags) {
   for (; isHexDigit(CurPtr[0]); ++NumDigits)
     ++CurPtr;
 
-  if (CurPtr[0] != '}') {
+  if (CurPtr[0] != End) {
     if (Diags)
       Diags->diagnose(CurPtr, diag::lex_invalid_u_escape_rbrace);
     return ~1U;
@@ -1208,6 +1251,27 @@ unsigned Lexer::lexCharacter(const char *&CurPtr, char StopQuote,
   default: {// Normal characters are part of the string.
     // If this is a "high" UTF-8 character, validate it.
     if ((signed char)(CurPtr[-1]) >= 0) {
+      if (inLOLCodeBody && CurPtr[-1] == ':') {
+        // FIXME: LOLCode string interpolation is not supported yet.
+        switch (*CurPtr) {
+        case ':': ++CurPtr; return ':';
+        case ')': ++CurPtr; return '\n';
+        case '>': ++CurPtr; return '\t';
+        case 'o': ++CurPtr; return 7U;
+        case '(': {
+          ++CurPtr;
+          CharValue = lexUnicodeEscape(CurPtr,
+                                       EmitDiagnostics ? this : nullptr);
+          return CharValue;
+        }
+        default:
+          if (EmitDiagnostics)
+            diagnose(CurPtr, diag::lex_invalid_escape);
+          // If this looks like a plausible escape character, recover as though
+          // this is an invalid escape.
+          if (isAlphanumeric(*CurPtr)) ++CurPtr;
+          return ~1U;
+      }
       if (isPrintable(CurPtr[-1]) == 0)
         if (!(MultilineString && (CurPtr[-1] == '\t')))
           if (EmitDiagnostics)
@@ -1398,6 +1462,22 @@ static const char *skipToEndOfInterpolatedExpression(const char *CurPtr,
         }
       }
       continue;
+    case ':':
+      if (inStringLiteral() && inLOLCodeBody) {
+        char escapedChar = *CurPtr++;
+        switch (escapedChar) {
+        case '{':
+          // Entering a recursive interpolated expression
+          OpenDelimiters.push_back('(');
+          continue;
+        case 0:
+          // Don't jump over newline/EOF due to preceding backslash!
+          return CurPtr-1;
+        default:
+          continue;
+        }
+      }
+      continue;
     case 0:
       // If we hit EOF, we fail.
       if (CurPtr-1 == EndPtr) {
@@ -1414,6 +1494,9 @@ static const char *skipToEndOfInterpolatedExpression(const char *CurPtr,
         OpenDelimiters.push_back('(');
       }
       continue;
+    case '}':
+      if (!inLOLCodeBody) continue;
+      LLVM_FALLTHROUGH;
     case ')':
       if (OpenDelimiters.empty()) {
         // No outstanding open delimiters; we're done.
@@ -1651,14 +1734,14 @@ void Lexer::lexStringLiteral() {
   }
 
   while (true) {
-    if (*CurPtr == '\\' && *(CurPtr + 1) == '(') {
+    if (!inLOLCodeBody && *CurPtr == '\\' && *(CurPtr + 1) == '(') {
       // Consume tokens until we hit the corresponding ')'.
       CurPtr += 2;
       const char *EndPtr =
           skipToEndOfInterpolatedExpression(CurPtr, BufferEnd,
                                             Diags, MultilineString);
       
-      if (*EndPtr == ')') {
+      if (*EndPtr == endChar) {
         // Successfully scanned the body of the expression literal.
         CurPtr = EndPtr+1;
       } else {
@@ -1685,7 +1768,7 @@ void Lexer::lexStringLiteral() {
       if (wasErroneous)
         return formToken(tok::unknown, TokStart);
 
-      if (*TokStart == '\'') {
+      if (*TokStart == '\'' && !inLOLCodeBody) {
         // Complain about single-quote string and suggest replacement with
         // double-quoted equivalent.
         StringRef orig(TokStart, CurPtr - TokStart);
@@ -2097,6 +2180,9 @@ void Lexer::getStringLiteralSegments(
   // FIXME: Use SSE to scan for '\'.
   while (BytesPtr != Bytes.end()) {
     char CurChar = *BytesPtr++;
+    if (inLOLCodeBody) {
+      continue;
+    }
     if (CurChar != '\\')
       continue;
 
@@ -2112,11 +2198,12 @@ void Lexer::getStringLiteralSegments(
                                   IsFirstSegment, false, IndentToStrip));
     IsFirstSegment = false;
 
+    char endChar = inLOLCodeBody ? '}' : ')';
     // Find the closing ')'.
     const char *End = skipToEndOfInterpolatedExpression(BytesPtr,
                                                         Str.getText().end(),
                                                         Diags, MultilineString);
-    assert(*End == ')' && "invalid string literal interpolations should"
+    assert(*End == c && "invalid string literal interpolations should"
            " not be returned as string literals");
     ++End;
 
@@ -2219,10 +2306,13 @@ void Lexer::lexImpl() {
   case '@': return formToken(tok::at_sign, TokStart);
   case '{': return formToken(tok::l_brace, TokStart);
   case '[': return formToken(tok::l_square, TokStart);
-  case '(': return formToken(tok::l_paren, TokStart);
+  case '(':
+    return formToken(tok::l_paren, TokStart);
   case '}': return formToken(tok::r_brace, TokStart);
   case ']': return formToken(tok::r_square, TokStart);
-  case ')': return formToken(tok::r_paren, TokStart);
+  case ')':
+    inLOLCodeBody = false;
+    return formToken(tok::r_paren, TokStart);
 
   case ',': return formToken(tok::comma, TokStart);
   case ';': return formToken(tok::semi, TokStart);
@@ -2367,6 +2457,24 @@ Restart:
   case '\f':
     Pieces.appendOrSquash(TriviaPiece::formfeeds(1));
     goto Restart;
+  case 'B':
+    if (inLOLCodeBody && CurPtr == "BTW") {
+      skipSlashSlashComment(/*EatNewline=*/false);
+      size_t Length = CurPtr - TriviaStart;
+      Pieces.push_back(TriviaPiece::lineComment({TriviaStart, Length}));
+      goto Restart;
+    } else {
+      break;
+    }
+  case 'O':
+  if (inLOLCodeBody && CurPtr == "OBTW") {
+    skipSlashStarComment();
+    size_t Length = CurPtr - TriviaStart;
+    Pieces.push_back(TriviaPiece::blockComment({TriviaStart, Length}));
+    goto Restart;
+  } else {
+    break;
+  }
   case '/':
     if (IsForTrailingTrivia || isKeepingComments()) {
       // Don't lex comments as trailing trivias (for now).

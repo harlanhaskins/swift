@@ -209,11 +209,6 @@ ParserResult<Expr> Parser::parseLOLCodeExpr() {
     return makeParserError;
 
   case tok::kw_BOTH:
-    if (!peekToken().is(tok::kw_SAEM)) {
-      diagnose(Tok, diag::expected_expr_lolcode);
-      return makeParserError();
-    }
-    return makeParserResult(parseLOLCodeBuiltinOpExpr());
   case tok::kw_SUM:
   case tok::kw_DIFF:
   case tok::kw_PRODUKT:
@@ -225,11 +220,6 @@ ParserResult<Expr> Parser::parseLOLCodeExpr() {
   case tok::kw_WON:
   case tok::kw_ANY:
   case tok::kw_ALL:
-    if (!peekToken().is(tok::kw_OF)) {
-      diagnose(Tok, diag::expected_expr_lolcode);
-      return makeParserError;
-    }
-    LLVM_FALLTHROUGH;
   case tok::kw_DIFFRINT:
   case tok::kw_SMOOSH:
   case tok::kw_NOT:
