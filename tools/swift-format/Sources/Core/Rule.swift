@@ -1,5 +1,7 @@
-public protocol Rule: Configurable {
+public protocol Rule {
+  var context: Context { get }
   var ruleName: String { get }
+  init(context: Context)
 }
 
 private var nameCache = [ObjectIdentifier: String]()

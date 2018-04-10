@@ -1,7 +1,6 @@
-import Configuration
 import SwiftSyntax
 
-open class FileRule: Rule {
+open class SyntaxFormatRule: SyntaxRewriter, Rule {
   public let context: Context
 
   public required init(context: Context) {

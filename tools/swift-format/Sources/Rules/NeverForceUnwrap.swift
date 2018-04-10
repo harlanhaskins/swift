@@ -1,5 +1,4 @@
 import Core
-import Foundation
 import SwiftSyntax
 
 /// Force-unwraps are strongly discouraged and must be documented.
