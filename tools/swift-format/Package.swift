@@ -20,5 +20,8 @@ let package = Package(
     .target(
       name: "Configuration",
       dependencies: []),
+    .testTarget(
+      name: "SwiftFormatTests",
+      dependencies: []),
   ]
 )
