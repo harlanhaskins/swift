@@ -4,10 +4,10 @@ import SwiftSyntax
 
 @testable import Rules
 
-public class MultilineTrailingCommasTests: DiagnosingTestCase {
+public class MultiLineTrailingCommasTests: DiagnosingTestCase {
   public func testMissedTrailingCommas() {
     XCTAssertFormatting(
-      MultilineTrailingCommas.self,
+      MultiLineTrailingCommas.self,
       input: """
              let brothersStrong = [
                "Strong Bad",
@@ -36,7 +36,7 @@ public class MultilineTrailingCommasTests: DiagnosingTestCase {
 
 #if !os(macOS)
   static let allTests = [
-    MultilineTrailingCommasTests.testMissedTrailingCommas,
+    MultiLineTrailingCommasTests.testMissedTrailingCommas,
   ]
 #endif
 
