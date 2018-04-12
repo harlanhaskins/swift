@@ -4,5 +4,6 @@ import XCTest
 
 XCTMain([
   ColonWhitespaceTests.allTests,
+  DoNotUseSemicolonsTests.allTests,
 ].joined())
 #endif
