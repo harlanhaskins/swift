@@ -21,6 +21,9 @@ public class Configuration: Codable {
   public let blankLineBetweenMembers = BlankLineBetweenMembersConfiguration()
 
   public let surroundSymbolsWithBackticks = SurroundSymbolsWithBackticksConfiguration()
+
+  /// Constructs a Configuration with all default values.
+  public init() {}
 }
 
 public struct BlankLineBetweenMembersConfiguration: Codable {

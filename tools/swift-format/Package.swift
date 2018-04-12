@@ -25,6 +25,6 @@ let package = Package(
       dependencies: []),
     .testTarget(
       name: "SwiftFormatTests",
-      dependencies: []),
+      dependencies: ["Core", "Configuration", "Rules"]),
   ]
 )

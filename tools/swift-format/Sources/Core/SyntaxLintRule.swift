@@ -20,7 +20,7 @@ extension Rule {
     location: SourceLocation?,
     actions: ((inout Diagnostic.Builder) -> Void)? = nil
   ) {
-    context.diagnosticEngine.diagnose(
+    context.diagnosticEngine?.diagnose(
       message.withRule(self),
       location: location,
       actions: actions

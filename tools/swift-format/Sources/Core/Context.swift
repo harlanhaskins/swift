@@ -8,10 +8,10 @@ import SwiftSyntax
 /// the current file.
 public class Context {
   public let configuration: Configuration
-  public let diagnosticEngine: DiagnosticEngine
+  public let diagnosticEngine: DiagnosticEngine?
   public let fileURL: URL
 
-  public init(configuration: Configuration, diagnosticEngine: DiagnosticEngine, fileURL: URL) {
+  public init(configuration: Configuration, diagnosticEngine: DiagnosticEngine?, fileURL: URL) {
     self.configuration = configuration
     self.diagnosticEngine = diagnosticEngine
     self.fileURL = fileURL
