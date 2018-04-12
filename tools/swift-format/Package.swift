@@ -12,6 +12,9 @@ let package = Package(
       name: "swiftformat",
       dependencies: ["Rules", "Core", "Configuration", "Utility"]),
     .target(
+      name: "generate-pipeline",
+      dependencies: []),
+    .target(
       name: "Rules",
       dependencies: ["Core", "Configuration"]),
     .target(
