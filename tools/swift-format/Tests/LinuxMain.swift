@@ -1,7 +1,8 @@
 #if os(Linux)
-import XCTest
 import SwiftFormatTests
+import XCTest
 
 XCTMain([
-])
+  ColonWhitespaceTests.allTests,
+].joined())
 #endif
