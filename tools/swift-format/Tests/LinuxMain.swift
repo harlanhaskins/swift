@@ -6,5 +6,6 @@ XCTMain([
   ColonWhitespaceTests.allTests,
   DoNotUseSemicolonsTests.allTests,
   MultilineTrailingCommasTests.allTests,
+  NoParensAroundConditionsTests.allTests,
 ].joined())
 #endif
