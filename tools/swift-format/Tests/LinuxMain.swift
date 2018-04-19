@@ -8,5 +8,6 @@ XCTMain([
   MultiLineTrailingCommasTests.allTests,
   NoParensAroundConditionsTests.allTests,
   AvoidInitializersForLiteralsTests.allTests,
+  CollectionLiteralWhitespaceTests.allTests,
 ].joined())
 #endif
