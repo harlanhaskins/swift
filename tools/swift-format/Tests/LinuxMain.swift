@@ -10,5 +10,6 @@ XCTMain([
   UseEnumForNamespacingTests.allTests,
   AvoidInitializersForLiteralsTests.allTests,
   CollectionLiteralWhitespaceTests.allTests,
+  NoVoidReturnOnFunctionSignatureTests.allTests,
 ].joined())
 #endif
