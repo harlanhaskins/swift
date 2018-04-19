@@ -11,5 +11,6 @@ XCTMain([
   AvoidInitializersForLiteralsTests.allTests,
   CollectionLiteralWhitespaceTests.allTests,
   NoVoidReturnOnFunctionSignatureTests.allTests,
+  OneVariableDeclarationPerLineTests.allTests,
 ].joined())
 #endif
