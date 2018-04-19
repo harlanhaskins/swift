@@ -7,6 +7,7 @@ XCTMain([
   DoNotUseSemicolonsTests.allTests,
   MultiLineTrailingCommasTests.allTests,
   NoParensAroundConditionsTests.allTests,
+  UseEnumForNamespacingTests.allTests,
   AvoidInitializersForLiteralsTests.allTests,
   CollectionLiteralWhitespaceTests.allTests,
 ].joined())
