@@ -1,6 +1,8 @@
 import Core
 import Foundation
 
+/// Enforces rules about when to use unicode escape sequences in `String`s.
+///
 /// For any character that has a special escape sequence (\t, \n, \r, \", \', \\, and \0), that
 /// sequence is used rather than the equivalent Unicode (e.g., \u{000a}) escape sequence.
 ///

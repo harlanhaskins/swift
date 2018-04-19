@@ -6,7 +6,9 @@ import SwiftSyntax
 ///
 /// Lint: If an invalid number of spaces appear before or after a binary operator, a lint error is
 ///       raised.
+///
 /// Format: All binary operators will have a single space before and after.
+///
 /// - SeeAlso: https://google.github.io/swift#horizontal-whitespace
 public final class OperatorWhitespace: SyntaxFormatRule {
 

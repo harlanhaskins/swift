@@ -2,8 +2,7 @@ import Core
 import Foundation
 import SwiftSyntax
 
-/// Array and dictionary literals should have a trailing comma if their values are split on multiple
-/// lines.
+/// Array and dictionary literals should have a trailing comma if they are split on multiple lines.
 ///
 /// Lint: If an array or dictionary literal is split on multiple lines, and the last element does
 ///       not have a trailing comma, a lint error is raised.

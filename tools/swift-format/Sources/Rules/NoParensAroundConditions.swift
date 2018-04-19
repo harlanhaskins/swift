@@ -2,6 +2,8 @@ import Core
 import Foundation
 import SwiftSyntax
 
+/// Enforces rules around parentheses in conditions or matched expressions.
+///
 /// Parentheses are not used around any condition of an `if`, `guard`, or `while` statement, or
 /// around the matched expression in a `switch` statement.
 ///

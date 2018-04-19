@@ -2,14 +2,16 @@ import Core
 import Foundation
 import SwiftSyntax
 
-/// Enforce whitespace for close braces.
+/// Enforces the 'One Statement Per Line' rule.
 ///
-/// Lint: If a close brace does not have a line break before it, except as covered by One Statement
-///       Per Line, a lint error will be raised.
+/// Each statement shall appear on its own line, except those statements with a single
+/// sub-statement, such as an `if` statement with a `return` inside.
 ///
-/// Format: Line breaks will be inserted for all non-conforming close braces.
+/// Lint: TODO(b/78290677): What is the rule for this that DoNotUseSemicolons doesn't catch?
 ///
-/// - SeeAlso: https://google.github.io/swift#braces
+/// Format: TODO(b/78290677): See above.
+///
+/// - SeeAlso: https://google.github.io/swift#one-statement-per-line
 public final class OneStatementPerLine: SyntaxFormatRule {
 
 }
