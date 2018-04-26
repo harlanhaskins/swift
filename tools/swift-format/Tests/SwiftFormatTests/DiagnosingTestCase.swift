@@ -13,9 +13,9 @@ public class DiagnosingTestCase: XCTestCase {
   private var consumer = DiagnosticTrackingConsumer()
 
   private class DiagnosticTrackingConsumer: DiagnosticConsumer {
-    var registeredDiagnostics = [String: Int]()
+    var registeredDiagnostics = [String]()
     func handle(_ diagnostic: Diagnostic) {
-      registeredDiagnostics[diagnostic.message.text, default: 0] += 1
+      registeredDiagnostics.append(diagnostic.message.text)
     }
     func finalize() {}
   }
@@ -42,11 +42,33 @@ public class DiagnosingTestCase: XCTestCase {
     #endif
   }
 
+  /// Performs a lint using the provided linter rule on the provided input.
+  ///
+  /// - Parameters:
+  ///   - type: The metatype of the lint rule you wish to perform.
+  ///   - input: The input code.
+  ///   - file: The file the test resides in (defaults to the current caller's file)
+  ///   - line:  The line the test resides in (defaults to the current caller's line)
+  func performLint(
+    _ type: SyntaxLintRule.Type,
+    input: String,
+    file: StaticString = #file,
+    line: UInt = #line) {
+    do {
+      let syntax = try SourceFileSyntax.parse(input)
+      let linter = type.init(context: context!)
+      linter.visit(syntax)
+    } catch {
+      XCTFail("\(error)", file: file, line: line)
+    }
+  }
+
   /// Asserts that the result of applying a formatter to the provided input code yields the output.
   ///
   /// This method should be called by each test of each rule.
   ///
   /// - Parameters:
+  ///   - formatType: The metatype of the format rule you wish to apply.
   ///   - input: The unformatted input code.
   ///   - expected: The expected result of formatting the input code.
   ///   - file: The file the test resides in (defaults to the current caller's file)
@@ -70,31 +92,50 @@ public class DiagnosingTestCase: XCTestCase {
     }
   }
 
-  /// Asserts that a specific diagnostic message was called, optionally checking how many times.
+  /// Asserts that a specific diagnostic message was not emitted.
   ///
   /// - Parameters:
   ///   - message: The diagnostic message to check for.
-  ///   - times: The number of times the diagnostic is expected to have been called. Defaults to 1.
+  ///   - file: The file the test resides in (defaults to the current caller's file)
+  ///   - line:  The line the test resides in (defaults to the current caller's line)
+  func XCTAssertNotDiagnosed(
+    _ message: Diagnostic.Message,
+    file: StaticString = #file,
+    line: UInt = #line
+  ) {
+    // This has to be a linear search, because the tests are going to check for the version
+    // of the diagnostic that is not annotated with '[NameOfRule]:'.
+    let hadDiag = consumer.registeredDiagnostics.contains {
+      $0.contains(message.text)
+    }
+
+    if hadDiag {
+      XCTFail("diagnostic '\(message.text)' should not have been raised", file: file, line: line)
+    }
+  }
+
+  /// Asserts that a specific diagnostic message was emitted.
+  ///
+  /// - Parameters:
+  ///   - message: The diagnostic message to check for.
   ///   - file: The file the test resides in (defaults to the current caller's file)
   ///   - line:  The line the test resides in (defaults to the current caller's line)
   func XCTAssertDiagnosed(
     _ message: Diagnostic.Message,
-    times: Int = 1,
     file: StaticString = #file,
     line: UInt = #line
   ) {
-    guard let diag = consumer.registeredDiagnostics[message.text] else {
+    // This has to be a linear search, because the tests are going to check for the version
+    // of the diagnostic that is not annotated with '[NameOfRule]:'.
+    let maybeIdx = consumer.registeredDiagnostics.index{
+      $0.contains(message.text)
+    }
+
+    guard let idx = maybeIdx else {
       XCTFail("diagnostic '\(message.text)' not raised", file: file, line: line)
       return
     }
-    guard diag == times else {
-      XCTFail(
-        "diagnostic '\(message.text)' raised \(diag) times; expected \(times)",
-        file: file,
-        line: line
-      )
-      return
-    }
-    consumer.registeredDiagnostics[message.text] = diag - 1
+
+    consumer.registeredDiagnostics.remove(at: idx)
   }
 }

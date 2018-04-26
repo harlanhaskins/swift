@@ -17,7 +17,7 @@ import SwiftSyntax
 ///
 /// - SeeAlso: https://google.github.io/swift#parentheses
 public final class NoParensAroundConditions: SyntaxFormatRule {
-public func extractExpr(_ tuple: TupleExprSyntax) -> ExprSyntax {
+  func extractExpr(_ tuple: TupleExprSyntax) -> ExprSyntax {
     assert(tuple.elementList.count == 1)
     let expr = tuple.elementList.first!.expression
 

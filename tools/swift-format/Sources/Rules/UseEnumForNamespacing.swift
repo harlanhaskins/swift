@@ -2,12 +2,6 @@ import Core
 import Foundation
 import SwiftSyntax
 
-extension ModifierListSyntax {
-  func has(modifier: String) -> Bool {
-    return contains { $0.name.text == modifier }
-  }
-}
-
 /// Use caseless `enum`s for namespacing.
 ///
 /// In practice, this means that any `class` or `struct` that consists of only `static let`s and
@@ -110,7 +104,7 @@ extension Diagnostic.Message {
   static func convertToEnum(kind: String, name: TokenSyntax) -> Diagnostic.Message {
     return .init(
       .warning,
-      "\(kind) '\(name.tokenKind)' used as a namespace should be an enum"
+      "\(kind) '\(name.text)' used as a namespace should be an enum"
     )
   }
 }
