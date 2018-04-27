@@ -17,5 +17,43 @@ import SwiftSyntax
 ///
 /// - SeeAlso: https://google.github.io/swift#braces
 public final class OpenBraceWhitespace: SyntaxFormatRule {
+  public override func visit(_ token: TokenSyntax) -> Syntax {
+    if token.tokenKind == .leftBrace, token.leadingTrivia.containsNewlines {
+      diagnose(.noLineBreakBeforeOpenBrace, on: token)
+      return token.withLeadingTrivia(
+        token.leadingTrivia.withoutSpaces().withoutNewlines())
+    }
 
+    if let prev = token.previousToken,
+       prev.tokenKind == .leftBrace,
+       !token.leadingTrivia.containsNewlines,
+       !isInAllowedSingleLineContainer(token) {
+      diagnose(.lineBreakRequiredAfterOpenBrace, on: prev)
+      return token.withOneLeadingNewline()
+    }
+
+    if let next = token.nextToken, next.tokenKind == .leftBrace {
+      let spaceCount = token.trailingTrivia.numberOfSpaces
+      if spaceCount < 1 {
+        diagnose(.notEnoughSpacesBeforeOpenBrace, on: next)
+      } else if spaceCount > 1 {
+        diagnose(.tooManySpacesBeforeOpenBrace, on: next)
+      } else {
+        return token
+      }
+      return token.withOneTrailingSpace()
+    }
+    return token
+  }
+}
+
+extension Diagnostic.Message {
+  static let lineBreakRequiredAfterOpenBrace =
+    Diagnostic.Message(.warning, "insert a newline after this '{'")
+  static let notEnoughSpacesBeforeOpenBrace =
+    Diagnostic.Message(.warning, "insert a space before this '{'")
+  static let tooManySpacesBeforeOpenBrace =
+    Diagnostic.Message(.warning, "remove extra spaces before this '{'")
+  static let noLineBreakBeforeOpenBrace =
+    Diagnostic.Message(.warning, "remove newline before this '{'")
 }
