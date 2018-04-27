@@ -58,8 +58,7 @@ public final class AllPublicDeclarationsHaveDocumentation: SyntaxLintRule {
       return
     }
 
-    // TODO(b/77534297): location for diagnostic
-    diagnose(.declRequiresComment(name), location: nil)
+    diagnose(.declRequiresComment(name), on: decl)
   }
 }
 

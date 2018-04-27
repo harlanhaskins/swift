@@ -27,8 +27,9 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
       return tuple
     }
 
-    // TODO(b/77534297): location for diagnostic
-    diagnose(.removeParensAroundExpression, location: nil)
+    diagnose(.removeParensAroundExpression, on: expr) {
+      $0.highlight(expr.sourceRange(in: self.context.fileURL))
+    }
 
     return replaceTrivia(
       on: expr,

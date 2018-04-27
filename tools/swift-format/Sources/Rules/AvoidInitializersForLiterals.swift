@@ -32,8 +32,9 @@ public final class AvoidInitializersForLiterals: SyntaxFormatRule {
       return super.visit(node)
     }
 
-    // TODO(b/77534297): location for diagnostic
-    diagnose(.avoidInitializerStyleCast, location: nil)
+    diagnose(.avoidInitializerStyleCast, on: callee) {
+      $0.highlight(callee.sourceRange(in: self.context.fileURL))
+    }
 
     // Construct an 'as' cast, converting `X(y)` to `y as X`.
     let asExpr = AsExprSyntax {

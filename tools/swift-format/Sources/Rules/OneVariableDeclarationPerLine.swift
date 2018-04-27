@@ -11,7 +11,7 @@ import SwiftSyntax
 ///
 /// - SeeAlso: https://google.github.io/swift#properties
 public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
-  public func splitVariableDecls(
+  func splitVariableDecls(
     _ items: CodeBlockItemListSyntax
   ) -> CodeBlockItemListSyntax? {
 
@@ -29,8 +29,8 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
         continue
       }
 
-        // TODO(b/77534297): location for diagnostic
-        diagnose(.onlyOneVariableDeclaration, location: nil)
+      diagnose(.onlyOneVariableDeclaration, on: varDecl)
+
       // The first binding corresponds to the original `var`/`let`
       // declaration, so it should not have its trivia replaced.
       var isFirst = true

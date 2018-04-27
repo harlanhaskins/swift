@@ -20,14 +20,12 @@ public final class CollectionLiteralWhitespace: SyntaxFormatRule {
     // If either this current token is a left delimiter, or the next token
     // is a right delimiter, then remove spaces from our trailing trivia.
     if token.tokenKind.isLeftBalancedDelimiter && token.trailingTrivia.containsSpaces {
-      // TODO(b/77534297): location for diagnostic
-      diagnose(.noSpacesAfter(token), location: nil)
+      diagnose(.noSpacesAfter(token), on: token)
       return token.withTrailingTrivia(token.trailingTrivia.withoutSpaces())
     }
 
     if next.tokenKind.isRightBalancedDelimiter && token.trailingTrivia.containsSpaces {
-      // TODO(b/77534297): location for diagnostic
-      diagnose(.noSpacesBefore(next), location: nil)
+      diagnose(.noSpacesBefore(next), on: next)
       return token.withTrailingTrivia(token.trailingTrivia.withoutSpaces())
     }
     return token

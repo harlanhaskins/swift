@@ -19,8 +19,7 @@ public final class MultiLineTrailingCommas: SyntaxFormatRule {
     guard lastElt.trailingComma == nil else { return node }
     guard node.rightSquare.leadingTrivia.containsNewlines else { return node }
 
-    // TODO(b/77534297): location for diagnostic
-    diagnose(.addTrailingCommaArray, location: nil)
+    diagnose(.addTrailingCommaArray, on: lastElt)
 
     // Insert a trailing comma before the existing trailing trivia
     let newElt = lastElt.withTrailingComma(
@@ -48,7 +47,7 @@ public final class MultiLineTrailingCommas: SyntaxFormatRule {
     guard node.rightSquare.leadingTrivia.containsNewlines else { return node }
 
     // TODO(b/77534297): location for diagnostic
-    diagnose(.addTrailingCommaDictionary, location: nil)
+    diagnose(.addTrailingCommaDictionary, on: lastElt)
 
     // Insert a trailing comma before the existing trailing trivia
     let newElt = lastElt.withTrailingComma(

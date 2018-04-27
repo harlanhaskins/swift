@@ -15,13 +15,11 @@ public final class NoVoidReturnOnFunctionSignature: SyntaxFormatRule {
   /// are inferred.
   public override func visit(_ node: FunctionSignatureSyntax) -> Syntax {
     if let ret = node.output?.returnType as? SimpleTypeIdentifierSyntax, ret.name.text == "Void" {
-      // TODO(b/77534297): location for diagnostic
-      diagnose(.removeRedundantReturn("Void"), location: nil)
+      diagnose(.removeRedundantReturn("Void"), on: ret)
       return node.withOutput(nil)
     }
     if let tup = node.output?.returnType as? TupleTypeSyntax, tup.elements.isEmpty {
-      // TODO(b/77534297): location for diagnostic
-      diagnose(.removeRedundantReturn("()"), location: nil)
+      diagnose(.removeRedundantReturn("()"), on: tup)
       return node.withOutput(nil)
     }
     return node

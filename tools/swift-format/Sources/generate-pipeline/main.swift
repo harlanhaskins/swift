@@ -45,16 +45,18 @@ for baseName in fm.enumerator(atPath: rulesDir.path)! {
     guard let classDecl = stmt.item as? ClassDeclSyntax else { continue }
     let className = classDecl.identifier.text
     guard let inheritanceClause = classDecl.inheritanceClause else { continue }
-    var kind: PassKind = .format
+    var maybeKind: PassKind? = nil
     for item in inheritanceClause.inheritedTypeCollection {
       guard let ident = item.typeName as? SimpleTypeIdentifierSyntax else { continue }
       switch ident.name.text {
-      case "SyntaxLintRule": kind = .lint
-      case "SyntaxFormatRule": kind = .format
-      case "FileRule": kind = .file
+      case "SyntaxLintRule": maybeKind = .lint
+      case "SyntaxFormatRule": maybeKind = .format
+      case "FileRule": maybeKind = .file
       default: continue
       }
     }
+    guard let kind = maybeKind else { continue }
+
     if kind == .file {
       registry.filePasses.append(className)
       continue
@@ -113,9 +115,10 @@ handle.write(
   ///
   /// - Parameter pipeline: The pipeline to populate with passes.
   func populate(_ pipeline: Pipeline) {
+    /// MARK: File Passes
+
   """
 )
-handle.write("  /// MARK: File Passes\n\n")
 for fileRule in registry.filePasses {
   handle.write("  pipeline.addFileRule(\(fileRule).self)\n")
 }

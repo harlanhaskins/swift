@@ -11,7 +11,7 @@ import SwiftSyntax
 ///
 /// Format: Declarations with no blank lines will have a blank line inserted.
 ///         Declarations with more than the maximum number of blank lines will be reduced to the
-//          maximum number of blank lines.
+///         maximum number of blank lines.
 ///
 /// Configuration: maximumBlankLines, blankLineBetweenMembers.ignoreSingleLineProperties
 ///

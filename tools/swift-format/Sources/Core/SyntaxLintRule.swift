@@ -17,12 +17,12 @@ extension Rule {
   ///   - actions: A set of actions to add notes, highlights, and fix-its to diagnostics.
   public func diagnose(
     _ message: Diagnostic.Message,
-    location: SourceLocation?,
+    on node: Syntax?,
     actions: ((inout Diagnostic.Builder) -> Void)? = nil
   ) {
     context.diagnosticEngine?.diagnose(
       message.withRule(self),
-      location: location,
+      location: node?.startLocation(in: context.fileURL),
       actions: actions
     )
   }

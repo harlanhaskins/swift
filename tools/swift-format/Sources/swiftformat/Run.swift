@@ -4,30 +4,6 @@ import Foundation
 import Rules
 import SwiftSyntax
 
-/// Creates a Pipeline with the provided configuration, diagnostic engine, and context.
-///
-/// This function creates a Pipeline object and registers all known formatting/linting passes with
-/// that pipeline.
-func createPipeline(
-  configuration: Configuration,
-  diagnosticEngine: DiagnosticEngine?,
-  file: URL,
-  mode: Pipeline.Mode
-) -> Pipeline {
-  let context = Context(
-    configuration: configuration,
-    diagnosticEngine: diagnosticEngine,
-    fileURL: file
-  )
-  let consumer = PrintingDiagnosticConsumer()
-  context.diagnosticEngine?.addConsumer(consumer)
-  let pipeline = Pipeline(context: context, mode: mode)
-
-  populate(pipeline)
-
-  return pipeline
-}
-
 /// Runs the linting pipeline over the provided source file.
 ///
 /// If there were any lint diagnostics emitted, this function returns a non-zero exit code.
@@ -36,18 +12,24 @@ func createPipeline(
 public func lintMain(path: String) -> Int {
   let url = URL(fileURLWithPath: path)
   let engine = DiagnosticEngine()
-  let pipeline = createPipeline(
+  let consumer = PrintingDiagnosticConsumer()
+  engine.addConsumer(consumer)
+
+  let context = Context(
     configuration: Configuration(),
     diagnosticEngine: engine,
-    file: url,
-    mode: .lint
+    fileURL: url
   )
+
+  let pipeline = LintPipeline(context: context)
+  populate(pipeline)
+
   do {
     let file = try SourceFileSyntax.parse(url)
 
     // Important! We need to cast this to Syntax to avoid going directly into the specialized
     // version of visit(_: SourceFileSyntax), which will not run the pipeline properly.
-    _ = pipeline.visit(file as Syntax)
+    pipeline.visit(file as Syntax)
   } catch {
     fatalError("\(error)")
   }
@@ -60,12 +42,15 @@ public func lintMain(path: String) -> Int {
 /// - Returns: Zero if there were no lint errors, otherwise a non-zero number.
 public func formatMain(path: String) -> Int {
   let url = URL(fileURLWithPath: path)
-  let pipeline = createPipeline(
+
+  let context = Context(
     configuration: Configuration(),
     diagnosticEngine: nil,
-    file: url,
-    mode: .format
+    fileURL: url
   )
+
+  let pipeline = FormatPipeline(context: context)
+  populate(pipeline)
   do {
     let file = try SourceFileSyntax.parse(url)
 

@@ -23,20 +23,18 @@ public final class ColonWhitespace: SyntaxFormatRule {
        !next.leadingTrivia.containsNewlines {
       let numSpaces = token.trailingTrivia.numberOfSpaces
       if numSpaces > 1 {
-        // TODO(b/77534297): location for diagnostic
-        diagnose(.removeSpacesAfterColon(count: numSpaces - 1), location: nil)
+        diagnose(.removeSpacesAfterColon(count: numSpaces - 1), on: token)
       }
       if numSpaces == 0 {
-        // TODO(b/77534297): location for diagnostic
-        diagnose(.addSpaceAfterColon, location: nil)
+        diagnose(.addSpaceAfterColon, on: token)
       }
       return token.withOneTrailingSpace()
     }
 
     /// Otherwise, colon-adjacent tokens should have 0 spaces after.
-    if next.tokenKind == .colon, token.trailingTrivia.containsSpaces {
-      // TODO(b/77534297): location for diagnostic
-      diagnose(.noSpacesBeforeColon, location: nil)
+    if next.tokenKind == .colon, token.trailingTrivia.containsSpaces,
+      !(next.containingExprStmtOrDecl is TernaryExprSyntax) {
+      diagnose(.noSpacesBeforeColon, on: next)
       return token.withTrailingTrivia(token.trailingTrivia.withoutSpaces())
     }
     return token

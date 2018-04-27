@@ -40,9 +40,9 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
 
       // If there's a semicolon, diagnose and remove it.
       if idx < items.count {
-        diagnose(.removeSemicolonAndMove, location: nil)
+        diagnose(.removeSemicolonAndMove, on: item)
       } else {
-        diagnose(.removeSemicolon, location: nil)
+        diagnose(.removeSemicolon, on: item)
       }
       newItem = newItem.withSemicolon(nil)
       newItems[idx] = newItem

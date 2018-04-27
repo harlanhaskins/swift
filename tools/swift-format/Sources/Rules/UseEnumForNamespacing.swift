@@ -22,8 +22,7 @@ public final class UseEnumForNamespacing: SyntaxFormatRule {
       return node
     }
 
-    // TODO(b/77534297): location for diagnostic
-    diagnose(.convertToEnum(kind: "struct", name: node.identifier), location: nil)
+    diagnose(.convertToEnum(kind: "struct", name: node.identifier), on: node)
 
     return makeEnum(
       declarationKeyword: node.structKeyword,
@@ -39,8 +38,7 @@ public final class UseEnumForNamespacing: SyntaxFormatRule {
       return node
     }
 
-    // TODO(b/77534297): location for diagnostic
-    diagnose(.convertToEnum(kind: "class", name: node.identifier), location: nil)
+    diagnose(.convertToEnum(kind: "class", name: node.identifier), on: node)
 
     return makeEnum(
       declarationKeyword: node.classKeyword,
@@ -70,6 +68,7 @@ public final class UseEnumForNamespacing: SyntaxFormatRule {
   /// solely as a namespace for static functions. If there is a non-static private initializer
   /// with no arguments, that does not count against possibly being a namespace.
   func declsIfUsedAsNamespace(_ members: MemberDeclListSyntax) -> MemberDeclListSyntax? {
+    if members.count == 0 { return nil }
     var declList = [MemberDeclListItemSyntax]()
     for member in members {
       switch member.decl {
