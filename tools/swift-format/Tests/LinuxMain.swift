@@ -14,5 +14,6 @@ XCTMain([
   OneVariableDeclarationPerLineTests.allTests,
   UseWhereClausesInForLoopsTests.allTests,
   OpenBraceWhitespaceTests.allTests,
+  CloseBraceWhitespaceTests.allTests,
 ].joined())
 #endif
