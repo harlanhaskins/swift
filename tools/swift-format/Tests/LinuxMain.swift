@@ -12,6 +12,7 @@ XCTMain([
   CollectionLiteralWhitespaceTests.allTests,
   NoVoidReturnOnFunctionSignatureTests.allTests,
   OneVariableDeclarationPerLineTests.allTests,
+  UseSingleLinePropertyGetterTests.allTests,
   UseWhereClausesInForLoopsTests.allTests,
   OpenBraceWhitespaceTests.allTests,
   CloseBraceWhitespaceTests.allTests,
