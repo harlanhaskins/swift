@@ -60,7 +60,8 @@ for baseName in fm.enumerator(atPath: rulesDir.path)! {
       continue
     }
     for member in classDecl.members.members {
-      guard let function = member as? FunctionDeclSyntax, let modifiers = function.modifiers else {
+      guard let function = member.decl as? FunctionDeclSyntax,
+            let modifiers = function.modifiers else {
         continue
       }
       guard modifiers.contains(where: { $0.name.text == "override" }) else { continue }
