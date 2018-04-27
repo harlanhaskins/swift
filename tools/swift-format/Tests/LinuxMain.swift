@@ -12,5 +12,6 @@ XCTMain([
   CollectionLiteralWhitespaceTests.allTests,
   NoVoidReturnOnFunctionSignatureTests.allTests,
   OneVariableDeclarationPerLineTests.allTests,
+  UseWhereClausesInForLoopsTests.allTests,
 ].joined())
 #endif
