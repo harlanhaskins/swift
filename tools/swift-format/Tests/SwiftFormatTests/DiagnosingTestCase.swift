@@ -127,7 +127,7 @@ public class DiagnosingTestCase: XCTestCase {
   ) {
     // This has to be a linear search, because the tests are going to check for the version
     // of the diagnostic that is not annotated with '[NameOfRule]:'.
-    let maybeIdx = consumer.registeredDiagnostics.index{
+    let maybeIdx = consumer.registeredDiagnostics.index {
       $0.contains(message.text)
     }
 

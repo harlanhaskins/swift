@@ -27,7 +27,7 @@ public final class OpenBraceWhitespace: SyntaxFormatRule {
     if let prev = token.previousToken,
        prev.tokenKind == .leftBrace,
        !token.leadingTrivia.containsNewlines,
-       !isInAllowedSingleLineContainer(token) {
+       !isInAllowedSingleLineContainer(prev) {
       diagnose(.lineBreakRequiredAfterOpenBrace, on: prev)
       return token.withOneLeadingNewline()
     }

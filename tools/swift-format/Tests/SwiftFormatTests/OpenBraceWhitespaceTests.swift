@@ -6,6 +6,7 @@ import SwiftSyntax
 
 public class OpenBraceWhitespaceTests: DiagnosingTestCase {
   public func testInvalidOpenBraceWhitespace() {
+    let input =
     XCTAssertFormatting(
       OpenBraceWhitespace.self,
       input: """
@@ -15,6 +16,7 @@ public class OpenBraceWhitespaceTests: DiagnosingTestCase {
              }
              func c() {}
              func d()        {}
+             if 5 > 6 { return }
              """,
       expected: """
                 func a() {}
@@ -22,7 +24,11 @@ public class OpenBraceWhitespaceTests: DiagnosingTestCase {
                 }
                 func c() {}
                 func d() {}
+                if 5 > 6 { return }
                 """)
+    XCTAssertDiagnosed(.noLineBreakBeforeOpenBrace)
+    XCTAssertDiagnosed(.notEnoughSpacesBeforeOpenBrace)
+    XCTAssertDiagnosed(.tooManySpacesBeforeOpenBrace)
   }
 
 #if !os(macOS)
