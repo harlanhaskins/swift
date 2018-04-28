@@ -10,5 +10,37 @@ import SwiftSyntax
 ///
 /// - SeeAlso: https://google.github.io/swift#identifiers
 public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
+  public override func visit(_ node: VariableDeclSyntax) {
+    for binding in node.bindings {
+      guard let pat = binding.pattern as? IdentifierPatternSyntax else {
+        continue
+      }
+      diagnoseLowerCamelCaseViolations(pat.identifier)
+    }
+  }
 
+  public override func visit(_ node: FunctionDeclSyntax) {
+    diagnoseLowerCamelCaseViolations(node.identifier)
+  }
+
+  public override func visit(_ node: EnumCaseElementSyntax) {
+    diagnoseLowerCamelCaseViolations(node.identifier)
+  }
+
+  func diagnoseLowerCamelCaseViolations(_ identifier: TokenSyntax) {
+    guard case .identifier(let text) = identifier.tokenKind else { return }
+    if text.isEmpty { return }
+    if text.dropFirst().contains("_") || ("A"..."Z").contains(text.first!) {
+      diagnose(.variableNameMustBeLowerCamelCase(text), on: identifier) {
+        $0.highlight(identifier.sourceRange(in: self.context.fileURL))
+      }
+    }
+  }
 }
+
+extension Diagnostic.Message {
+  static func variableNameMustBeLowerCamelCase(_ name: String) -> Diagnostic.Message {
+    return .init(.warning, "variable '\(name)' must be lower-camel-case")
+  }
+}
+

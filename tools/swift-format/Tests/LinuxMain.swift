@@ -16,5 +16,6 @@ XCTMain([
   UseWhereClausesInForLoopsTests.allTests,
   OpenBraceWhitespaceTests.allTests,
   CloseBraceWhitespaceTests.allTests,
+  AlwaysUseLowerCamelCaseTests.allTests,
 ].joined())
 #endif
