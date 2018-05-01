@@ -1,8 +1,11 @@
 import SwiftSyntax
 
+/// A rule that lints a given file.
 open class SyntaxLintRule: SyntaxVisitor, Rule {
+  /// The context in which the rule is executed.
   public let context: Context
 
+  /// Creates a new SyntaxLintRule in the given context.
   public required init(context: Context) {
     self.context = context
   }
