@@ -18,14 +18,22 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
     // If we're here, then there's at least one VariableDeclSyntax that
     // needs to be split.
 
+    var needsWork = false
+    for codeBlockItem in items {
+      if let varDecl = codeBlockItem.item as? VariableDeclSyntax,
+        varDecl.bindings.count > 1 {
+        needsWork = true
+      }
+    }
+    if !needsWork { return nil }
+
     var newItems = [CodeBlockItemSyntax]()
     for codeBlockItem in items {
       // If we're not looking at a VariableDecl with more than 1 binding, visit the item and
       // skip it.
       guard let varDecl = codeBlockItem.item as? VariableDeclSyntax,
             varDecl.bindings.count > 1 else {
-        let newUnderlyingItem = visit(codeBlockItem.item)
-        newItems.append(codeBlockItem.withItem(newUnderlyingItem))
+        newItems.append(codeBlockItem)
         continue
       }
 

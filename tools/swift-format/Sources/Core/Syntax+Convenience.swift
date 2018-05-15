@@ -3,7 +3,7 @@ import SwiftSyntax
 extension Syntax {
   /// Performs a depth-first in-order traversal of the node to find the first
   /// node in its hierarchy that is a Token.
-  var firstToken: TokenSyntax? {
+  public var firstToken: TokenSyntax? {
     if let tok = self as? TokenSyntax { return tok }
     for child in children {
       if let tok = child.firstToken { return tok }
@@ -13,7 +13,7 @@ extension Syntax {
 
   /// Performs a depth-first reverse-order traversal of the node to find the last
   /// node in its hierarchy that is a Token.
-  var lastToken: TokenSyntax? {
+  public var lastToken: TokenSyntax? {
     if let tok = self as? TokenSyntax { return tok }
     for child in children.reversed() {
       if let tok = child.lastToken { return tok }
@@ -23,7 +23,7 @@ extension Syntax {
 
   /// Walks up from the current node to find the nearest node that is an
   /// Expr, Stmt, or Decl.
-  var containingExprStmtOrDecl: Syntax? {
+  public var containingExprStmtOrDecl: Syntax? {
     var node: Syntax? = self
     while let parent = node?.parent {
       if parent is ExprSyntax ||
@@ -38,7 +38,7 @@ extension Syntax {
 
   /// Recursively walks through the tree to find the next token semantically
   /// after this node.
-  var nextToken: TokenSyntax? {
+  public var nextToken: TokenSyntax? {
     var current: Syntax? = self
 
     // Walk up the parent chain, checking adjacent siblings after each node
@@ -66,7 +66,7 @@ extension Syntax {
 
   /// Recursively walks through the tree to find the token semantically
   /// before this node.
-  var previousToken: TokenSyntax? {
+  public var previousToken: TokenSyntax? {
     var current: Syntax? = self
 
     // Walk up the parent chain, checking adjacent siblings after each node

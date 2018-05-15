@@ -6,11 +6,11 @@ public class Configuration: Codable {
   /// MARK: Common configuration
 
   /// The maximum number of consecutive blank lines that may appear in a file.
-  public let maximumBlankLines = 1
+  public var maximumBlankLines = 1
 
   /// The width of the horizontal tab in spaces.
   /// Used when converting indentation type.
-  public let tabWidth = 8
+  public var tabWidth = 8
 
   /// A string that represents a single level of indentation.
   /// All indentation will be conducted in multiples of this string.

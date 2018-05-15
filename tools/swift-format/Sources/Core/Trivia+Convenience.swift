@@ -2,7 +2,7 @@ import SwiftSyntax
 
 extension Trivia {
   /// Returns the number of whitespace characters after this node.
-  var numberOfSpaces: Int {
+  public var numberOfSpaces: Int {
     var count = 0
     for piece in self {
       if case .tabs = piece { count += 1 }
@@ -13,7 +13,7 @@ extension Trivia {
   }
 
   /// Returns this set of trivia, without any whitespace characters.
-  func withoutSpaces() -> Trivia {
+  public func withoutSpaces() -> Trivia {
     return Trivia(pieces: filter {
       if case .spaces = $0 { return false }
       if case .tabs = $0 { return false }
@@ -22,7 +22,7 @@ extension Trivia {
   }
 
   /// Returns this set of trivia, without any newlines.
-  func withoutNewlines() -> Trivia {
+  public func withoutNewlines() -> Trivia {
     return Trivia(pieces: filter {
       if case .newlines = $0 { return false }
       return true
@@ -31,30 +31,30 @@ extension Trivia {
 
   /// Returns this set of trivia, with all spaces removed except for one at the
   /// end.
-  func withOneTrailingSpace() -> Trivia {
+  public func withOneTrailingSpace() -> Trivia {
     return withoutSpaces() + .spaces(1)
   }
 
   /// Returns this set of trivia, with all spaces removed except for one at the
   /// beginning.
-  func withOneLeadingSpace() -> Trivia {
+  public func withOneLeadingSpace() -> Trivia {
     return .spaces(1) + withoutSpaces()
   }
 
   /// Returns this set of trivia, with all newlines removed except for one.
-  func withOneLeadingNewline() -> Trivia {
+  public func withOneLeadingNewline() -> Trivia {
     return .newlines(1) + withoutNewlines()
   }
 
   /// Returns this set of trivia, with all newlines removed except for one.
-  func withOneTrailingNewline() -> Trivia {
+  public func withOneTrailingNewline() -> Trivia {
     return withoutNewlines() + .newlines(1)
   }
 
   /// Walks through trivia looking for multiple separate trivia entities with
   /// the same base kind, and condenses them.
   /// `[.spaces(1), .spaces(2)]` becomes `[.spaces(3)]`.
-  func condensed() -> Trivia {
+  public func condensed() -> Trivia {
     guard var prev = first else { return self }
     var pieces = [TriviaPiece]()
     for piece in dropFirst() {
@@ -87,7 +87,7 @@ extension Trivia {
   }
 
   /// Returns `true` if this trivia contains any newlines.
-  var containsNewlines: Bool {
+  public var containsNewlines: Bool {
     return contains(where: {
       if case .newlines = $0 { return true }
       return false
@@ -95,7 +95,7 @@ extension Trivia {
   }
 
   /// Returns `true` if this trivia contains any spaces.
-  var containsSpaces: Bool {
+  public var containsSpaces: Bool {
     return contains(where: {
       if case .spaces = $0 { return true }
       if case .tabs = $0 { return true }

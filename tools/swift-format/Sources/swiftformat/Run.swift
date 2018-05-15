@@ -43,8 +43,11 @@ public func lintMain(path: String) -> Int {
 public func formatMain(path: String) -> Int {
   let url = URL(fileURLWithPath: path)
 
+  let config = Configuration()
+  config.maximumBlankLines = 2
+
   let context = Context(
-    configuration: Configuration(),
+    configuration: config,
     diagnosticEngine: nil,
     fileURL: url
   )
@@ -57,8 +60,10 @@ public func formatMain(path: String) -> Int {
     // Important! We need to cast this to Syntax to avoid going directly into the specialized
     // version of visit(_: SourceFileSyntax), which will not run the pipeline properly.
     let formatted = pipeline.visit(file as Syntax)
-    let output = url.deletingPathExtension().appendingPathExtension("formatted.swift")
-    try formatted.description.write(to: output, atomically: true, encoding: .utf8)
+    let printer = PrettyPrinter(configuration: context.configuration)
+    printer.printStream(formatted.makeTokenStream(configuration: context.configuration))
+//    let output = url.deletingPathExtension().appendingPathExtension("formatted.swift")
+//    try formatted.description.write(to: output, atomically: true, encoding: .utf8)
   } catch {
     fatalError("\(error)")
   }
