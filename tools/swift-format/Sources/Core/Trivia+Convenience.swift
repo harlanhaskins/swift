@@ -12,6 +12,21 @@ extension Trivia {
     return count
   }
 
+  var hasSpaces: Bool {
+    for piece in self {
+      if case .tabs = piece { return true }
+      if case .spaces = piece { return true }
+    }
+    return false
+  }
+
+  public var hasBackticks: Bool {
+    for piece in self {
+      if case .backticks = piece { return true }
+    }
+    return false
+  }
+
   /// Returns this set of trivia, without any whitespace characters.
   public func withoutSpaces() -> Trivia {
     return Trivia(pieces: filter {

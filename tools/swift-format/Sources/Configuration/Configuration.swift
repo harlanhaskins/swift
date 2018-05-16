@@ -1,3 +1,5 @@
+import Foundation
+
 /// Holds the complete set of configured values and defaults.
 public class Configuration: Codable {
   /// The version of the configuration; used in case of breaking changes in the future.
@@ -8,13 +10,16 @@ public class Configuration: Codable {
   /// The maximum number of consecutive blank lines that may appear in a file.
   public var maximumBlankLines = 1
 
+  /// The maximum length of a line of source code, after which the formatter will break lines.
+  public var lineLength = 100
+
   /// The width of the horizontal tab in spaces.
   /// Used when converting indentation type.
   public var tabWidth = 8
 
   /// A string that represents a single level of indentation.
-  /// All indentation will be conducted in multiples of this string.
-  public let indentation = "  "
+  /// All indentation will be conducted in multiples of this configuration.
+  public var indentation: Indent = .spaces(2)
 
   /// MARK: Rule-specific configuration
 
@@ -61,4 +66,21 @@ public struct NoPlaygroundLiteralsConfiguration: Codable {
 
   /// Resolution behavior to use when encountering an ambiguous `#colorLiteral`.
   public let resolveAmbiguousColor: ResolveBehavior = .useUIColor
+}
+
+public struct Indent: Hashable, Codable {
+  public enum Kind: String, Codable {
+    case tabs
+    case spaces
+  }
+  public let kind: Kind
+  public let count: Int
+
+  public static func tabs(_ count: Int) -> Indent {
+    return .init(kind: .tabs, count: count)
+  }
+
+  public static func spaces(_ count: Int) -> Indent {
+    return .init(kind: .spaces, count: count)
+  }
 }

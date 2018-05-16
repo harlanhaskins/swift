@@ -44,7 +44,7 @@ public func formatMain(path: String) -> Int {
   let url = URL(fileURLWithPath: path)
 
   let config = Configuration()
-  config.maximumBlankLines = 2
+  config.lineLength = 20
 
   let context = Context(
     configuration: config,
@@ -60,8 +60,9 @@ public func formatMain(path: String) -> Int {
     // Important! We need to cast this to Syntax to avoid going directly into the specialized
     // version of visit(_: SourceFileSyntax), which will not run the pipeline properly.
     let formatted = pipeline.visit(file as Syntax)
-    let printer = PrettyPrinter(configuration: context.configuration)
-    printer.printStream(formatted.makeTokenStream(configuration: context.configuration))
+    let stream = formatted.makeTokenStream(configuration: context.configuration)
+    let printer = PrettyPrinter(configuration: context.configuration, stream: stream)
+    printer.prettyPrint()
 //    let output = url.deletingPathExtension().appendingPathExtension("formatted.swift")
 //    try formatted.description.write(to: output, atomically: true, encoding: .utf8)
   } catch {
