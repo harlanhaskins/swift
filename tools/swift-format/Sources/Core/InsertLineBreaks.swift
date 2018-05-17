@@ -13,6 +13,17 @@ public enum BreakStyle {
   case inconsistent
 }
 
+public struct Comment {
+  enum Kind {
+    case line, docLine, block, docBlock
+  }
+  public let text: String
+
+  func reflow(lineLength: Int) -> [Comment] {
+    return []
+  }
+}
+
 public enum Token: Hashable {
   case comment(String, hasTrailingSpace: Bool)
   case newlines(Int)
@@ -52,9 +63,7 @@ extension Indent {
 
 extension Array where Element == Indent {
   func indentation() -> String {
-    return map {
-      $0.text
-    }.joined()
+    return map { $0.text }.joined()
   }
 
   func length(in configuration: Configuration) -> Int {
@@ -80,7 +89,7 @@ public class PrettyPrinter {
     self.maxLineLength = configuration.lineLength
   }
 
-  func columns(_ token: Token, previous: Token?) -> Int {
+  func columns(_ token: Token) -> Int {
     switch token {
     case .comment(let line, let hasTrailingSpace):
       return line.count + (hasTrailingSpace ? 1 : 0)
@@ -97,27 +106,35 @@ public class PrettyPrinter {
     print(str, terminator: "")
   }
 
+  func adjustLineLength(_ token: Token) {
+    if case .newlines = token {
+      lineLength = 0
+    } else {
+      lineLength += columns(token)
+    }
+  }
+
+  func appendToken(_ token: Token) {
+    adjustLineLength(token)
+    tokens.append(token)
+  }
+
   func addToken(_ token: Token) {
     if case .newlines = token {
-      tokens.append(token)
+      appendToken(token)
       flush(forceWrapped: false)
-      lineLength = 0
       return
     }
 
-    let tokenLength = columns(token, previous: tokens.last)
-
-    if lineLength + tokenLength > maxLineLength {
+    if lineLength + columns(token) > maxLineLength {
       flush(forceWrapped: true)
       if case .break(.inconsistent, _) = token {
-        tokens.append(.newline)
+        appendToken(.newline)
       } else {
-        tokens.append(token)
-        lineLength = tokenLength
+        appendToken(token)
       }
     } else {
-      lineLength += tokenLength
-      tokens.append(token)
+      appendToken(token)
     }
   }
 
@@ -131,7 +148,7 @@ public class PrettyPrinter {
         addIndent(i)
       case .close:
         addToken(token)
-        bufferIndent.removeLast()
+        removeIndent()
       default:
         addToken(token)
       }
@@ -140,9 +157,18 @@ public class PrettyPrinter {
     flush(forceWrapped: false)
   }
 
+  func recomputeMaxLength() {
+    maxLineLength = configuration.lineLength - bufferIndent.length(in: configuration)
+  }
+
   func addIndent(_ level: Indent) {
     bufferIndent.append(level)
-    maxLineLength = configuration.lineLength - bufferIndent.length(in: configuration)
+    recomputeMaxLength()
+  }
+
+  func removeIndent() {
+    bufferIndent.removeLast()
+    recomputeMaxLength()
   }
 
   func writeNewlines(_ count: Int = 1) {
@@ -159,7 +185,7 @@ public class PrettyPrinter {
 
   func flush(forceWrapped: Bool) {
     let endOfFlushBuffer: Int
-    let mostRecentOpen = tokens.lastIndex(where: { $0.isOpen })
+    let mostRecentOpen = tokens.index(where: { $0.isOpen })
     if forceWrapped, let openIdx = mostRecentOpen {
       endOfFlushBuffer = openIdx
     } else {
@@ -188,17 +214,14 @@ public class PrettyPrinter {
           write(" ")
         }
       case .break(let style, let spaces):
-//        write("|")
         if let wrap = forceWrapping.last, wrap, style == .consistent {
           writeNewlines()
         } else if spaces > 0 {
           write(String(repeating: " ", count: spaces))
         }
       case .open(let indent):
-//        write("⟨")
         outputIndent.append(indent)
       case .close:
-//        write("⟩")
         outputIndent.removeLast()
         if !forceWrapping.isEmpty {
           forceWrapping.removeLast()
@@ -208,6 +231,8 @@ public class PrettyPrinter {
     tokens.removeSubrange(0..<endOfFlushBuffer)
     if mostRecentOpen != nil {
       forceWrapping.append(forceWrapped)
+      lineLength = 0
+      tokens.forEach(adjustLineLength)
     }
   }
 }
