@@ -1,4 +1,5 @@
 import Configuration
+import Core
 import SwiftSyntax
 
 private class FindChildScope: SyntaxVisitor {
@@ -969,7 +970,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
 extension Syntax {
   /// Creates a pretty-printable token stream for the provided Syntax node.
-  public func makeTokenStream(configuration: Configuration) -> [Token] {
+  func makeTokenStream(configuration: Configuration) -> [Token] {
     return TokenStreamCreator(configuration: configuration).makeStream(from: self)
   }
 }

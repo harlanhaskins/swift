@@ -10,12 +10,15 @@ let package = Package(
   targets: [
     .target(
       name: "swiftformat",
-      dependencies: ["Rules", "Core", "Configuration", "Utility"]),
+      dependencies: ["Rules", "Core", "Configuration", "PrettyPrint", "Utility"]),
     .target(
       name: "generate-pipeline",
       dependencies: []),
     .target(
       name: "Rules",
+      dependencies: ["Core", "Configuration"]),
+    .target(
+      name: "PrettyPrint",
       dependencies: ["Core", "Configuration"]),
     .target(
       name: "Core",
@@ -25,6 +28,6 @@ let package = Package(
       dependencies: []),
     .testTarget(
       name: "SwiftFormatTests",
-      dependencies: ["Core", "Configuration", "Rules"]),
+      dependencies: ["Core", "Configuration", "PrettyPrint", "Rules"]),
   ]
 )

@@ -12,7 +12,7 @@ extension Trivia {
     return count
   }
 
-  var hasSpaces: Bool {
+  public var hasSpaces: Bool {
     for piece in self {
       if case .tabs = piece { return true }
       if case .spaces = piece { return true }
