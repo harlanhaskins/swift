@@ -12,8 +12,8 @@ enum BreakStyle {
   case inconsistent
 }
 
-enum Token: Hashable {
-  case comment(String, hasTrailingSpace: Bool)
+enum Token {
+  case comment(Comment, hasTrailingSpace: Bool)
   case newlines(Int)
   case `break`(BreakStyle, spaces: Int)
   case open(Indent)
@@ -30,8 +30,8 @@ enum Token: Hashable {
 
   var columns: Int {
     switch self {
-    case .comment(let line, let hasTrailingSpace):
-      return line.count + (hasTrailingSpace ? 1 : 0)
+    case .comment(let comment, let hasTrailingSpace):
+      return (comment.text.split(separator: "\n").first?.count ?? 0) + (hasTrailingSpace ? 1 : 0)
     case .break(_, let spaces):
       return spaces
     case .newlines: return 0

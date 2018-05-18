@@ -21,15 +21,15 @@ public class PrettyPrinter {
   /// Creates a new PrettyPrinter with the provided formatting configuration.
   ///
   /// - Parameters:
-  ///   - configuration: <#configuration description#>
-  ///   - node: <#node description#>
+  ///   - configuration: The configuration used to decide whitespace or breaking behavior.
+  ///   - node: The node to be pretty printed.
   public init(configuration: Configuration, node: Syntax) {
     self.configuration = configuration
     self.stream = node.makeTokenStream(configuration: configuration)
     self.maxLineLength = configuration.lineLength
   }
 
-  func write(_ str: String) {
+  func write<S: StringProtocol>(_ str: S) {
     print(str, terminator: "")
   }
 
@@ -121,8 +121,17 @@ public class PrettyPrinter {
     for tok in tokens[0..<endOfFlushBuffer] {
       switch tok {
       case .comment(let comment, let hasTrailingSpace):
-        writeIndent()
-        write(comment)
+        let lines = comment.wordWrap(lineLength: maxLineLength - lineLength)
+        for (offset, line) in lines.enumerated() {
+          if requiresIndent {
+            write(outputIndent.indentation())
+          }
+          write(line)
+          if offset < lines.count - 1 {
+            write("\n")
+          }
+        }
+        requiresIndent = false
         if hasTrailingSpace {
           write(" ")
         }

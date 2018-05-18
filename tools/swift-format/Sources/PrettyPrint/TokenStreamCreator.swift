@@ -329,6 +329,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: AccessLevelModifierSyntax) {
+    after(node.lastToken, .break)
     super.visit(node)
   }
 
@@ -905,7 +906,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     if let before = beforeMap[token] {
       tokens += before
     }
-    tokens.append(.syntax(token))
+    appendToken(.syntax(token))
     if var after = afterMap[token] {
       /// If a `break`, with any number of spaces, comes right after a token which has spaces
       /// in its trailing trivia, then remove the spaces from this break and keep the same style.
@@ -918,32 +919,55 @@ private final class TokenStreamCreator: SyntaxVisitor {
     breakDownTrivia(token.trailingTrivia)
   }
 
+  func appendToken(_ token: Token) {
+    if let last = tokens.last {
+      switch (last, token) {
+      case (.comment(let c1, _), .comment(let c2, _))
+        where c1.kind == .docLine && c2.kind == .docLine:
+        var newComment = c1
+        newComment.addText(c2.text)
+        tokens[tokens.count - 1] = .comment(newComment, hasTrailingSpace: false)
+        return
+      default:
+        break
+      }
+    }
+    tokens.append(token)
+  }
+
+  private func shouldAddNewlineBefore(_ token: TokenSyntax?) -> Bool {
+    guard let token = token, let before = beforeMap[token] else { return false }
+    for item in before {
+      if case .newlines = item { return false }
+    }
+    return true
+  }
+
   private func breakDownTrivia(_ trivia: Trivia, before: TokenSyntax? = nil) {
     for (offset, piece) in trivia.enumerated() {
+      let next: TriviaPiece? = offset + 1 < trivia.count ? trivia[offset + 1] : nil
       switch piece {
-      case .lineComment(let text), .docLineComment(let text):
-        tokens.append(.comment(text, hasTrailingSpace: false))
-
-        // Line comments always have newlines after them. If a line comment appears
-        // as leading trivia of a node, check to see if there's a required newline before the node.
-        // If there isn't, we need to require a newline after the line comment.
-        if let token = before {
-          let alreadyHasNewline = beforeMap[token, default: []].contains {
-            if case .newlines = $0 { return true }
-            return false
-          }
-          if !alreadyHasNewline {
-            // TODO(harlan): Handle mulitple blank lines between comments.
-            tokens.append(.newline)
-          }
+      case .lineComment(let text):
+        appendToken(.comment(Comment(kind: .line, text: text), hasTrailingSpace: false))
+        if case .lineComment? = next {
+          /* do nothing */
+        } else {
+          appendToken(.newline)
+        }
+      case .docLineComment(let text):
+        appendToken(.comment(Comment(kind: .docLine, text: text), hasTrailingSpace: false))
+        if case .lineComment? = next {
+          /* do nothing */
+        } else {
+          appendToken(.newline)
         }
       case .blockComment(let text), .docBlockComment(let text):
         var hasTrailingSpace = false
         var hasTrailingNewline = false
 
         // Detect if a newline or trailing space comes after this comment and preserve it.
-        if (offset + 1) < trivia.count {
-          switch trivia[offset + 1] {
+        if let next = next {
+          switch next {
           case .newlines, .carriageReturns, .carriageReturnLineFeeds:
             hasTrailingNewline = true
           case .spaces, .tabs:
@@ -953,13 +977,20 @@ private final class TokenStreamCreator: SyntaxVisitor {
           }
         }
 
-        tokens.append(.comment(text, hasTrailingSpace: hasTrailingSpace))
+        let commentKind: Comment.Kind
+        if case .blockComment = piece {
+          commentKind = .block
+        } else {
+          commentKind = .docBlock
+        }
+        let comment = Comment(kind: commentKind, text: text)
+        appendToken(.comment(comment, hasTrailingSpace: hasTrailingSpace))
         if hasTrailingNewline {
-          tokens.append(.newline)
+          appendToken(.newline)
         }
       case .newlines(let n), .carriageReturns(let n), .carriageReturnLineFeeds(let n):
         if n > 1 {
-          tokens.append(.newlines(min(n - 1, config.maximumBlankLines)))
+          appendToken(.newlines(min(n - 1, config.maximumBlankLines)))
         }
       default:
         break
