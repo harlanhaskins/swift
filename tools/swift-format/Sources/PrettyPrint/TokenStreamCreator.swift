@@ -83,10 +83,15 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: BinaryOperatorExprSyntax) {
+    if !(node.parent is BinaryOperatorExprSyntax) {
+      after(node.operatorToken, defaultOpen)
+      after(node.lastToken, .close)
+    }
     // Specifically, the range operators do not allow for breaking and do not include spaces before
     // or after.
     if !rangeOperators.contains(node.operatorToken.text) {
-      after(node.operatorToken, .break)
+      before(node.operatorToken, .break(.inconsistent, spaces: 1))
+      after(node.operatorToken, .break(.inconsistent, spaces: 1))
     }
     super.visit(node)
   }

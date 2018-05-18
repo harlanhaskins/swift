@@ -122,12 +122,12 @@ public class PrettyPrinter {
         let lines = comment.wordWrap(lineLength: maxLineLength - lineLength)
         for (offset, line) in lines.enumerated() {
           if requiresIndent {
-            // This comment is pretty far nested, and will pose a problem once we need to keep 80 columns. In fact, this is too long for even 100 columns.
             write(outputIndent.indentation())
           }
           write(line)
           if offset < lines.count - 1 {
             write("\n")
+            hasWrapped = true
           }
         }
         requiresIndent = false
@@ -136,6 +136,7 @@ public class PrettyPrinter {
         }
       case .newlines(let n):
         writeNewlines(n)
+        hasWrapped = true
       case .syntax(let tok):
         writeIndent()
         if tok.leadingTrivia.hasBackticks {
@@ -151,6 +152,8 @@ public class PrettyPrinter {
       case .break(let style, let spaces):
         if let wrap = forceWrapping.last, wrap, style == .consistent {
           writeNewlines()
+          // FIXME: We need to actually insert newlines for inconsistent breaks that make the
+          //        difference between fitting and not.
         } else if spaces > 0 {
           write(String(repeating: " ", count: spaces))
         }
