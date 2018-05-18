@@ -65,8 +65,6 @@ public class PrettyPrinter {
     }
   }
 
-  /** Test
-   */
   public func prettyPrint() {
     for token in stream {
       switch token {
@@ -124,6 +122,7 @@ public class PrettyPrinter {
         let lines = comment.wordWrap(lineLength: maxLineLength - lineLength)
         for (offset, line) in lines.enumerated() {
           if requiresIndent {
+            // This comment is pretty far nested, and will pose a problem once we need to keep 80 columns. In fact, this is too long for even 100 columns.
             write(outputIndent.indentation())
           }
           write(line)

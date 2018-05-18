@@ -45,7 +45,7 @@ public func formatMain(path: String) -> Int {
   let url = URL(fileURLWithPath: path)
 
   let config = Configuration()
-  config.lineLength = 20
+  config.lineLength = 80
 
   let context = Context(
     configuration: config,

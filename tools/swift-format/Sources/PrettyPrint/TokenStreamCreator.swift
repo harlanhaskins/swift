@@ -945,18 +945,19 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   private func breakDownTrivia(_ trivia: Trivia, before: TokenSyntax? = nil) {
     for (offset, piece) in trivia.enumerated() {
-      let next: TriviaPiece? = offset + 1 < trivia.count ? trivia[offset + 1] : nil
       switch piece {
       case .lineComment(let text):
         appendToken(.comment(Comment(kind: .line, text: text), hasTrailingSpace: false))
-        if case .lineComment? = next {
+        if case .newlines? = trivia[safe: offset + 1],
+           case .lineComment? = trivia[safe: offset + 2] {
           /* do nothing */
         } else {
           appendToken(.newline)
         }
       case .docLineComment(let text):
         appendToken(.comment(Comment(kind: .docLine, text: text), hasTrailingSpace: false))
-        if case .lineComment? = next {
+        if case .newlines? = trivia[safe: offset + 1],
+           case .docLineComment? = trivia[safe: offset + 2] {
           /* do nothing */
         } else {
           appendToken(.newline)
@@ -966,7 +967,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
         var hasTrailingNewline = false
 
         // Detect if a newline or trailing space comes after this comment and preserve it.
-        if let next = next {
+        if let next = trivia[safe: offset + 1] {
           switch next {
           case .newlines, .carriageReturns, .carriageReturnLineFeeds:
             hasTrailingNewline = true
@@ -1003,5 +1004,11 @@ extension Syntax {
   /// Creates a pretty-printable token stream for the provided Syntax node.
   func makeTokenStream(configuration: Configuration) -> [Token] {
     return TokenStreamCreator(configuration: configuration).makeStream(from: self)
+  }
+}
+
+extension Collection {
+  subscript(safe index: Index) -> Element? {
+    return index < endIndex ? self[index] : nil
   }
 }

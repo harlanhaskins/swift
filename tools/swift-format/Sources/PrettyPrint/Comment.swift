@@ -18,7 +18,7 @@ struct Comment {
     var prefix: String {
       switch self {
       case .line: return "//"
-      case .block, .docBlock: return " *"
+      case .block, .docBlock: return " "
       case .docLine: return "///"
       }
     }
@@ -49,24 +49,33 @@ struct Comment {
     let maxLength = lineLength - (kind.prefixLength + 1)
     let scanner = Scanner(string: text)
     var lines = [String]()
-    var currentLine = ""
-    var currentLineLength = 0
-    var buffer: NSString! = ""
-    while scanner.scanUpToCharacters(from: .whitespacesAndNewlines, into: &buffer) {
-      let strBuf = buffer as String
-      if currentLineLength + strBuf.count > maxLength {
-        lines.append(currentLine)
-        currentLine = ""
-        currentLineLength = 0
+
+    // FIXME: Word wrapping doesn't work for documentation comments, as we need to preserve all the
+    //        intricacies of Markdown formatting.
+    // FIXME: If there's a totally blank comment line, it doesn't get a prefix for some reason.
+    // TODO: Allow for leading `*` characters for each line of a block comment.
+    if kind == .docLine || kind == .docBlock {
+      lines = text.split(separator: "\n").map { "\(kind.prefix)\($0)" }
+    } else {
+      var currentLine = ""
+      var currentLineLength = 0
+      var buffer: NSString! = ""
+      while scanner.scanUpToCharacters(from: .whitespacesAndNewlines, into: &buffer) {
+        let strBuf = buffer as String
+        if currentLineLength + strBuf.count > maxLength {
+          lines.append(currentLine)
+          currentLine = ""
+          currentLineLength = 0
+        }
+        currentLine += strBuf + " "
+        currentLineLength += strBuf.count + 1
       }
-      currentLine += strBuf + " "
-      currentLineLength += strBuf.count + 1
-    }
-    if currentLineLength > 0 {
-      lines.append(currentLine)
-    }
-    for i in 0..<lines.count {
-      lines[i] = "\(kind.prefix) \(lines[i])"
+      if currentLineLength > 0 {
+        lines.append(currentLine.trimmingCharacters(in: .whitespaces))
+      }
+      for i in 0..<lines.count {
+        lines[i] = "\(kind.prefix) \(lines[i])"
+      }
     }
     switch kind {
     case .block:
