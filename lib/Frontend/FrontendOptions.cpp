@@ -48,6 +48,7 @@ bool FrontendOptions::needsProperModuleName(ActionType action) {
   case ActionType::EmitSIB:
   case ActionType::EmitModuleOnly:
   case ActionType::MergeModules:
+  case ActionType::GenerateAPI:
     return true;
   case ActionType::Immediate:
   case ActionType::REPL:
@@ -83,6 +84,7 @@ bool FrontendOptions::isActionImmediate(ActionType action) {
   case ActionType::EmitSIB:
   case ActionType::EmitModuleOnly:
   case ActionType::MergeModules:
+  case ActionType::GenerateAPI:
     return false;
   case ActionType::Immediate:
   case ActionType::REPL:
@@ -152,6 +154,9 @@ FrontendOptions::formatForPrincipalOutputFileForAction(ActionType action) {
   case ActionType::DumpTypeRefinementContexts:
   case ActionType::DumpTypeInfo:
     return TY_Nothing;
+
+  case ActionType::GenerateAPI:
+    return TY_TBD;
 
   case ActionType::EmitPCH:
     return TY_PCH;
@@ -223,6 +228,7 @@ bool FrontendOptions::canActionEmitDependencies(ActionType action) {
   case ActionType::EmitAssembly:
   case ActionType::EmitObject:
   case ActionType::EmitImportedModules:
+  case ActionType::GenerateAPI:
     return true;
   }
 }
@@ -256,6 +262,7 @@ bool FrontendOptions::canActionEmitReferenceDependencies(ActionType action) {
   case ActionType::EmitAssembly:
   case ActionType::EmitObject:
   case ActionType::EmitImportedModules:
+  case ActionType::GenerateAPI:
     return true;
   }
 }
@@ -289,6 +296,7 @@ bool FrontendOptions::canActionEmitObjCHeader(ActionType action) {
   case ActionType::EmitAssembly:
   case ActionType::EmitObject:
   case ActionType::EmitImportedModules:
+  case ActionType::GenerateAPI:
     return true;
   }
 }
@@ -322,6 +330,7 @@ bool FrontendOptions::canActionEmitLoadedModuleTrace(ActionType action) {
   case ActionType::EmitAssembly:
   case ActionType::EmitObject:
   case ActionType::EmitImportedModules:
+  case ActionType::GenerateAPI:
     return true;
   }
 }
@@ -344,6 +353,7 @@ bool FrontendOptions::canActionEmitModule(ActionType action) {
   case ActionType::EmitSILGen:
   case ActionType::Immediate:
   case ActionType::REPL:
+  case ActionType::GenerateAPI:
     return false;
   case ActionType::MergeModules:
   case ActionType::EmitModuleOnly:
@@ -392,6 +402,7 @@ bool FrontendOptions::canActionEmitInterface(ActionType action) {
   case ActionType::EmitBC:
   case ActionType::EmitAssembly:
   case ActionType::EmitObject:
+  case ActionType::GenerateAPI:
     return true;
   }
 }
@@ -421,6 +432,7 @@ bool FrontendOptions::doesActionProduceOutput(ActionType action) {
   case ActionType::EmitImportedModules:
   case ActionType::MergeModules:
   case ActionType::DumpTypeInfo:
+  case ActionType::GenerateAPI:
     return true;
 
   case ActionType::NoneAction:
@@ -461,6 +473,7 @@ bool FrontendOptions::doesActionProduceTextualOutput(ActionType action) {
   case ActionType::EmitAssembly:
   case ActionType::EmitIR:
   case ActionType::DumpTypeInfo:
+  case ActionType::GenerateAPI:
     return true;
   }
 }
@@ -480,6 +493,7 @@ bool FrontendOptions::doesActionGenerateSIL(ActionType action) {
   case ActionType::DumpTypeRefinementContexts:
   case ActionType::EmitImportedModules:
   case ActionType::EmitPCH:
+  case ActionType::GenerateAPI:
     return false;
   case ActionType::EmitSILGen:
   case ActionType::EmitSIBGen:

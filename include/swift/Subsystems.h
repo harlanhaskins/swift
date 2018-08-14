@@ -176,6 +176,10 @@ namespace swift {
     /// If set, dumps wall time taken to type check each expression to
     /// llvm::errs().
     DebugTimeExpressions = 1 << 3,
+
+    /// If set, ignores bodies of functions that are not inlineable or usable
+    /// from inline.
+    SkipNonInterfaceFunctionBodies = 1 << 4,
   };
 
   /// Once parsing and name-binding are complete, this walks the AST to resolve

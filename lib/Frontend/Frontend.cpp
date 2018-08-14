@@ -774,6 +774,8 @@ OptionSet<TypeCheckingFlags> CompilerInstance::computeTypeCheckingOptions() {
   if (options.DebugTimeExpressionTypeChecking) {
     TypeCheckOptions |= TypeCheckingFlags::DebugTimeExpressions;
   }
+  if (options.RequestedAction == FrontendOptions::ActionType::GenerateAPI)
+    TypeCheckOptions |= TypeCheckingFlags::SkipNonInterfaceFunctionBodies;
   return TypeCheckOptions;
 }
 

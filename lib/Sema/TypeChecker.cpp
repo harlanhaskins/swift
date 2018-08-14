@@ -497,10 +497,22 @@ void TypeChecker::resolveExtensionForConformanceConstruction(
   }
 }
 
-static void typeCheckFunctionsAndExternalDecls(SourceFile &SF, TypeChecker &TC) {
+// If we're generating an interface or TBD, skip typechecking non-inlineable
+// functions, because their bodies will not appear.
+static bool shouldSkipChecking(
+  AbstractFunctionDecl *AFD, bool SkipNonInterfaceFunctionBodies) {
+  if (!SkipNonInterfaceFunctionBodies) return false;
+  if (AFD->getAttrs().hasAttribute<TransparentAttr>()) return false;
+  if (AFD->getAttrs().hasAttribute<InlinableAttr>()) return false;
+  return true;
+};
+
+static void typeCheckFunctionsAndExternalDecls(
+  SourceFile &SF, TypeChecker &TC, bool SkipNonInterfaceFunctionBodies) {
   unsigned currentFunctionIdx = 0;
   unsigned currentExternalDef = TC.Context.LastCheckedExternalDefinition;
   unsigned currentSynthesizedDecl = SF.LastCheckedSynthesizedDecl;
+
   do {
     // Type check conformance contexts.
     for (unsigned i = 0; i != TC.ConformanceContexts.size(); ++i) {
@@ -525,6 +537,9 @@ static void typeCheckFunctionsAndExternalDecls(SourceFile &SF, TypeChecker &TC) 
          ++currentFunctionIdx) {
       auto *AFD = TC.definedFunctions[currentFunctionIdx];
 
+      if (shouldSkipChecking(AFD, SkipNonInterfaceFunctionBodies))
+        continue;
+
       TC.typeCheckAbstractFunctionBody(AFD);
     }
 
@@ -535,8 +550,10 @@ static void typeCheckFunctionsAndExternalDecls(SourceFile &SF, TypeChecker &TC) 
       auto decl = TC.Context.ExternalDefinitions[currentExternalDef];
 
       if (auto *AFD = dyn_cast<AbstractFunctionDecl>(decl)) {
-        TC.typeCheckAbstractFunctionBody(AFD);
-        TC.checkFunctionErrorHandling(AFD);
+        if (!shouldSkipChecking(AFD, SkipNonInterfaceFunctionBodies)) {
+          TC.typeCheckAbstractFunctionBody(AFD);
+          TC.checkFunctionErrorHandling(AFD);
+        }
         continue;
       }
       if (auto nominal = dyn_cast<NominalTypeDecl>(decl)) {
@@ -645,6 +662,8 @@ static void typeCheckFunctionsAndExternalDecls(SourceFile &SF, TypeChecker &TC) 
     TC.computeCaptures(closure);
   }
   for (AbstractFunctionDecl *FD : reversed(TC.definedFunctions)) {
+    if (shouldSkipChecking(FD, SkipNonInterfaceFunctionBodies))
+      continue;
     TC.computeCaptures(FD);
   }
 
@@ -652,6 +671,8 @@ static void typeCheckFunctionsAndExternalDecls(SourceFile &SF, TypeChecker &TC) 
   // this file.  This can depend on all of their interior function
   // bodies having been type-checked.
   for (AbstractFunctionDecl *FD : TC.definedFunctions) {
+    if (shouldSkipChecking(FD, SkipNonInterfaceFunctionBodies))
+      continue;
     TC.checkFunctionErrorHandling(FD);
   }
 }
@@ -660,7 +681,8 @@ void swift::typeCheckExternalDefinitions(SourceFile &SF) {
   assert(SF.ASTStage == SourceFile::TypeChecked);
   auto &Ctx = SF.getASTContext();
   TypeChecker TC(Ctx);
-  typeCheckFunctionsAndExternalDecls(SF, TC);
+  typeCheckFunctionsAndExternalDecls(SF, TC,
+                                     /*SkipNonInterfaceFunctionBodies*/false);
 }
 
 void swift::performTypeChecking(SourceFile &SF, TopLevelContext &TLC,
@@ -759,7 +781,8 @@ void swift::performTypeChecking(SourceFile &SF, TopLevelContext &TLC,
     if (SF.Kind == SourceFileKind::REPL && !Ctx.hadError())
       TC.processREPLTopLevel(SF, TLC, StartElem);
 
-    typeCheckFunctionsAndExternalDecls(SF, TC);
+    typeCheckFunctionsAndExternalDecls(SF, TC,
+      Options.contains(TypeCheckingFlags::SkipNonInterfaceFunctionBodies));
   }
 
   // Checking that benefits from having the whole module available.

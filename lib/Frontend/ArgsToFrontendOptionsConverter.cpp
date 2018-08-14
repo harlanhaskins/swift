@@ -328,6 +328,8 @@ ArgsToFrontendOptionsConverter::determineRequestedAction(const ArgList &args) {
     return FrontendOptions::ActionType::ResolveImports;
   if (Opt.matches(OPT_typecheck))
     return FrontendOptions::ActionType::Typecheck;
+  if (Opt.matches(OPT_generate_api))
+    return FrontendOptions::ActionType::GenerateAPI;
   if (Opt.matches(OPT_dump_parse))
     return FrontendOptions::ActionType::DumpParse;
   if (Opt.matches(OPT_dump_ast))

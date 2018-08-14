@@ -19,6 +19,9 @@
 
 // RUN: %target-swift-frontend -enable-resilience -emit-ir -o/dev/null -parse-as-library -module-name test -import-objc-header %S/Inputs/objc_class_header.h -validate-tbd-against-ir=all %t/main.swift -disable-objc-attr-requires-foundation-module -enable-testing -O
 
+// RUN: %target-swift-frontend -generate-api -parse-as-library -module-name test -import-objc-header %S/Inputs/objc_class_header.h %t/main.swift -disable-objc-attr-requires-foundation-module
+// RUN: %target-swift-frontend -generate-api -parse-as-library -module-name test -import-objc-header %S/Inputs/objc_class_header.h %t/main.swift -disable-objc-attr-requires-foundation-module -enable-testing
+
 // REQUIRES: objc_interop
 
 import Foundation

@@ -1412,6 +1412,7 @@ void Driver::buildOutputInfo(const ToolChain &TC, const DerivedArgList &Args,
     case options::OPT_dump_interface_hash:
     case options::OPT_dump_type_info:
     case options::OPT_verify_debug_info:
+    case options::OPT_generate_api:
       OI.CompilerOutputType = file_types::TY_Nothing;
       break;
 

@@ -1012,6 +1012,9 @@ static bool performCompile(CompilerInstance &Instance,
   if (writeTBDIfNeeded(Invocation, Instance))
     return true;
 
+  if (Action == FrontendOptions::ActionType::GenerateAPI)
+    return false;
+
   assert(FrontendOptions::doesActionGenerateSIL(Action) &&
          "All actions not requiring SILGen must have been handled!");
 

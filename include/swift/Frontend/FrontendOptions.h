@@ -140,6 +140,8 @@ public:
     EmitBC,       ///< Emit LLVM BC
     EmitObject,   ///< Emit object file
 
+    GenerateAPI, ///< Generate API-specific files only
+
     DumpTypeInfo, ///< Dump IRGen type info
   };
 
@@ -247,6 +249,10 @@ public:
   /// Indicates whether the dependency tracker should track system
   /// dependencies as well.
   bool TrackSystemDeps = false;
+
+  /// Whether to skip typechecking function bodies that do not need to
+  /// appear in synthesized interfaces.
+  bool SkipTypecheckNonInterfaceFunctionBodies = false;
 
   /// The different modes for validating TBD against the LLVM IR.
   enum class TBDValidationMode {
