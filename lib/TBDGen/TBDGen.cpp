@@ -389,7 +389,7 @@ static bool isApplicationExtensionSafe(const LangOptions &LangOpts) {
 static void enumeratePublicSymbolsAndWrite(ModuleDecl *M, FileUnit *singleFile,
                                            StringSet &symbols,
                                            llvm::raw_ostream *os,
-                                           TBDGenOptions &opts) {
+                                           const TBDGenOptions &opts) {
   auto isWholeModule = singleFile == nullptr;
   const auto &target = M->getASTContext().LangOpts.Target;
   UniversalLinkageInfo linkInfo(target, opts.HasMultipleIGMs, isWholeModule);
@@ -447,16 +447,15 @@ static void enumeratePublicSymbolsAndWrite(ModuleDecl *M, FileUnit *singleFile,
 }
 
 void swift::enumeratePublicSymbols(FileUnit *file, StringSet &symbols,
-                                   TBDGenOptions &opts) {
-  enumeratePublicSymbolsAndWrite(file->getParentModule(), file, symbols,
+                                   const TBDGenOptions &opts) {
+  enumeratePublicSymbolsAndWrite(file->getParentModule(), file, &symbols,
                                  nullptr, opts);
 }
 void swift::enumeratePublicSymbols(ModuleDecl *M, StringSet &symbols,
-                                   TBDGenOptions &opts) {
-  enumeratePublicSymbolsAndWrite(M, nullptr, symbols, nullptr, opts);
+                                   const TBDGenOptions &opts) {
+  enumeratePublicSymbolsAndWrite(M, nullptr, &symbols, nullptr, opts);
 }
 void swift::writeTBDFile(ModuleDecl *M, llvm::raw_ostream &os,
-                         TBDGenOptions &opts) {
-  StringSet symbols;
-  enumeratePublicSymbolsAndWrite(M, nullptr, symbols, &os, opts);
+                         const TBDGenOptions &opts) {
+  enumeratePublicSymbolsAndWrite(M, nullptr, nullptr, &os, opts);
 }

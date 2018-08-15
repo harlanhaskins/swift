@@ -44,7 +44,7 @@ public:
   const llvm::Triple &Triple;
   const UniversalLinkageInfo &UniversalLinkInfo;
   ModuleDecl *SwiftModule;
-  TBDGenOptions &Opts;
+  const TBDGenOptions &Opts;
 
 private:
   bool FileHasEntryPoint = false;
@@ -76,9 +76,10 @@ private:
 public:
   TBDGenVisitor(StringSet &symbols, const llvm::Triple &triple,
                 const UniversalLinkageInfo &universalLinkInfo,
-                ModuleDecl *swiftModule, TBDGenOptions &opts)
-      : Symbols(symbols), Triple(triple), UniversalLinkInfo(universalLinkInfo),
-        SwiftModule(swiftModule), Opts(opts) {}
+                ModuleDecl *swiftModule, const TBDGenOptions &opts)
+      : Symbols(symbols), Archs(archs), StringSymbols(stringSymbols),
+        UniversalLinkInfo(universalLinkInfo), SwiftModule(swiftModule),
+        Opts(opts) {}
 
   void setFileHasEntryPoint(bool hasEntryPoint) {
     FileHasEntryPoint = hasEntryPoint;
