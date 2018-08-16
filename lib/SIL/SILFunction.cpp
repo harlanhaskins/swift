@@ -34,19 +34,20 @@ ArrayRef<Requirement> SILSpecializeAttr::getRequirements() const {
 }
 
 SILSpecializeAttr::SILSpecializeAttr(ArrayRef<Requirement> requirements,
-                                     bool exported, SpecializationKind kind)
+                                     bool exported, bool mandatory,
+                                     SpecializationKind kind)
     : numRequirements(requirements.size()), kind(kind), exported(exported) {
   std::copy(requirements.begin(), requirements.end(), getRequirementsData());
 }
 
 SILSpecializeAttr *SILSpecializeAttr::create(SILModule &M,
                                              ArrayRef<Requirement> requirements,
-                                             bool exported,
+                                             bool exported, bool mandatory,
                                              SpecializationKind kind) {
   unsigned size =
       sizeof(SILSpecializeAttr) + sizeof(Requirement) * requirements.size();
   void *buf = M.allocate(size, alignof(SILSpecializeAttr));
-  return ::new (buf) SILSpecializeAttr(requirements, exported, kind);
+  return ::new (buf) SILSpecializeAttr(requirements, exported, mandatory, kind);
 }
 
 void SILFunction::addSpecializeAttr(SILSpecializeAttr *Attr) {

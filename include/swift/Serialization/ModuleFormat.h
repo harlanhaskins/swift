@@ -55,7 +55,7 @@ const uint16_t VERSION_MAJOR = 0;
 /// describe what change you made. The content of this comment isn't important;
 /// it just ensures a conflict if two people change the module format.
 /// Don't worry about adhering to the 80-column limit for this line.
-const uint16_t VERSION_MINOR = 436; // Last change: without_actually_escaping.
+const uint16_t VERSION_MINOR = 437; // Last change: _specialize(mandatory: true).
 
 using DeclIDField = BCFixed<31>;
 
@@ -1531,6 +1531,7 @@ namespace decls_block {
   using SpecializeDeclAttrLayout = BCRecordLayout<
     Specialize_DECL_ATTR,
     BCFixed<1>, // exported flag
+    BCFixed<1>, // mandatory flag
     BCFixed<1> // specialization kind
   >;
 

@@ -58,12 +58,17 @@ public:
 
   static SILSpecializeAttr *create(SILModule &M,
                                    ArrayRef<Requirement> requirements,
-                                   bool exported, SpecializationKind kind);
+                                   bool exported, bool mandatory,
+                                   SpecializationKind kind);
 
   ArrayRef<Requirement> getRequirements() const;
 
   bool isExported() const {
     return exported;
+  }
+
+  bool isMandatory() const {
+    return mandatory;
   }
 
   bool isFullSpecialization() const {
@@ -88,10 +93,11 @@ private:
   unsigned numRequirements;
   SpecializationKind kind;
   bool exported;
+  bool mandatory;
   SILFunction *F;
 
   SILSpecializeAttr(ArrayRef<Requirement> requirements, bool exported,
-                    SpecializationKind kind);
+                    bool mandatory, SpecializationKind kind);
 
   Requirement *getRequirementsData() {
     return reinterpret_cast<Requirement *>(this+1);

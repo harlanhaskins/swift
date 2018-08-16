@@ -829,6 +829,7 @@ public:
   /// Parse the arguments inside the @_specialize attribute
   bool parseSpecializeAttributeArguments(
       swift::tok ClosingBrace, bool &DiscardAttribute, Optional<bool> &Exported,
+      Optional<bool> &Mandatory,
       Optional<SpecializeAttr::SpecializationKind> &Kind,
       TrailingWhereClause *&TrailingWhereClause);
 

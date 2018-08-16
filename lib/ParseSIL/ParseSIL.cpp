@@ -142,6 +142,7 @@ namespace {
   struct ParsedSpecAttr {
     ArrayRef<RequirementRepr> requirements;
     bool exported;
+    bool mandatory;
     SILSpecializeAttr::SpecializationKind kind;
   };
 
@@ -966,6 +967,7 @@ static bool parseDeclSILOptional(bool *isTransparent,
       ParsedSpecAttr SpecAttr;
       SpecAttr.requirements = {};
       SpecAttr.exported = false;
+      SpecAttr.mandatory = false;
       SpecAttr.kind = SILSpecializeAttr::SpecializationKind::Full;
       SpecializeAttr *Attr;
 
@@ -979,6 +981,7 @@ static bool parseDeclSILOptional(bool *isTransparent,
                           ? SILSpecializeAttr::SpecializationKind::Full
                           : SILSpecializeAttr::SpecializationKind::Partial;
       SpecAttr.exported = Attr->isExported();
+      SpecAttr.mandatory = Attr->isMandatory();
       SpecAttrs->emplace_back(SpecAttr);
       continue;
     }
@@ -5270,7 +5273,7 @@ bool SILParserTUState::parseDeclSIL(Parser &P) {
                                             Attr.requirements, requirements);
           FunctionState.F->addSpecializeAttr(SILSpecializeAttr::create(
               FunctionState.F->getModule(), requirements, Attr.exported,
-              Attr.kind));
+              Attr.mandatory, Attr.kind));
         }
       }
 

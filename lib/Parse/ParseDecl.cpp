@@ -543,17 +543,19 @@ ParserResult<AvailableAttr> Parser::parseExtendedAvailabilitySpecList(
 
 bool Parser::parseSpecializeAttributeArguments(
     swift::tok ClosingBrace, bool &DiscardAttribute, Optional<bool> &Exported,
+    Optional<bool> &Mandatory,
     Optional<SpecializeAttr::SpecializationKind> &Kind,
     swift::TrailingWhereClause *&TrailingWhereClause) {
   SyntaxParsingContext ContentContext(SyntaxContext,
                                       SyntaxKind::SpecializeAttributeSpecList);
-  // Parse optional "exported" and "kind" labeled parameters.
+  // Parse optional "exported", "kind", and "mandatory" labeled parameters.
   while (!Tok.is(tok::kw_where)) {
     SyntaxParsingContext ArgumentContext(SyntaxContext,
                                          SyntaxKind::LabeledSpecializeEntry);
     if (Tok.is(tok::identifier)) {
       auto ParamLabel = Tok.getText();
-      if (ParamLabel != "exported" && ParamLabel != "kind") {
+      if (ParamLabel != "exported" && ParamLabel != "kind" &&
+          ParamLabel != "mandatory") {
         diagnose(Tok.getLoc(), diag::attr_specialize_unknown_parameter_name,
                  ParamLabel);
       }
@@ -574,14 +576,16 @@ bool Parser::parseSpecializeAttributeArguments(
         return false;
       }
       if ((ParamLabel == "exported" && Exported.hasValue()) ||
-          (ParamLabel == "kind" && Kind.hasValue())) {
+          (ParamLabel == "kind" && Kind.hasValue()) ||
+          (ParamLabel == "mandatory" && Mandatory.hasValue())) {
         diagnose(Tok.getLoc(), diag::attr_specialize_parameter_already_defined,
                  ParamLabel);
       }
       if (ParamLabel == "exported") {
-        bool isTrue = consumeIf(tok::kw_true);
-        bool isFalse = consumeIf(tok::kw_false);
-        if (!isTrue && !isFalse) {
+        if (Tok.is(tok::kw_true) || Tok.is(tok::kw_false)) {
+          Exported = Tok.is(tok::kw_true);
+          skipSingle();
+        } else {
           diagnose(Tok.getLoc(), diag::attr_specialize_expected_bool_value);
           skipUntil(tok::comma, tok::kw_where);
           if (Tok.is(ClosingBrace))
@@ -595,9 +599,6 @@ bool Parser::parseSpecializeAttributeArguments(
           }
           DiscardAttribute = true;
           return false;
-        }
-        if (ParamLabel == "exported") {
-          Exported = isTrue ? true : false;
         }
       }
       if (ParamLabel == "kind") {
@@ -616,6 +617,26 @@ bool Parser::parseSpecializeAttributeArguments(
                    consumeIf(tok::kw_false, paramValueLoc)) {
           diagnose(paramValueLoc,
                    diag::attr_specialize_expected_partial_or_full);
+        }
+      }
+      if (ParamLabel == "mandatory") {
+        if (Tok.is(tok::kw_true) || Tok.is(tok::kw_false)) {
+          Mandatory = Tok.is(tok::kw_true);
+          skipSingle();
+        } else {
+          diagnose(Tok.getLoc(), diag::attr_specialize_expected_bool_value);
+          skipUntil(tok::comma, tok::kw_where);
+          if (Tok.is(ClosingBrace))
+            break;
+          if (Tok.is(tok::kw_where)) {
+            continue;
+          }
+          if (Tok.is(tok::comma)) {
+            consumeToken();
+            continue;
+          }
+          DiscardAttribute = true;
+          return false;
         }
       }
       if (!consumeIf(tok::comma)) {
@@ -663,12 +684,14 @@ bool Parser::parseSpecializeAttribute(swift::tok ClosingBrace, SourceLoc AtLoc,
   StringRef AttrName = "_specialize";
 
   Optional<bool> exported;
+  Optional<bool> mandatory;
   Optional<SpecializeAttr::SpecializationKind> kind;
 
   TrailingWhereClause *trailingWhereClause = nullptr;
 
   if (!parseSpecializeAttributeArguments(ClosingBrace, DiscardAttribute,
-                                         exported, kind, trailingWhereClause)) {
+                                         exported, mandatory, kind,
+                                         trailingWhereClause)) {
     return false;
   }
 
@@ -686,6 +709,9 @@ bool Parser::parseSpecializeAttribute(swift::tok ClosingBrace, SourceLoc AtLoc,
   // Not exported by default.
   if (!exported.hasValue())
     exported = false;
+  // Not mandatory by default.
+  if (!mandatory.hasValue())
+    mandatory = false;
   // Full specialization by default.
   if (!kind.hasValue())
     kind = SpecializeAttr::SpecializationKind::Full;
@@ -697,7 +723,7 @@ bool Parser::parseSpecializeAttribute(swift::tok ClosingBrace, SourceLoc AtLoc,
   // Store the attribute.
   Attr = SpecializeAttr::create(Context, AtLoc, SourceRange(Loc, rParenLoc),
                                 trailingWhereClause, exported.getValue(),
-                                kind.getValue());
+                                mandatory.getValue(), kind.getValue());
   return true;
 }
 

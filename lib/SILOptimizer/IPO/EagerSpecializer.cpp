@@ -732,18 +732,15 @@ static SILFunction *eagerSpecialize(SILOptFunctionBuilder &FuncBuilder,
   return NewFunc;
 }
 
-/// Run the pass.
-void EagerSpecializerTransform::run() {
-  if (!EagerSpecializeFlag)
-    return;
-
-  SILOptFunctionBuilder FuncBuilder(*this);
+static void eagerSpecializeFunctions(
+  SILModuleTransform &transform, bool includeMandatory) {
+  SILOptFunctionBuilder FuncBuilder(transform);
 
   // Process functions in any order.
-  for (auto &F : *getModule()) {
+  for (auto &F : *transform.getModule()) {
     if (!F.shouldOptimize()) {
       LLVM_DEBUG(dbgs() << "  Cannot specialize function " << F.getName()
-                        << " marked to be excluded from optimizations.\n");
+                 << " marked to be excluded from optimizations.\n");
       continue;
     }
     // Only specialize functions in their home module.
@@ -761,6 +758,8 @@ void EagerSpecializerTransform::run() {
     // TODO: Use a decision-tree to reduce the amount of dynamic checks being
     // performed.
     for (auto *SA : F.getSpecializeAttrs()) {
+      if (SA->isMandatory() != includeMandatory)
+        continue;
       auto AttrRequirements = SA->getRequirements();
       ReInfoVec.emplace_back(&F, AttrRequirements);
       auto *NewFunc = eagerSpecialize(FuncBuilder, &F, *SA, ReInfoVec.back());
@@ -787,13 +786,42 @@ void EagerSpecializerTransform::run() {
     // Invalidate everything since we delete calls as well as add new
     // calls and branches.
     if (Changed) {
-      invalidateAnalysis(&F, SILAnalysis::InvalidationKind::Everything);
+      transform.invalidateAnalysis(
+        &F, SILAnalysis::InvalidationKind::Everything);
     }
     // As specializations are created, the attributes should be removed.
     F.clearSpecializeAttrs();
   }
 }
 
+/// Run the pass.
+void EagerSpecializerTransform::run() {
+  if (!EagerSpecializeFlag)
+    return;
+
+  eagerSpecializeFunctions(*this, /*includeMandatory: */false);
+}
+
 SILTransform *swift::createEagerSpecializer() {
   return new EagerSpecializerTransform();
+}
+
+namespace swift {
+class MandatoryEagerSpecializerTransform : public SILModuleTransform {
+public:
+  MandatoryEagerSpecializerTransform() {}
+
+  void run() override;
+};
+}
+
+void MandatoryEagerSpecializerTransform::run() {
+  if (!EagerSpecializeFlag)
+    return;
+
+  eagerSpecializeFunctions(*this, /*includeMandatory: */true);
+}
+
+SILTransform *swift::createMandatoryEagerSpecializer() {
+  return new MandatoryEagerSpecializerTransform();
 }

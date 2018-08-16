@@ -2468,12 +2468,13 @@ ModuleFile::getDeclCheckedImpl(DeclID DID) {
 
       case decls_block::Specialize_DECL_ATTR: {
         unsigned exported;
+        unsigned mandatory;
         SpecializeAttr::SpecializationKind specializationKind;
         unsigned specializationKindVal;
         SmallVector<Requirement, 8> requirements;
 
         serialization::decls_block::SpecializeDeclAttrLayout::readRecord(
-          scratch, exported, specializationKindVal);
+          scratch, exported, mandatory, specializationKindVal);
 
         specializationKind = specializationKindVal
                                  ? SpecializeAttr::SpecializationKind::Partial
@@ -2483,6 +2484,7 @@ ModuleFile::getDeclCheckedImpl(DeclID DID) {
 
         Attr = SpecializeAttr::create(ctx, SourceLoc(), SourceRange(),
                                       requirements, exported != 0,
+                                      mandatory != 0,
                                       specializationKind);
         break;
       }

@@ -412,6 +412,7 @@ void SILSerializer::writeSILFunction(const SILFunction &F, bool DeclOnly) {
     unsigned specAttrAbbrCode = SILAbbrCodes[SILSpecializeAttrLayout::Code];
     SILSpecializeAttrLayout::emitRecord(Out, ScratchRecord, specAttrAbbrCode,
                                         (unsigned)SA->isExported(),
+                                        (unsigned)SA->isMandatory(),
                                         (unsigned)SA->getSpecializationKind());
     S.writeGenericRequirements(SA->getRequirements(), SILAbbrCodes);
   }

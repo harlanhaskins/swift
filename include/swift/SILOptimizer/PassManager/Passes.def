@@ -36,7 +36,7 @@
 ///   This macro follows the same conventions as PASS(Id, Tag, Description),
 ///   but is used for IRGen passes which are built outside of the
 ///   SILOptimizer library.
-///   
+///
 ///   An IRGen pass is created by IRGen and needs to be registered with the pass
 ///   manager dynamically.
 #ifndef IRGEN_PASS
@@ -198,6 +198,8 @@ PASS(LowerAggregateInstrs, "lower-aggregate-instrs",
      "Lower Aggregate SIL Instructions to Multiple Scalar Operations")
 PASS(MandatoryInlining, "mandatory-inlining",
      "Mandatory Inlining of Transparent Functions")
+PASS(MandatoryEagerSpecializer, "mandatory-eager-specializer",
+     "Eager Specialization via @_specialize for mandatory specializations")
 PASS(Mem2Reg, "mem2reg",
      "Memory to SSA Value Conversion to Remove Stack Allocation")
 PASS(MemBehaviorDumper, "mem-behavior-dump",

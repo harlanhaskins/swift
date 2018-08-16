@@ -307,6 +307,7 @@ namespace sil_block {
   using SILSpecializeAttrLayout =
       BCRecordLayout<SIL_SPECIALIZE_ATTR,
                      BCFixed<1>, // exported
+                     BCFixed<1>, // mandatory
                      BCFixed<1> // specialization kind
                      >;
 

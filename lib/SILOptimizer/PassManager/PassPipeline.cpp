@@ -99,6 +99,7 @@ static void addMandatoryOptPipeline(SILPassPipelinePlan &P,
   P.addOwnershipModelEliminator();
   P.addMandatoryInlining();
   P.addMandatorySILLinker();
+  P.addMandatoryEagerSpecializer();
   P.addPredictableMemoryOptimizations();
 
   // Diagnostic ConstantPropagation must be rerun on deserialized functions

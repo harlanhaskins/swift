@@ -598,8 +598,10 @@ SILDeserializer::readSILFunctionChecked(DeclID FID, SILFunction *existingFn,
     assert(kind == SIL_SPECIALIZE_ATTR && "Missing specialization attribute");
 
     unsigned exported;
+    unsigned mandatory;
     unsigned specializationKindVal;
-    SILSpecializeAttrLayout::readRecord(scratch, exported, specializationKindVal);
+    SILSpecializeAttrLayout::readRecord(scratch, exported, mandatory,
+                                        specializationKindVal);
     SILSpecializeAttr::SpecializationKind specializationKind =
         specializationKindVal ? SILSpecializeAttr::SpecializationKind::Partial
                               : SILSpecializeAttr::SpecializationKind::Full;
@@ -609,7 +611,8 @@ SILDeserializer::readSILFunctionChecked(DeclID FID, SILFunction *existingFn,
 
     // Read the substitution list and construct a SILSpecializeAttr.
     fn->addSpecializeAttr(SILSpecializeAttr::create(
-        SILMod, requirements, exported != 0, specializationKind));
+        SILMod, requirements, exported != 0, mandatory != 0,
+        specializationKind));
   }
 
   GenericEnvironment *genericEnv = nullptr;

@@ -2350,6 +2350,7 @@ void Serializer::writeDeclAttribute(const DeclAttribute *DA) {
 
     SpecializeDeclAttrLayout::emitRecord(Out, ScratchRecord, abbrCode,
                                          (unsigned)SA->isExported(),
+                                         (unsigned)SA->isMandatory(),
                                          (unsigned)SA->getSpecializationKind());
     writeGenericRequirements(SA->getRequirements(), DeclTypeAbbrCodes);
     return;

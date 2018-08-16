@@ -236,9 +236,10 @@ protected:
       ownership : NumReferenceOwnershipBits
     );
 
-    SWIFT_INLINE_BITFIELD_FULL(SpecializeAttr, DeclAttribute, 1+1+32,
+    SWIFT_INLINE_BITFIELD_FULL(SpecializeAttr, DeclAttribute, 1+1+1+32,
       exported : 1,
       kind : 1,
+      mandatory : 1,
       : NumPadBits,
       numRequirements : 32
     );
@@ -1114,23 +1115,25 @@ private:
   }
 
   SpecializeAttr(SourceLoc atLoc, SourceRange Range,
-                 TrailingWhereClause *clause, bool exported,
+                 TrailingWhereClause *clause, bool exported, bool mandatory,
                  SpecializationKind kind);
 
   SpecializeAttr(SourceLoc atLoc, SourceRange Range,
                  ArrayRef<Requirement> requirements,
-                 bool exported,
+                 bool exported, bool mandatory,
                  SpecializationKind kind);
 
 public:
   static SpecializeAttr *create(ASTContext &Ctx, SourceLoc atLoc,
                                 SourceRange Range, TrailingWhereClause *clause,
-                                bool exported, SpecializationKind kind);
+                                bool exported, bool mandatory,
+                                SpecializationKind kind);
 
   static SpecializeAttr *create(ASTContext &Ctx, SourceLoc atLoc,
                                 SourceRange Range,
                                 ArrayRef<Requirement> requirement,
-                                bool exported, SpecializationKind kind);
+                                bool exported,  bool mandatory,
+                                SpecializationKind kind);
 
   TrailingWhereClause *getTrailingWhereClause() const;
 
@@ -1138,6 +1141,10 @@ public:
 
   MutableArrayRef<Requirement> getRequirements() {
     return { getRequirementsData(), Bits.SpecializeAttr.numRequirements };
+  }
+
+  bool isMandatory() const {
+    return Bits.SpecializeAttr.mandatory;
   }
 
   void setRequirements(ASTContext &Ctx, ArrayRef<Requirement> requirements);

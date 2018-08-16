@@ -855,21 +855,25 @@ const AvailableAttr *AvailableAttr::isUnavailable(const Decl *D) {
 SpecializeAttr::SpecializeAttr(SourceLoc atLoc, SourceRange range,
                                TrailingWhereClause *clause,
                                bool exported,
+                               bool mandatory,
                                SpecializationKind kind)
     : DeclAttribute(DAK_Specialize, atLoc, range, /*Implicit=*/false),
       trailingWhereClause(clause) {
   Bits.SpecializeAttr.exported = exported;
   Bits.SpecializeAttr.kind = unsigned(kind);
+  Bits.SpecializeAttr.mandatory = mandatory;
   Bits.SpecializeAttr.numRequirements = 0;
 }
 
 SpecializeAttr::SpecializeAttr(SourceLoc atLoc, SourceRange range,
                                ArrayRef<Requirement> requirements,
                                bool exported,
+                               bool mandatory,
                                SpecializationKind kind)
     : DeclAttribute(DAK_Specialize, atLoc, range, /*Implicit=*/false) {
   Bits.SpecializeAttr.exported = exported;
   Bits.SpecializeAttr.kind = unsigned(kind);
+  Bits.SpecializeAttr.mandatory = mandatory;
   Bits.SpecializeAttr.numRequirements = requirements.size();
   std::copy(requirements.begin(), requirements.end(), getRequirementsData());
 }
@@ -897,26 +901,28 @@ SpecializeAttr *SpecializeAttr::create(ASTContext &Ctx, SourceLoc atLoc,
                                        SourceRange range,
                                        TrailingWhereClause *clause,
                                        bool exported,
+                                       bool mandatory,
                                        SpecializationKind kind) {
   unsigned numRequirements = (clause) ? clause->getRequirements().size() : 0;
   unsigned size =
       sizeof(SpecializeAttr) + (numRequirements * sizeof(Requirement));
   void *mem = Ctx.Allocate(size, alignof(SpecializeAttr));
   return new (mem)
-      SpecializeAttr(atLoc, range, clause, exported, kind);
+      SpecializeAttr(atLoc, range, clause, exported, mandatory, kind);
 }
 
 SpecializeAttr *SpecializeAttr::create(ASTContext &Ctx, SourceLoc atLoc,
                                        SourceRange range,
                                        ArrayRef<Requirement> requirements,
                                        bool exported,
+                                       bool mandatory,
                                        SpecializationKind kind) {
   unsigned numRequirements = requirements.size();
   unsigned size =
       sizeof(SpecializeAttr) + (numRequirements * sizeof(Requirement));
   void *mem = Ctx.Allocate(size, alignof(SpecializeAttr));
   return new (mem)
-      SpecializeAttr(atLoc, range, requirements, exported, kind);
+      SpecializeAttr(atLoc, range, requirements, exported, mandatory, kind);
 }
 
 
