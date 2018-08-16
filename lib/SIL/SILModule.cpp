@@ -634,16 +634,6 @@ shouldSerializeEntitiesAssociatedWithDeclContext(const DeclContext *DC) const {
   return false;
 }
 
-/// Returns true if it is the OnoneSupport module.
-bool SILModule::isOnoneSupportModule() const {
-  return getSwiftModule()->getName().str() == SWIFT_ONONE_SUPPORT;
-}
-
-/// Returns true if it is the optimized OnoneSupport module.
-bool SILModule::isOptimizedOnoneSupportModule() const {
-  return getOptions().shouldOptimize() && isOnoneSupportModule();
-}
-
 void SILModule::setSerializeSILAction(SILModule::ActionCallback Action) {
   assert(!SerializeSILAction && "Serialization action can be set only once");
   SerializeSILAction = Action;

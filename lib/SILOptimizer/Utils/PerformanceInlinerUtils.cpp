@@ -667,7 +667,7 @@ SILFunction *swift::getEligibleFunction(FullApplySite AI,
     return nullptr;
 
   auto ModuleName = Callee->getModule().getSwiftModule()->getName().str();
-  bool IsInStdlib = (ModuleName == STDLIB_NAME || ModuleName == SWIFT_ONONE_SUPPORT);
+  bool IsInStdlib = ModuleName == STDLIB_NAME;
 
   // Don't inline functions that are marked with the @_semantics or @_effects
   // attribute if the inliner is asked not to inline them.

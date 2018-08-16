@@ -466,35 +466,6 @@ static void addAdditionalInitialImportsTo(
   SF->addImports(additionalImports);
 }
 
-/// Implicitly import the SwiftOnoneSupport module in non-optimized
-/// builds. This allows for use of popular specialized functions
-/// from the standard library, which makes the non-optimized builds
-/// execute much faster.
-static bool
-shouldImplicityImportSwiftOnoneSupportModule(CompilerInvocation &Invocation) {
-  if (Invocation.getImplicitModuleImportKind() !=
-      SourceFile::ImplicitModuleImportKind::Stdlib)
-    return false;
-  if (Invocation.getSILOptions().shouldOptimize())
-    return false;
-
-  // If we are not executing an action that has a dependency on
-  // SwiftOnoneSupport, don't load it.
-  //
-  // FIXME: Knowledge of SwiftOnoneSupport loading in the Frontend is a layering
-  // violation. However, SIL currently does not have a way to express this
-  // dependency itself for the benefit of autolinking.  In the mean time, we
-  // will be conservative and say that actions like -emit-silgen and
-  // -emit-sibgen - that don't really involve the optimizer - have a
-  // strict dependency on SwiftOnoneSupport.
-  //
-  // This optimization is disabled by -track-system-dependencies to preserve
-  // the explicit dependency.
-  const auto &options = Invocation.getFrontendOptions();
-  return options.TrackSystemDeps
-      || FrontendOptions::doesActionGenerateSIL(options.RequestedAction);
-}
-
 void CompilerInstance::performParseAndResolveImportsOnly() {
   performSemaUpTo(SourceFile::NameBound);
 }
@@ -524,10 +495,6 @@ void CompilerInstance::performSemaUpTo(SourceFile::ASTStage_t LimitStage) {
       SourceFile::ImplicitModuleImportKind::Stdlib) {
     if (!loadStdlib())
       return;
-  }
-  if (shouldImplicityImportSwiftOnoneSupportModule(Invocation)) {
-    Invocation.getFrontendOptions().ImplicitImportModuleNames.push_back(
-        SWIFT_ONONE_SUPPORT);
   }
 
   const ImplicitImports implicitImports(*this);

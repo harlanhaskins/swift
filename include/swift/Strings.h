@@ -20,8 +20,6 @@ namespace swift {
 
 /// The name of the standard library, which is a reserved module name.
 constexpr static const char STDLIB_NAME[] = "Swift";
-/// The name of the Onone support library, which is a reserved module name.
-constexpr static const char SWIFT_ONONE_SUPPORT[] = "SwiftOnoneSupport";
 /// The name of the SwiftShims module, which contains private stdlib decls.
 constexpr static const char SWIFT_SHIMS_NAME[] = "SwiftShims";
 /// The name of the Builtin module, which contains Builtin functions.

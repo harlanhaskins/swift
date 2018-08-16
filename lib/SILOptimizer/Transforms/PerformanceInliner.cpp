@@ -485,7 +485,7 @@ static Optional<bool> shouldInlineGeneric(FullApplySite AI) {
   // can properly optimize a user code later.
   auto ModuleName = Callee->getModule().getSwiftModule()->getName().str();
   if (Callee->hasSemanticsAttrThatStartsWith("array.") &&
-      (ModuleName == STDLIB_NAME || ModuleName == SWIFT_ONONE_SUPPORT))
+      ModuleName == STDLIB_NAME)
     return false;
 
   // Do not inline into thunks.

@@ -218,8 +218,7 @@ namespace {
 
     bool ShouldSerializeAll;
 
-    void addMandatorySILFunction(const SILFunction *F,
-                                 bool emitDeclarationsForOnoneSupport);
+    void addMandatorySILFunction(const SILFunction *F);
     void addReferencedSILFunction(const SILFunction *F,
                                   bool DeclOnly = false);
     void processSILFunctionWorklist();
@@ -278,30 +277,25 @@ namespace {
   };
 } // end anonymous namespace
 
-void SILSerializer::addMandatorySILFunction(const SILFunction *F,
-                                            bool emitDeclarationsForOnoneSupport) {
+void SILSerializer::addMandatorySILFunction(const SILFunction *F) {
   // If this function is not fragile, don't do anything.
-  if (!emitDeclarationsForOnoneSupport &&
-      !shouldEmitFunctionBody(F, /* isReference */ false))
+  if (!shouldEmitFunctionBody(F, /* isReference */ false))
     return;
 
   auto iter = FuncsToEmit.find(F);
   if (iter != FuncsToEmit.end()) {
     // We've already visited this function. Make sure that we decided
     // to emit its body the first time around.
-    assert(iter->second == emitDeclarationsForOnoneSupport
-           && "Already emitting declaration");
+    assert(iter->second && "Already emitting declaration");
     return;
   }
 
   // We haven't seen this function before. Record that we want to
   // emit its body, and add it to the worklist.
-  FuncsToEmit[F] = emitDeclarationsForOnoneSupport;
+  FuncsToEmit[F] = true;
 
-  // Function body should be serialized unless it is a KeepAsPublic function
-  // (which is typically a pre-specialization).
-  if (!emitDeclarationsForOnoneSupport)
-    Worklist.push_back(F);
+  // Function body should be serialized unless it is a pre-specialization.
+  Worklist.push_back(F);
 }
 
 void SILSerializer::addReferencedSILFunction(const SILFunction *F,
@@ -2473,25 +2467,18 @@ void SILSerializer::writeSILBlock(const SILModule *SILMod) {
       writeSILDefaultWitnessTable(wt);
   }
 
-  // Emit only declarations if it is a module with pre-specializations.
-  // And only do it in optimized builds.
-  bool emitDeclarationsForOnoneSupport =
-      SILMod->isOptimizedOnoneSupportModule();
-
   // Go through all the SILFunctions in SILMod and write out any
   // mandatory function bodies.
   for (const SILFunction &F : *SILMod) {
-    if (emitDeclarationsForOnoneSupport) {
-      // Only declarations of hardcoded pre-specializations with
-      // public linkage need to be serialized as they will be used
-      // by the UsePrespecializations pass during -Onone compilation to
-      // check for availability of concrete pre-specializations.
-      if (!hasPublicVisibility(F.getLinkage()) ||
-          !isKnownPrespecialization(F.getName()))
-        continue;
-    }
+    // Only declarations of hardcoded pre-specializations with
+    // public linkage need to be serialized as they will be used
+    // by the UsePrespecializations pass during -Onone compilation to
+    // check for availability of concrete pre-specializations.
+    if (!hasPublicVisibility(F.getLinkage()) ||
+        !isKnownPrespecialization(F.getName()))
+      continue;
 
-    addMandatorySILFunction(&F, emitDeclarationsForOnoneSupport);
+    addMandatorySILFunction(&F);
     processSILFunctionWorklist();
   }
 
@@ -2500,8 +2487,7 @@ void SILSerializer::writeSILBlock(const SILModule *SILMod) {
   for (const SILFunction &F : *SILMod) {
     auto iter = FuncsToEmit.find(&F);
     if (iter != FuncsToEmit.end() && iter->second) {
-      assert((emitDeclarationsForOnoneSupport ||
-              !shouldEmitFunctionBody(&F)) &&
+      assert(!shouldEmitFunctionBody(&F) &&
              "Should have emitted function body earlier");
       writeSILFunction(F, true);
     }

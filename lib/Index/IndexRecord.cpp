@@ -402,8 +402,6 @@ static void addModuleDependencies(ArrayRef<ModuleDecl::ImportedModule> imports,
 
   for (auto &import : imports) {
     ModuleDecl *mod = import.second;
-    if (mod->getNameStr() == SWIFT_ONONE_SUPPORT)
-      continue; // ignore the Onone support library.
     if (mod->isSwiftShimsModule())
       continue;
 
