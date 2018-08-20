@@ -370,6 +370,22 @@ void TBDGenVisitor::addFirstFileSymbols() {
   }
 }
 
+/// Converts a version tuple into a packed version, ignoring components beyond
+/// major, minor, and subminor.
+static tapi::internal::PackedVersion
+convertToPacked(const version::Version &version) {
+  // FIXME: Warn if version is greater than 3 components?
+  unsigned major = 0, minor = 0, subminor = 0;
+  if (version.size() > 0) major = version[0];
+  if (version.size() > 1) minor = version[1];
+  if (version.size() > 2) subminor = version[2];
+  return tapi::internal::PackedVersion(major, minor, subminor);
+}
+
+static bool isApplicationExtensionSafe(const LangOptions &LangOpts) {
+  return LangOpts.EnableAppExtensionRestrictions;
+}
+
 static void enumeratePublicSymbolsAndWrite(ModuleDecl *M, FileUnit *singleFile,
                                            StringSet &symbols,
                                            llvm::raw_ostream *os,
@@ -378,7 +394,21 @@ static void enumeratePublicSymbolsAndWrite(ModuleDecl *M, FileUnit *singleFile,
   const auto &target = M->getASTContext().LangOpts.Target;
   UniversalLinkageInfo linkInfo(target, opts.HasMultipleIGMs, isWholeModule);
 
-  TBDGenVisitor visitor(symbols, target, linkInfo, M, opts);
+  tapi::internal::InterfaceFile file;
+  file.setFileType(tapi::internal::FileType::TBD_V3);
+  file.setApplicationExtensionSafe(
+    isApplicationExtensionSafe(M->getASTContext().LangOpts));
+  file.setInstallName(opts.InstallName);
+  file.setCurrentVersion(convertToPacked(opts.CurrentVersion));
+  file.setCompatibilityVersion(convertToPacked(opts.CompatibilityVersion));
+  file.setTwoLevelNamespace();
+  file.setSwiftABIVersion(TAPI_SWIFT_ABI_VERSION);
+  file.setPlatform(tapi::internal::mapToSinglePlatform(target));
+  auto arch = tapi::internal::getArchType(target.getArchName());
+  file.setArch(arch);
+  file.setInstallAPI();
+
+  TBDGenVisitor visitor(file, arch, symbols, linkInfo, M, opts);
 
   auto visitFile = [&](FileUnit *file) {
     if (file == M->getFiles()[0]) {
