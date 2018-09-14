@@ -14,6 +14,7 @@
 #define SWIFT_AST_INLINABLETEXT_H
 
 #include "swift/AST/ASTNode.h"
+#include "swift/AST/PrettyStackTrace.h"
 #include "swift/Basic/LLVM.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/SmallVector.h"
@@ -23,7 +24,7 @@ class SourceManager;
 
 /// Extracts the text of this ASTNode from the source buffer, ignoring
 /// all #if declarations and clauses except the elements that are active.
-StringRef extractInlinableText(SourceManager &sourceMgr, ASTNode node,
+StringRef extractInlinableText(ASTContext &ctx, ASTNode node,
                                SmallVectorImpl<char> &scratch);
 
 } // end namespace swift

@@ -15,12 +15,137 @@
 #include "swift/AST/ASTNode.h"
 #include "swift/AST/Decl.h"
 #include "swift/AST/Expr.h"
+#include "swift/AST/PrettyStackTrace.h"
 #include "swift/Parse/Lexer.h"
+#include "swift/Parse/Parser.h"
+#include "swift/Syntax/Trivia.h"
+#include "swift/Syntax/TokenSyntax.h"
 
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/SmallString.h"
 
 using namespace swift;
+using namespace syntax;
+
+/// Moves the comments in the provided iterator to the end, and returns a
+/// pointer to the first comment.
+static TriviaList::iterator
+removeComments(TriviaList::iterator begin, TriviaList::iterator end) {
+  return std::remove_if(begin, end, [](const TriviaPiece &piece) {
+                                      return piece.isComment();
+                                    });
+}
+
+/// Removes all comments from the provided input.
+static void removeComments(TriviaList &input) {
+  input.erase(removeComments(input.begin(), input.end()), input.end());
+}
+
+/// Determines if a given trivia piece is a newline.
+static bool isNewline(const TriviaPiece &piece) {
+  switch (piece.getKind()) {
+  case TriviaKind::Newline:
+  case TriviaKind::CarriageReturn:
+  case TriviaKind::CarriageReturnLineFeed:
+    return true;
+  default: return false;
+  }
+}
+
+/// Finds the last element in the provided bidirectional iterator that satisfies
+/// the provided predicate.
+template <typename Iterator, typename Predicate>
+static Iterator
+find_last_if(const Iterator begin, const Iterator end, Predicate pred) {
+  for (auto it = end; it != begin; --it) {
+    if (pred(*it))
+      return it;
+  }
+  return end;
+}
+
+
+/// Returns an iterator pointing to the last newline in the input list, or the
+/// end of the input if none is found.
+static TriviaList::iterator
+indexOfLastNewline(TriviaList &input) {
+  return find_last_if(input.begin(), input.end(),
+                      [](const TriviaPiece &piece) {
+                        return isNewline(piece);
+                      });
+}
+
+/// Removes all comments in the input list, treating it as leading trivia.
+static void removeLeadingComments(TriviaList &input) {
+  // The strategy here is to choose a pivot point.
+  // If there are no newlines in this trivia, then remove all comments, but
+  // preserve all whitespace.
+  // Otherwise, pick the last newline, remove _all_ trivia before it, and
+  // then remove all comments after it, preserving the whitespace.
+  auto it = indexOfLastNewline(input);
+  if (it == input.end()) {
+    removeComments(input);
+    return;
+  }
+
+  input.erase(input.begin(), it);
+  input.erase(removeComments(it, input.end()),
+              input.end());
+}
+
+/// Removes all comments in the input list, treating it as trailing trivia.
+static void removeTrailingComments(TriviaList &input) {
+  // Trailing block comments can not be safely removed, otherwise you might
+  // paste two tokens together, instead they have to be replaced
+  // with a single space.
+  for (auto it = input.begin(); it != input.end(); ++it) {
+    if (it->getKind() == TriviaKind::BlockComment ||
+        it->getKind() == TriviaKind::DocBlockComment) {
+      *it = TriviaPiece::space();
+    }
+  }
+
+  // Trailing line comments can just be removed.
+  auto removedEnd = std::remove_if(
+                      input.begin(), input.end(),
+                      [](TriviaPiece &p) {
+                        return p.getKind() == TriviaKind::LineComment ||
+                               p.getKind() == TriviaKind::DocLineComment;
+                      });
+  input.erase(removedEnd, input.end());
+}
+
+/// Removes all comments from the provided Swift source text, storing the
+/// result in the provided scratch buffer.
+static
+StringRef removeComments(StringRef text, SmallVectorImpl<char> &scratch) {
+  // Copy the source into a temporary source manager buffer.
+  SourceManager sourceManager;
+  unsigned bufferID = sourceManager.addMemBufferCopy(text);
+  auto tokensAndPositions = tokenizeWithTrivia({}, sourceManager, bufferID);
+
+  // For each token, remove comments from the leading and trailing trivia, and
+  // form new tokens without comments.
+  SmallVector<RC<RawSyntax>, 128> finalTokens;
+  for (auto &pair : tokensAndPositions) {
+    auto tok = pair.first;
+    TriviaList leading = tok->getLeadingTrivia().vec();
+    removeLeadingComments(leading);
+    TriviaList trailing = tok->getTrailingTrivia().vec();
+    removeTrailingComments(trailing);
+    finalTokens.push_back(tok->withLeadingTrivia(leading)
+                             ->withTrailingTrivia(trailing));
+  }
+
+  // Print the token text to the scratch buffer.
+  llvm::raw_svector_ostream os(scratch);
+  SyntaxPrintOptions opts;
+  for (auto tok : finalTokens) {
+    tok->print(os, opts);
+  }
+
+  return { scratch.data(), scratch.size() };
+}
 
 /// Gets the last token that exists inside this IfConfigClause, ignoring
 /// hoisted elements.
@@ -128,8 +253,13 @@ struct ExtractInactiveRanges : public ASTWalker {
 };
 } // end anonymous namespace
 
-StringRef swift::extractInlinableText(SourceManager &sourceMgr, ASTNode node,
+StringRef swift::extractInlinableText(ASTContext &ctx, ASTNode node,
                                       SmallVectorImpl<char> &scratch) {
+  PrettyStackTraceLocation pst(ctx, "extracting inlinable text",
+                               node.getStartLoc());
+
+  auto &sourceMgr = ctx.SourceMgr;
+
   // Extract inactive ranges from the text of the node.
   ExtractInactiveRanges extractor(sourceMgr);
   node.walk(extractor);
@@ -140,10 +270,12 @@ StringRef swift::extractInlinableText(SourceManager &sourceMgr, ASTNode node,
     auto range =
       Lexer::getCharSourceRangeFromSourceRange(
         sourceMgr, node.getSourceRange());
-    return sourceMgr.extractText(range);
+    return removeComments(sourceMgr.extractText(range), scratch);
   }
 
   // Begin piecing together active code ranges.
+
+  SmallString<128> buf;
 
   // Get the full start and end of the provided node, as character locations.
   SourceLoc start = node.getStartLoc();
@@ -152,7 +284,7 @@ StringRef swift::extractInlinableText(SourceManager &sourceMgr, ASTNode node,
     // Add the text from the current 'start' to this ignored range's start.
     auto charRange = CharSourceRange(sourceMgr, start, range.getStart());
     auto chunk = sourceMgr.extractText(charRange);
-    scratch.append(chunk.begin(), chunk.end());
+    buf.append(chunk);
 
     // Set 'start' to the end of this range, effectively skipping it.
     start = range.getEnd();
@@ -162,7 +294,7 @@ StringRef swift::extractInlinableText(SourceManager &sourceMgr, ASTNode node,
   if (start != end) {
     auto range = CharSourceRange(sourceMgr, start, end);
     auto chunk = sourceMgr.extractText(range);
-    scratch.append(chunk.begin(), chunk.end());
+    buf.append(chunk);
   }
-  return { scratch.data(), scratch.size() };
+  return removeComments(buf.str(), scratch);
 }

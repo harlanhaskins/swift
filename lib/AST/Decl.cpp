@@ -1240,9 +1240,9 @@ StringRef PatternBindingEntry::getInitStringRepresentation(
 
   if (InitContextAndIsText.getInt() && !InitStringRepresentation.empty())
     return InitStringRepresentation;
-  auto &sourceMgr = getAnchoringVarDecl()->getASTContext().SourceMgr;
+  auto &ctx = getAnchoringVarDecl()->getASTContext();
   auto init = getInit();
-  return extractInlinableText(sourceMgr, init, scratch);
+  return extractInlinableText(ctx, init, scratch);
 }
 
 SourceRange PatternBindingDecl::getSourceRange() const {
@@ -4863,7 +4863,7 @@ ParamDecl::getDefaultValueStringRepresentation(
       DefaultValueAndIsVariadic.getPointer()->StringRepresentation;
     if (!existing.empty())
       return existing;
-    return extractInlinableText(getASTContext().SourceMgr, getDefaultValue(),
+    return extractInlinableText(getASTContext(), getDefaultValue(),
                                 scratch);
   }
   case DefaultArgumentKind::Inherited:
@@ -5490,7 +5490,7 @@ StringRef AbstractFunctionDecl::getInlinableBodyText(
     return BodyStringRepresentation;
 
   auto body = getBody();
-  return extractInlinableText(getASTContext().SourceMgr, body, scratch);
+  return extractInlinableText(getASTContext(), body, scratch);
 }
 
 FuncDecl *FuncDecl::createImpl(ASTContext &Context,
