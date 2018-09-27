@@ -2435,9 +2435,16 @@ void Serializer::writePatternBindingInitializer(PatternBindingDecl *binding,
                                                 unsigned bindingIndex) {
   using namespace decls_block;
   auto abbrCode = DeclTypeAbbrCodes[PatternBindingInitializerLayout::Code];
+
+  StringRef initStr;
+  SmallString<128> scratch;
+  if (binding->hasInitStringRepresentation(bindingIndex)) {
+    initStr = binding->getInitStringRepresentation(bindingIndex, scratch);
+  }
+
   PatternBindingInitializerLayout::emitRecord(Out, ScratchRecord,
                                               abbrCode, addDeclRef(binding),
-                                              bindingIndex);
+                                              bindingIndex, initStr);
 }
 
 void

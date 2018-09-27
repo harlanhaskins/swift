@@ -1837,6 +1837,9 @@ DeclContext *ModuleFile::getLocalDeclContext(DeclContextID DCID) {
     if (!declContextOrOffset.isComplete())
       declContextOrOffset = new (ctx)
         SerializedPatternBindingInitializer(binding, bindingIndex);
+
+    if (!blobData.empty())
+      binding->setInitStringRepresentation(bindingIndex, blobData);
     break;
   }
 
@@ -5367,23 +5370,29 @@ decodeRawStableForeignErrorConventionKind(uint8_t kind) {
   }
 }
 
-Optional<StringRef> ModuleFile::maybeReadInlinableBodyText() {
+static Optional<StringRef>
+maybeReadSimpleBlobRecord(llvm::BitstreamCursor &Cursor, unsigned kind) {
   using namespace decls_block;
 
   SmallVector<uint64_t, 8> scratch;
-  BCOffsetRAII restoreOffset(DeclTypeCursor);
+  BCOffsetRAII restoreOffset(Cursor);
   StringRef blobData;
 
-  auto next = DeclTypeCursor.advance(AF_DontPopBlockAtEnd);
+  auto next = Cursor.advance(AF_DontPopBlockAtEnd);
   if (next.Kind != llvm::BitstreamEntry::Record)
     return None;
 
-  unsigned recKind = DeclTypeCursor.readRecord(next.ID, scratch, &blobData);
-  if (recKind != INLINABLE_BODY_TEXT)
+  unsigned recKind = Cursor.readRecord(next.ID, scratch, &blobData);
+  if (recKind != kind)
     return None;
 
   restoreOffset.reset();
   return blobData;
+}
+
+Optional<StringRef> ModuleFile::maybeReadInlinableBodyText() {
+  using namespace decls_block;
+  return maybeReadSimpleBlobRecord(DeclTypeCursor, INLINABLE_BODY_TEXT);
 }
 
 Optional<ForeignErrorConvention> ModuleFile::maybeReadForeignErrorConvention() {

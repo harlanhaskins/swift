@@ -17,6 +17,7 @@
 #include "swift/AST/ASTContext.h"
 #include "ForeignRepresentationInfo.h"
 #include "SubstitutionMapStorage.h"
+#include "swift/AST/ASTPrinterRequests.h"
 #include "swift/AST/ConcreteDeclRef.h"
 #include "swift/AST/DiagnosticEngine.h"
 #include "swift/AST/DiagnosticsSema.h"
@@ -535,6 +536,7 @@ ASTContext::ASTContext(LangOptions &langOpts, SearchPathOptions &SearchPathOpts,
   // Register any request-evaluator functions available at the AST layer.
   registerAccessRequestFunctions(evaluator);
   registerNameLookupRequestFunctions(evaluator);
+  registerASTPrinterRequestFunctions(evaluator);
 }
 
 ASTContext::~ASTContext() {

@@ -1215,6 +1215,24 @@ SourceRange PatternBindingEntry::getSourceRange(bool omitAccessors) const {
   return SourceRange(startLoc, endLoc);
 }
 
+bool PatternBindingEntry::hasInitStringRepresentation() const {
+  if (!InitStringRepresentation.empty()) return true;
+  return getInit() && getInit()->getSourceRange().isValid();
+}
+
+StringRef PatternBindingEntry::getInitStringRepresentation(
+  SmallVectorImpl<char> &scratch) const {
+
+  assert(hasInitStringRepresentation() &&
+         "must check if pattern has string representation");
+
+  if (!InitStringRepresentation.empty())
+    return InitStringRepresentation;
+  auto &sourceMgr = getAnchoringVarDecl()->getASTContext().SourceMgr;
+  auto init = getInit();
+  return extractInlinableText(sourceMgr, init, scratch);
+}
+
 SourceRange PatternBindingDecl::getSourceRange() const {
   SourceLoc startLoc = getStartLoc();
   SourceLoc endLoc = getPatternList().back().getSourceRange().End;
@@ -2348,9 +2366,11 @@ bool ValueDecl::isUsableFromInline() const {
     if (EED->getParentEnum()->getAttrs().hasAttribute<UsableFromInlineAttr>())
       return true;
 
-  if (auto *ATD = dyn_cast<AssociatedTypeDecl>(this))
-    if (ATD->getProtocol()->getAttrs().hasAttribute<UsableFromInlineAttr>())
+  if (auto *containingProto = dyn_cast<ProtocolDecl>(getDeclContext())) {
+    if (isProtocolRequirement() &&
+        containingProto->getAttrs().hasAttribute<UsableFromInlineAttr>())
       return true;
+  }
 
   if (auto *DD = dyn_cast<DestructorDecl>(this))
     if (auto *CD = dyn_cast<ClassDecl>(DD->getDeclContext()))

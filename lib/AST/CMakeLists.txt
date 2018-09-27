@@ -11,6 +11,7 @@ add_swift_library(swiftAST STATIC
   ASTMangler.cpp
   ASTNode.cpp
   ASTPrinter.cpp
+  ASTPrinterRequests.cpp
   ASTScope.cpp
   ASTVerifier.cpp
   ASTWalker.cpp

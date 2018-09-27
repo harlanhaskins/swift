@@ -1883,6 +1883,8 @@ class PatternBindingEntry {
   /// The initializer context used for this pattern binding entry.
   DeclContext *InitContext = nullptr;
 
+  StringRef InitStringRepresentation;
+
   friend class PatternBindingInitializer;
 
 public:
@@ -1902,6 +1904,12 @@ public:
   }
   SourceRange getOrigInitRange() const;
   void setInit(Expr *E);
+
+  StringRef getInitStringRepresentation(SmallVectorImpl<char> &scratch) const;
+  void setInitStringRepresentation(StringRef str) {
+    InitStringRepresentation = str;
+  }
+  bool hasInitStringRepresentation() const;
 
   /// Retrieve the location of the equal '=' token.
   SourceLoc getEqualLoc() const { return EqualLoc; }
@@ -2007,6 +2015,19 @@ public:
     return const_cast<PatternBindingDecl*>(this)->getMutablePatternList();
   }
 
+  bool hasInitStringRepresentation(unsigned i) {
+    return getPatternList()[i].hasInitStringRepresentation();
+  }
+
+  void setInitStringRepresentation(unsigned i, StringRef str) {
+    getMutablePatternList()[i].setInitStringRepresentation(str);
+  }
+
+  StringRef getInitStringRepresentation(unsigned i,
+                                        SmallVectorImpl<char> &scratch) {
+    return getPatternList()[i].getInitStringRepresentation(scratch);
+  }
+
   Expr *getInit(unsigned i) const {
     return getPatternList()[i].getInit();
   }
@@ -2039,7 +2060,8 @@ public:
   
   /// Return the PatternEntry (a pattern + initializer pair) for the specified
   /// VarDecl.
-  PatternBindingEntry getPatternEntryForVarDecl(const VarDecl *VD) const {
+  const PatternBindingEntry &getPatternEntryForVarDecl(
+    const VarDecl *VD) const {
     return getPatternList()[getPatternEntryIndexForVarDecl(VD)];
   }
   
@@ -2097,7 +2119,7 @@ public:
   static bool classof(const Decl *D) {
     return D->getKind() == DeclKind::PatternBinding;
   }
-  
+
 private:
   MutableArrayRef<PatternBindingEntry> getMutablePatternList() {
     // Pattern entries are tail allocated.

@@ -85,7 +85,7 @@ bool swift::emitModuleInterface(raw_ostream &out, ModuleDecl *M) {
 
   printImports(out, M);
 
-  const PrintOptions printOptions = PrintOptions::printTextualInterfaceFile();
+  const PrintOptions printOptions = PrintOptions::printTextualInterfaceFile(M);
   SmallVector<Decl *, 16> topLevelDecls;
   M->getTopLevelDecls(topLevelDecls);
   for (const Decl *D : topLevelDecls) {

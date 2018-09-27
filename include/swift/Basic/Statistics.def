@@ -144,6 +144,11 @@ FRONTEND_STATISTIC(AST, NumPrecedenceGroups)
 /// Number of conformances used by code processed by this frontend job.
 FRONTEND_STATISTIC(AST, NumUsedConformances)
 
+/// All AST requests go into the AST area.
+#define SWIFT_TYPEID(NAME) FRONTEND_STATISTIC(Sema, NAME)
+#include "swift/AST/ASTPrinterTypeIDZone.def"
+#undef SWIFT_TYPEID
+
 /// Number of full function bodies parsed.
 FRONTEND_STATISTIC(Parse, NumFunctionsParsed)
 

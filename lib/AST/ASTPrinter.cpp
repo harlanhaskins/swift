@@ -15,6 +15,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "swift/AST/ASTPrinter.h"
+#include "swift/AST/ASTPrinterRequests.h"
 #include "swift/AST/ASTContext.h"
 #include "swift/AST/ASTVisitor.h"
 #include "swift/AST/Attr.h"
@@ -79,12 +80,13 @@ static bool contributesToParentTypeStorage(const AbstractStorageDecl *ASD) {
   return !ND->isResilient() && ASD->hasStorage() && !ASD->isStatic();
 }
 
-PrintOptions PrintOptions::printTextualInterfaceFile() {
+PrintOptions PrintOptions::printTextualInterfaceFile(ModuleDecl *m) {
   PrintOptions result;
   result.PrintLongAttrsOnSeparateLines = true;
   result.TypeDefinitions = true;
   result.PrintIfConfig = false;
-  result.FullyQualifiedTypes = true;
+  result.FullyQualifiedTypesIfAmbiguous = true;
+  result.CurrentModule = m;
   result.SkipImports = true;
   result.OmitNameOfInaccessibleProperties = true;
   result.FunctionDefinitions = true;
@@ -841,26 +843,35 @@ void PrintAST::printAttributes(const Decl *D) {
   if (Options.SkipAttributes)
     return;
 
-  // Don't print a redundant 'final' if we are printing a 'static' decl.
+  // Save the current number of exclude attrs to restore once we're done.
   unsigned originalExcludeAttrCount = Options.ExcludeAttrList.size();
-  if (Options.PrintImplicitAttrs &&
-      D->getDeclContext()->getSelfClassDecl() &&
-      getCorrectStaticSpelling(D) == StaticSpellingKind::KeywordStatic) {
-    Options.ExcludeAttrList.push_back(DAK_Final);
-  }
 
-  // Don't print any contextual decl modifiers.
-  // We will handle 'mutating' and 'nonmutating' separately.
-  if (Options.PrintImplicitAttrs && isa<AccessorDecl>(D)) {
+  if (Options.PrintImplicitAttrs) {
+
+    // Don't print a redundant 'final' if we are printing a 'static' decl.
+    if (D->getDeclContext()->getSelfClassDecl() &&
+        getCorrectStaticSpelling(D) == StaticSpellingKind::KeywordStatic) {
+      Options.ExcludeAttrList.push_back(DAK_Final);
+    }
+
+    // Don't print @_hasInitialValue if we're in printing an
+    // @usableFromInline property.
+    if (auto vd = dyn_cast<VarDecl>(D)) {
+      if (vd->getAttrs().hasAttribute<UsableFromInlineAttr>())
+        Options.ExcludeAttrList.push_back(DAK_HasInitialValue);
+    }
+
+    // Don't print any contextual decl modifiers.
+    // We will handle 'mutating' and 'nonmutating' separately.
+    if (isa<AccessorDecl>(D)) {
 #define EXCLUDE_ATTR(Class) Options.ExcludeAttrList.push_back(DAK_##Class);
 #define CONTEXTUAL_DECL_ATTR(X, Class, Y, Z) EXCLUDE_ATTR(Class)
 #define CONTEXTUAL_SIMPLE_DECL_ATTR(X, Class, Y, Z) EXCLUDE_ATTR(Class)
 #define CONTEXTUAL_DECL_ATTR_ALIAS(X, Class) EXCLUDE_ATTR(Class)
 #include "swift/AST/Attr.def"
-  }
+    }
 
-  // If the declaration is implicitly @objc, print the attribute now.
-  if (Options.PrintImplicitAttrs) {
+    // If the declaration is implicitly @objc, print the attribute now.
     if (auto VD = dyn_cast<ValueDecl>(D)) {
       if (VD->isObjC() && !VD->getAttrs().hasAttribute<ObjCAttr>()) {
         Printer.printAttrName("@objc");
@@ -898,7 +909,10 @@ void PrintAST::printPattern(const Pattern *pattern) {
     recordDeclLoc(decl, [&]{
       if (Options.OmitNameOfInaccessibleProperties &&
           contributesToParentTypeStorage(decl) &&
-          !isPublicOrUsableFromInline(decl))
+          !isPublicOrUsableFromInline(decl) &&
+          // FIXME: We need to figure out a way to generate an entry point
+          //        for the initializer expression without revealing the name.
+          !decl->getAttrs().hasAttribute<HasInitialValueAttr>())
         Printer << "_";
       else
         Printer.printName(named->getBoundName());
@@ -2010,6 +2024,18 @@ void PrintAST::visitExtensionDecl(ExtensionDecl *decl) {
     printExtension(decl);
 }
 
+static bool shouldPrintInitializerExpr(const VarDecl *vd) {
+  if (!vd->getAttrs().hasAttribute<HasInitialValueAttr>() &&
+      !vd->getAttrs().hasAttribute<UsableFromInlineAttr>())
+    return false;
+  auto parent = dyn_cast<NominalTypeDecl>(vd->getDeclContext());
+  if (!parent) return false;
+  if (parent->isFormallyResilient())
+    return false;
+  return evaluateOrDefault(vd->getASTContext().evaluator,
+                           HasInlinableInitializerRequest(parent), false);
+}
+
 void PrintAST::visitPatternBindingDecl(PatternBindingDecl *decl) {
   // FIXME: We're not printing proper "{ get set }" annotations in pattern
   // binding decls.  As a hack, scan the decl to find out if any of the
@@ -2044,7 +2070,7 @@ void PrintAST::visitPatternBindingDecl(PatternBindingDecl *decl) {
   }
 
   bool isFirst = true;
-  for (auto entry : decl->getPatternList()) {
+  for (auto &entry : decl->getPatternList()) {
     if (!shouldPrintPattern(entry.getPattern()))
       continue;
     if (isFirst)
@@ -2063,6 +2089,12 @@ void PrintAST::visitPatternBindingDecl(PatternBindingDecl *decl) {
 
     if (Options.VarInitializers) {
       // FIXME: Implement once we can pretty-print expressions.
+    }
+
+    auto vd = entry.getAnchoringVarDecl();
+    if (entry.hasInitStringRepresentation() && shouldPrintInitializerExpr(vd)) {
+      SmallString<128> scratch;
+      Printer << " = " << entry.getInitStringRepresentation(scratch);
     }
   }
 }

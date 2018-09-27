@@ -451,7 +451,7 @@ struct PrintOptions {
   /// consistent and well-formed.
   ///
   /// \see swift::emitModuleInterface
-  static PrintOptions printTextualInterfaceFile();
+  static PrintOptions printTextualInterfaceFile(ModuleDecl *m);
 
   static PrintOptions printModuleInterface();
   static PrintOptions printTypeInterface(Type T);
