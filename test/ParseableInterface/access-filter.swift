@@ -109,7 +109,7 @@ extension UFIProto {
 
 // CHECK: extension PublicStruct {{[{]$}}
 extension PublicStruct {
-  // CHECK: public private(set) static var secretlySettable: Int{{$}}
+  // CHECK: public private(set) static var secretlySettable: Swift.Int{{$}}
   public private(set) static var secretlySettable: Int = 0
 } // CHECK: {{^[}]$}}
 
@@ -133,7 +133,7 @@ extension UFIStruct: PublicProto {
 public enum PublicEnum {
   // CHECK-NEXT: case x
   case x
-  // CHECK-NEXT: case y(Int)
+  // CHECK-NEXT: case y({{.*}}Int)
   case y(Int)
 } // CHECK-NEXT: {{^[}]$}}
 
@@ -146,6 +146,6 @@ enum InternalEnum_BAD {
 @usableFromInline enum UFIEnum {
   // CHECK-NEXT: case x
   case x
-  // CHECK-NEXT: case y(Int)
+  // CHECK-NEXT: case y({{.*}}Int)
   case y(Int)
 } // CHECK-NEXT: {{^[}]$}}

@@ -14,7 +14,7 @@ public protocol SimpleProto {
 // CHECK-LABEL: public struct SimplImpl<Element> : SimpleProto {
 public struct SimplImpl<Element>: SimpleProto {
   // NEGATIVE-NOT: typealias Element =
-  // CHECK: public func inference(_: Int){{$}}
+  // CHECK: public func inference(_: Swift.Int){{$}}
   public func inference(_: Int) {}
   // CHECK: public typealias Inferred = Swift.Int
 } // CHECK: {{^}$}}

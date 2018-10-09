@@ -5,7 +5,7 @@
 
 // CHECK: final public class FinalClass {
 public final class FinalClass {
-  // CHECK: @inlinable final public class var a: [[INT:(Swift.)?Int]] {
+  // CHECK: @inlinable final public class var a: Swift.Int {
   // CHECK-NEXT: {{^}} get {
   // CHECK-NEXT: return 3
   // CHECK-NEXT: }
@@ -15,7 +15,7 @@ public final class FinalClass {
     return 3
   }
 
-  // CHECK: final public class var b: [[INT]] {
+  // CHECK: final public class var b: Swift.Int {
   // CHECK-NEXT:   {{^}} @inlinable get {
   // CHECK-NEXT:     return 3
   // CHECK-NEXT:   }
@@ -30,7 +30,7 @@ public final class FinalClass {
     }
   }
 
-  // CHECK: public static var c: [[INT]] {
+  // CHECK: public static var c: Swift.Int {
   // CHECK-NEXT: {{^}} get
   // CHECK-NEXT:   @inlinable set[[NEWVALUE]] {}
   // CHECK-NEXT: }
@@ -41,7 +41,7 @@ public final class FinalClass {
     @inlinable set {}
   }
 
-  // CHECK: @objc dynamic final public var d: [[INT]] {
+  // CHECK: @objc dynamic final public var d: Swift.Int {
   // CHECK-NEXT: {{^}} @objc get{{$}}
   // CHECK-NEXT: {{^}} @objc set[[NEWVALUE]]{{$}}
   // CHECK-NEXT: }
@@ -55,7 +55,7 @@ public final class FinalClass {
 
 // CHECK: public struct MyStruct {
 public struct MyStruct {
-  // CHECK: public var e: [[INT]] {
+  // CHECK: public var e: Swift.Int {
   // CHECK-NEXT: {{^}} mutating get{{$}}
   // CHECK-NEXT: {{^}} @inlinable nonmutating set[[NEWVALUE]] {}
   // CHECK-NEXT: }

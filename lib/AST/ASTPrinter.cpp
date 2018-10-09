@@ -79,17 +79,19 @@ static bool contributesToParentTypeStorage(const AbstractStorageDecl *ASD) {
   return !ND->isResilient() && ASD->hasStorage() && !ASD->isStatic();
 }
 
-PrintOptions PrintOptions::printParseableInterfaceFile() {
+PrintOptions PrintOptions::printParseableInterfaceFile(ModuleDecl *module) {
   PrintOptions result;
   result.PrintLongAttrsOnSeparateLines = true;
   result.TypeDefinitions = true;
   result.PrintIfConfig = false;
-  result.FullyQualifiedTypes = true;
+  result.PreferTypeRepr = false;
+  result.FullyQualifyTypesMode = FullyQualifyTypes::OutsideCurrentModule;
   result.AllowNullTypes = false;
   result.SkipImports = true;
   result.OmitNameOfInaccessibleProperties = true;
   result.FunctionDefinitions = true;
   result.CollapseSingleGetterProperty = false;
+  result.CurrentModule = module;
 
   result.FunctionBody = [](const ValueDecl *decl, ASTPrinter &printer) {
     auto AFD = dyn_cast<AbstractFunctionDecl>(decl);
@@ -1950,8 +1952,7 @@ void PrintAST::visitImportDecl(ImportDecl *decl) {
 
 static void printExtendedTypeName(Type ExtendedType, ASTPrinter &Printer,
                                   PrintOptions Options) {
-  Options.FullyQualifiedTypes = false;
-  Options.FullyQualifiedTypesIfAmbiguous = false;
+  Options.FullyQualifyTypesMode = PrintOptions::FullyQualifyTypes::Never;
 
   // Strip off generic arguments, if any.
   auto Ty = ExtendedType->getAnyNominal()->getDeclaredType();
@@ -3289,12 +3290,6 @@ class TypePrinter : public TypeVisitor<TypePrinter> {
   }
 
   bool shouldPrintFullyQualified(TypeBase *T) {
-    if (Options.FullyQualifiedTypes)
-      return true;
-
-    if (!Options.FullyQualifiedTypesIfAmbiguous)
-      return false;
-
     Decl *D = T->getAnyGeneric();
 
     // If we cannot find the declaration, be extra careful and print
@@ -3303,6 +3298,16 @@ class TypePrinter : public TypeVisitor<TypePrinter> {
       return true;
 
     ModuleDecl *M = D->getDeclContext()->getParentModule();
+
+    switch (Options.FullyQualifyTypesMode) {
+      case PrintOptions::FullyQualifyTypes::Always: return true;
+      case PrintOptions::FullyQualifyTypes::Never: return false;
+      case PrintOptions::FullyQualifyTypes::OutsideCurrentModule:
+        assert(Options.CurrentModule && "must set CurrentModule");
+        return Options.CurrentModule != M;
+      case PrintOptions::FullyQualifyTypes::IfAmbiguous:
+        break;
+    }
 
     if (Options.CurrentModule && M == Options.CurrentModule) {
       return false;
@@ -3422,6 +3427,8 @@ public:
     if (auto parent = T->getParent()) {
       visit(parent);
       Printer << ".";
+    } else if (shouldPrintFullyQualified(T)) {
+      printModuleContext(T);
     }
 
     printTypeDeclName(T);

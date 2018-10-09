@@ -5,7 +5,7 @@
 
 // CHECK: public struct Foo : Hashable {
 public struct Foo: Hashable {
-  // CHECK: public var inlinableGetPublicSet: [[INT:(Swift.)?Int]] {
+  // CHECK: public var inlinableGetPublicSet: Swift.Int {
   public var inlinableGetPublicSet: Int {
   // CHECK: @inlinable get {
   // CHECK-NEXT: return 3
@@ -21,10 +21,10 @@ public struct Foo: Hashable {
     // CHECK-NEXT: {{^}}  }
   }
 
-  // CHECK: public var noAccessors: [[INT]]{{$}}
+  // CHECK: public var noAccessors: Swift.Int{{$}}
   public var noAccessors: Int
 
-  // CHECK: public var hasDidSet: [[INT]] {
+  // CHECK: public var hasDidSet: Swift.Int {
   public var hasDidSet: Int {
     // CHECK-NEXT: @_transparent get{{$}}
     // CHECK-NEXT: set[[NEWVALUE]]{{$}}
@@ -36,7 +36,7 @@ public struct Foo: Hashable {
   }
 
 
-  // CHECK: @_transparent public var transparent: [[INT]] {
+  // CHECK: @_transparent public var transparent: Swift.Int {
   // CHECK-NEXT:   get {
   // CHECK-NEXT:   return 34
   // CHECK-NEXT: }
@@ -46,7 +46,7 @@ public struct Foo: Hashable {
     return 34
   }
 
-  // CHECK: public var transparentSet: [[INT]] {
+  // CHECK: public var transparentSet: Swift.Int {
   public var transparentSet: Int {
     // CHECK-NEXT: get{{$}}
     get {
@@ -77,7 +77,7 @@ public struct Foo: Hashable {
     }
   }
 
-  // CHECK: @inlinable public var inlinableProperty: [[INT]] {
+  // CHECK: @inlinable public var inlinableProperty: Swift.Int {
   @inlinable
   public var inlinableProperty: Int {
     // CHECK: get {
@@ -104,7 +104,7 @@ public struct Foo: Hashable {
     // CHECK-NEXT: }
   }
 
-  // CHECK: @inlinable public var inlinableReadAndModify: [[INT]] {
+  // CHECK: @inlinable public var inlinableReadAndModify: Swift.Int {
   @inlinable
   public var inlinableReadAndModify: Int {
     // CHECK: _read {
@@ -124,7 +124,7 @@ public struct Foo: Hashable {
     // CHECK-NEXT: }
   }
 
-  // CHECK: public var inlinableReadNormalModify: [[INT]] {
+  // CHECK: public var inlinableReadNormalModify: Swift.Int {
   public var inlinableReadNormalModify: Int {
     // CHECK: @inlinable _read {
     // CHECK-NEXT: yield 0
@@ -144,7 +144,7 @@ public struct Foo: Hashable {
     // CHECK-NEXT: }
   }
 
-  // CHECK: public var normalReadInlinableModify: [[INT]] {
+  // CHECK: public var normalReadInlinableModify: Swift.Int {
   public var normalReadInlinableModify: Int {
     // CHECK: _read{{$}}
     // CHECK-NOT: yield 0
@@ -164,7 +164,7 @@ public struct Foo: Hashable {
     // CHECK-NEXT: }
   }
 
-  // CHECK: public var normalReadAndModify: [[INT]] {
+  // CHECK: public var normalReadAndModify: Swift.Int {
   public var normalReadAndModify: Int {
     // CHECK-NEXT: _read{{$}}
     _read { yield 0 }
@@ -213,7 +213,7 @@ public struct Foo: Hashable {
     print("Not inlinable")
   }
 
-  // CHECK: public subscript(i: [[INT]]) -> [[INT]] {
+  // CHECK: public subscript(i: Swift.Int) -> Swift.Int {
   // CHECK-NEXT:   get{{$}}
   // CHECK-NEXT:   @inlinable set[[NEWVALUE]] { print("set") }
   // CHECK-NEXT: }
@@ -222,7 +222,7 @@ public struct Foo: Hashable {
     @inlinable set { print("set") }
   }
 
-  // CHECK: public subscript(j: [[INT]], k: [[INT]]) -> [[INT]] {
+  // CHECK: public subscript(j: Swift.Int, k: Swift.Int) -> Swift.Int {
   // CHECK-NEXT:   @inlinable get { return 0 }
   // CHECK-NEXT:   set[[NEWVALUE]]{{$}}
   // CHECK-NEXT: }
@@ -231,7 +231,7 @@ public struct Foo: Hashable {
     set { print("set") }
   }
 
-  // CHECK: @inlinable public subscript(l: [[INT]], m: [[INT]], n: [[INT]]) -> [[INT]] {
+  // CHECK: @inlinable public subscript(l: Swift.Int, m: Swift.Int, n: Swift.Int) -> Swift.Int {
   // CHECK-NEXT:   get { return 0 }
   // CHECK-NEXT:   set[[NEWVALUE]] { print("set") }
   // CHECK-NEXT: }
@@ -241,7 +241,7 @@ public struct Foo: Hashable {
     set { print("set") }
   }
 
-  // CHECK: public init(value: [[INT]]) {
+  // CHECK: public init(value: Swift.Int) {
   // CHECK-NEXT: topLevelUsableFromInline()
   // CHECK-NEXT: noAccessors = value
   // CHECK-NEXT: hasDidSet = value

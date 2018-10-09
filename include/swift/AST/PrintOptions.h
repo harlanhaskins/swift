@@ -178,12 +178,24 @@ struct PrintOptions {
   /// it to the user.
   bool PreferTypeRepr = true;
 
-  /// \brief Whether to print fully qualified Types.
-  bool FullyQualifiedTypes = false;
+  /// Determines behavior when the printer should module-qualify types.
+  enum class FullyQualifyTypes {
+    /// Never module-qualify types.
+    Never,
 
-  /// \brief Print fully qualified types if our heuristics say that a certain
-  /// type might be ambiguous.
-  bool FullyQualifiedTypesIfAmbiguous = false;
+    /// Module qualify types if our heuristics determine leaving off the
+    /// qualification introduces an ambiguity.
+    IfAmbiguous,
+
+    /// Module qualify types if they originate outside the current module.
+    OutsideCurrentModule,
+
+    /// Always module qualify types.
+    Always
+  };
+
+  /// Determines when to print types fully module-qualified.
+  FullyQualifyTypes FullyQualifyTypesMode = FullyQualifyTypes::Never;
 
   /// \brief Print Swift.Array and Swift.Optional with sugared syntax
   /// ([] and ?), even if there are no sugar type nodes.
@@ -415,7 +427,7 @@ struct PrintOptions {
     PrintOptions result = printVerbose();
     result.PrintAccess = true;
     result.Indent = 4;
-    result.FullyQualifiedTypesIfAmbiguous = true;
+    result.FullyQualifyTypesMode = FullyQualifyTypes::IfAmbiguous;
     result.SynthesizeSugarOnTypes = true;
     result.PrintUserInaccessibleAttrs = false;
     result.PrintImplicitAttrs = false;
@@ -455,7 +467,7 @@ struct PrintOptions {
   /// consistent and well-formed.
   ///
   /// \see swift::emitParseableInterface
-  static PrintOptions printParseableInterfaceFile();
+  static PrintOptions printParseableInterfaceFile(ModuleDecl *module);
 
   static PrintOptions printModuleInterface();
   static PrintOptions printTypeInterface(Type T);
@@ -508,7 +520,7 @@ struct PrintOptions {
 
   static PrintOptions printQualifiedSILType() {
     PrintOptions result = PrintOptions::printSIL();
-    result.FullyQualifiedTypesIfAmbiguous = true;
+    result.FullyQualifyTypesMode = FullyQualifyTypes::IfAmbiguous;
     return result;
   }
 

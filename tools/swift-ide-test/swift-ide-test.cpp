@@ -2111,7 +2111,10 @@ static int doPrintTypes(const CompilerInvocation &InitInvok,
   CI.performSema();
 
   PrintOptions Options = PrintOptions::printEverything();
-  Options.FullyQualifiedTypes = FullyQualifiedTypes;
+  Options.FullyQualifyTypesMode =
+    FullyQualifiedTypes ?
+      PrintOptions::FullyQualifyTypes::Always :
+      PrintOptions::FullyQualifyTypes::Never;
   ASTTypePrinter Printer(CI.getSourceMgr(), Options);
 
   CI.getMainModule()->walk(Printer);
@@ -3133,8 +3136,10 @@ int main(int argc, char *argv[]) {
     PrintOpts = PrintOptions::printDocInterface();
   } else {
     PrintOpts = PrintOptions::printEverything();
-    PrintOpts.FullyQualifiedTypesIfAmbiguous =
-      options::FullyQualifiedTypesIfAmbiguous;
+    PrintOpts.FullyQualifyTypesMode =
+      options::FullyQualifiedTypesIfAmbiguous ?
+        PrintOptions::FullyQualifyTypes::IfAmbiguous :
+        PrintOptions::FullyQualifyTypes::Never;
     PrintOpts.SynthesizeSugarOnTypes = options::SynthesizeSugarOnTypes;
     PrintOpts.AbstractAccessors = options::AbstractAccessors;
     PrintOpts.FunctionDefinitions = options::FunctionDefinitions;
