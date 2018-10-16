@@ -79,12 +79,14 @@ static bool contributesToParentTypeStorage(const AbstractStorageDecl *ASD) {
   return !ND->isResilient() && ASD->hasStorage() && !ASD->isStatic();
 }
 
-PrintOptions PrintOptions::printParseableInterfaceFile() {
+PrintOptions PrintOptions::printParseableInterfaceFile(ModuleDecl *module) {
   PrintOptions result;
   result.PrintLongAttrsOnSeparateLines = true;
   result.TypeDefinitions = true;
   result.PrintIfConfig = false;
   result.FullyQualifiedTypes = true;
+  result.PreferTypeRepr = false;
+  result.CurrentModule = module;
   result.AllowNullTypes = false;
   result.SkipImports = true;
   result.OmitNameOfInaccessibleProperties = true;
@@ -564,11 +566,13 @@ class PrintAST : public ASTVisitor<PrintAST> {
       return;
 
     printAccess(D->getFormalAccess());
+    bool shouldSkipSetterAccess =
+      llvm::is_contained(Options.ExcludeAttrList, DAK_SetterAccess);
 
     if (auto storageDecl = dyn_cast<AbstractStorageDecl>(D)) {
       if (auto setter = storageDecl->getSetter()) {
         AccessLevel setterAccess = setter->getFormalAccess();
-        if (setterAccess != D->getFormalAccess())
+        if (setterAccess != D->getFormalAccess() && !shouldSkipSetterAccess)
           printAccess(setterAccess, "(set)");
       }
     }
@@ -744,6 +748,8 @@ private:
   void printSynthesizedExtension(Type ExtendedType, ExtensionDecl *ExtDecl);
 
   void printExtension(ExtensionDecl* ExtDecl);
+  void collectPrintedAccessors(const AbstractStorageDecl *asd,
+                               SmallVectorImpl<const AccessorDecl *> &decls);
 
 public:
   PrintAST(ASTPrinter &Printer, const PrintOptions &Options)
@@ -853,11 +859,15 @@ void PrintAST::printAttributes(const Decl *D) {
       Options.ExcludeAttrList.push_back(DAK_Final);
     }
 
-    // Don't print @_hasInitialValue if we're printing an initializer
-    // expression.
     if (auto vd = dyn_cast<VarDecl>(D)) {
+      // Don't print @_hasInitialValue if we're printing an initializer
+      // expression.
       if (vd->isInitExposedToClients())
         Options.ExcludeAttrList.push_back(DAK_HasInitialValue);
+
+      // Don't print @_hasStorage if we've got an initial value.
+      if (vd->hasInitialValue())
+        Options.ExcludeAttrList.push_back(DAK_HasStorage);
     }
 
     // Don't print any contextual decl modifiers.
@@ -1615,7 +1625,8 @@ void PrintAST::printAccessors(const AbstractStorageDecl *ASD) {
   // Treat StoredWithTrivialAccessors the same as Stored unless
   // we're printing for SIL, in which case we want to distinguish it
   // from a pure stored property.
-  if (impl.isSimpleStored()) {
+  if (impl.isSimpleStored() &&
+      !ASD->getAttrs().hasAttribute<SetterAccessAttr>()) {
     if (Options.PrintForSIL) {
       Printer << " { get " << (impl.supportsMutation() ? "set }" : "}");
     }

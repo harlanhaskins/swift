@@ -4759,7 +4759,9 @@ Parser::ParsedAccessors::classify(Parser &P, AbstractStorageDecl *storage,
 
   // 'get', 'read', and a non-mutable addressor are all exclusive.
   ReadImplKind readImpl;
-  if (Get) {
+  if (attrs.hasAttribute<HasStorageAttr>())
+    readImpl = ReadImplKind::Stored;
+  else if (Get) {
     diagnoseConflictingAccessors(P, Get, Read);
     diagnoseConflictingAccessors(P, Get, Address);
     readImpl = ReadImplKind::Get;
@@ -4807,7 +4809,14 @@ Parser::ParsedAccessors::classify(Parser &P, AbstractStorageDecl *storage,
   ReadWriteImplKind readWriteImpl;
   if (Set) {
     diagnoseConflictingAccessors(P, Set, MutableAddress);
-    writeImpl = WriteImplKind::Set;
+
+    // @_hasStorage with a custom setter means there are didSet/willSet
+    // observers
+    if (attrs.hasAttribute<HasStorageAttr>()) {
+      writeImpl = WriteImplKind::StoredWithObservers;
+    } else {
+      writeImpl = WriteImplKind::Set;
+    }
     if (Modify) {
       readWriteImpl = ReadWriteImplKind::Modify;
     } else {
