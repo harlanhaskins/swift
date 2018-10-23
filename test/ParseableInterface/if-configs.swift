@@ -1,14 +1,14 @@
 // RUN: %empty-directory(%t)
 // RUN: %target-swift-frontend -emit-module -o %t/Test~partial.swiftmodule -module-name Test -primary-file %s
 // RUN: %target-swift-frontend -merge-modules -emit-module -o %t/Test.swiftmodule %t/Test~partial.swiftmodule
-// RUN: %target-swift-ide-test -print-module -module-to-print=Test -source-filename=x -I %t | %FileCheck %s
+// RUN: %target-swift-ide-test -print-module -module-to-print=Test -source-filename=x -I %t -fully-qualified-types=true -prefer-type-repr=false | %FileCheck %s
 
 // RUN: %target-swift-frontend -typecheck -emit-parseable-module-interface-path %t.swiftinterface -enable-resilience %s
 // RUN: %FileCheck %s < %t.swiftinterface
 
 // CHECK: func hasClosureDefaultArg(_ x: () -> Swift.Void = {
 // CHECK-NEXT: })
-public func hasClosureDefaultArg(_ x: () -> Swift.Void = {
+public func hasClosureDefaultArg(_ x: () -> Void = {
 }) {
 }
 
@@ -25,7 +25,7 @@ public func hasClosureDefaultArg(_ x: () -> Swift.Void = {
 // CHECK: }
 // CHECK-NOT: #endif
 // CHECK: })
-public func hasClosureDefaultArgWithComplexNestedPoundIfs(_ x: () -> Swift.Void = {
+public func hasClosureDefaultArgWithComplexNestedPoundIfs(_ x: () -> Void = {
   #if NOT_PROVIDED
     print("should not exist")
   #elseif !NOT_PROVIDED
@@ -52,7 +52,7 @@ public func hasClosureDefaultArgWithComplexNestedPoundIfs(_ x: () -> Swift.Void 
 // CHECK: print("should also exist"){{$}}
 // CHECK-NOT: #endif
 // CHECK-NEXT: })
-public func hasClosureDefaultArgWithComplexPoundIf(_ x: () -> Swift.Void = {
+public func hasClosureDefaultArgWithComplexPoundIf(_ x: () -> Void = {
   #if NOT_PROVIDED
     print("should not exist")
     #else
@@ -83,7 +83,7 @@ public func hasClosureDefaultArgWithComplexPoundIf(_ x: () -> Swift.Void = {
 // CHECK: print("also should appear")
 // CHECK-NOT: #endif
 // CHECK-NEXT: })
-public func hasClosureDefaultArgWithMultilinePoundIfCondition(_ x: () -> Swift.Void = {
+public func hasClosureDefaultArgWithMultilinePoundIfCondition(_ x: () -> Void = {
   #if (
     !false && true
   )
@@ -107,7 +107,7 @@ public func hasClosureDefaultArgWithMultilinePoundIfCondition(_ x: () -> Swift.V
 // CHECK-NOT: print("false")
 // CHECK-NOT: #endif
 // CHECK-NEXT: })
-public func hasClosureDefaultArgWithSinglePoundIf(_ x: () -> Swift.Void = {
+public func hasClosureDefaultArgWithSinglePoundIf(_ x: () -> Void = {
   #if true
   print("true")
   #else
@@ -116,6 +116,6 @@ public func hasClosureDefaultArgWithSinglePoundIf(_ x: () -> Swift.Void = {
 }) {
 }
 
-// CHECK: func hasSimpleDefaultArgs(_ x: {{.*}}Int = 0, b: {{.*}}Int = 1)
+// CHECK: func hasSimpleDefaultArgs(_ x: Swift.Int = 0, b: Swift.Int = 1)
 public func hasSimpleDefaultArgs(_ x: Int = 0, b: Int = 1) {
 }

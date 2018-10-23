@@ -3289,25 +3289,21 @@ class TypePrinter : public TypeVisitor<TypePrinter> {
     return M->getName().str().startswith(LLDB_EXPRESSIONS_MODULE_NAME_PREFIX);
   }
 
-  bool shouldPrintFullyQualified(TypeBase *T) {
+  ModuleDecl *getOriginatingModule(TypeBase *T) {
     Decl *D = T->getAnyGeneric();
-
-    // If we cannot find the declaration, be extra careful and print
-    // the type qualified.
+    // If we cannot find the declaration, we can't find the containing module.
     if (!D)
+      return nullptr;
+    return D->getDeclContext()->getParentModule();
+  }
+
+  bool shouldPrintFullyQualifiedIfAmbiguous(TypeBase *T) {
+    auto M = getOriginatingModule(T);
+
+    // If we can't get the declared type's module, be extra careful and print
+    // the type qualified.
+    if (!M)
       return true;
-
-    ModuleDecl *M = D->getDeclContext()->getParentModule();
-
-    switch (Options.FullyQualifyTypesMode) {
-      case PrintOptions::FullyQualifyTypes::Always: return true;
-      case PrintOptions::FullyQualifyTypes::Never: return false;
-      case PrintOptions::FullyQualifyTypes::OutsideCurrentModule:
-        assert(Options.CurrentModule && "must set CurrentModule");
-        return Options.CurrentModule != M;
-      case PrintOptions::FullyQualifyTypes::IfAmbiguous:
-        break;
-    }
 
     if (Options.CurrentModule && M == Options.CurrentModule) {
       return false;
@@ -3327,6 +3323,20 @@ class TypePrinter : public TypeVisitor<TypePrinter> {
     }
 
     return true;
+  }
+
+  bool shouldPrintFullyQualified(TypeBase *T) {
+    switch (Options.FullyQualifyTypesMode) {
+    case PrintOptions::FullyQualifyTypes::Never:
+      return false;
+    case PrintOptions::FullyQualifyTypes::IfAmbiguous:
+      return shouldPrintFullyQualifiedIfAmbiguous(T);
+    case PrintOptions::FullyQualifyTypes::OutsideCurrentModule:
+      assert(Options.CurrentModule && "must set CurrentModule");
+      return Options.CurrentModule != getOriginatingModule(T);
+    case PrintOptions::FullyQualifyTypes::Always:
+      return true;
+    }
   }
 
 public:

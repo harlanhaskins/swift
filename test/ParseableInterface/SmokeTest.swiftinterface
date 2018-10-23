@@ -7,7 +7,7 @@
 // ...and then make sure parse-and-typecheck-and-serialize works.
 // RUN: %empty-directory(%t)
 // RUN: %target-swift-frontend -emit-module -o %t/SmokeTest.swiftmodule %s
-// RUN: %target-swift-ide-test -print-module -module-to-print SmokeTest -I %t -source-filename x -print-interface > %t/SmokeTest.txt
+// RUN: %target-swift-ide-test -print-module -module-to-print SmokeTest -I %t -source-filename x -print-interface -fully-qualified-types=true > %t/SmokeTest.txt
 // RUN: %FileCheck %s < %t/SmokeTest.txt
 // RUN: %FileCheck -check-prefix NEGATIVE %s < %t/SmokeTest.txt
 
@@ -19,13 +19,13 @@ public class TestClass {
   // CHECK: public func method(){{$}}
   public func method()
 
-  // CHECK: public subscript(_: Int) -> Void{{$}}
+  // CHECK: public subscript(_: Swift.Int) -> Swift.Void{{$}}
   public subscript(_: Int) -> Void { get set }
 
   // CHECK: public var prop: Int{{$}}
   public var prop: Int { get set }
 
-  // CHECK: public static var propWithNoAccessors: Int{{$}}
+  // CHECK: public static var propWithNoAccessors: Swift.Int{{$}}
   public static var propWithNoAccessors: Int
 
   // NEGATIVE-NOT: deinit
@@ -51,13 +51,13 @@ public enum TestEnum {
   // CHECK: public func method(){{$}}
   public func method()
 
-  // CHECK: public subscript(_: Int) -> Void{{$}}
+  // CHECK: public subscript(_: Swift.Int) -> Swift.Void{{$}}
   public subscript(_: Int) -> Void { get set }
 
-  // CHECK: public var prop: Int{{$}}
+  // CHECK: public var prop: Swift.Int{{$}}
   public var prop: Int { get set }
 
-  // CHECK: public static var propWithNoAccessors: Int{{$}}
+  // CHECK: public static var propWithNoAccessors: Swift.Int{{$}}
   public static var propWithNoAccessors: Int
 } // CHECK: {{^}$}}
 
@@ -69,23 +69,23 @@ public struct TestStruct {
   // CHECK: public func method(){{$}}
   public func method()
 
-  // CHECK: public subscript(_: Int) -> Void{{$}}
+  // CHECK: public subscript(_: Swift.Int) -> Swift.Void{{$}}
   public subscript(_: Int) -> Void { get set }
 
-  // CHECK: public var prop: Int{{$}}
+  // CHECK: public var prop: Swift.Int{{$}}
   public var prop: Int { get set }
 
-  // CHECK: public static var propWithNoAccessors: Int{{$}}
+  // CHECK: public static var propWithNoAccessors: Swift.Int{{$}}
   public static var propWithNoAccessors: Int
 } // CHECK: {{^}$}}
 
-// CHECK: public let globalWithNoAccessors: Int{{$}}
+// CHECK: public let globalWithNoAccessors: Swift.Int{{$}}
 public let globalWithNoAccessors: Int
 
-// CHECK: public var readOnlyVar: Int { get }{{$}}
+// CHECK: public var readOnlyVar: Swift.Int { get }{{$}}
 public var readOnlyVar: Int { get }
 
-// CHECK: public var readWriteVar: Int{{$}}
+// CHECK: public var readWriteVar: Swift.Int{{$}}
 public var readWriteVar: Int { get set }
 
 // CHECK: public func verySimpleFunction(){{$}}
