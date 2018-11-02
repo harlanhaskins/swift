@@ -299,7 +299,7 @@ struct SILDeclRef {
   void print(llvm::raw_ostream &os) const;
   void dump() const;
 
-  unsigned getParameterListCount() const;
+  bool hasCurriedParameters() const;
   
   // Returns the SILDeclRef for an entity at a shallower uncurry level.
   SILDeclRef asCurried(bool curried = true) const {

@@ -484,10 +484,10 @@ public:
     return SubstFormalInterfaceType;
   }
 
-  unsigned getParameterListCount() const {
+  bool hasCurriedParameters() const {
     switch (kind) {
     case Kind::IndirectValue:
-      return 1;
+      return false;
 
     case Kind::StandaloneFunction:
     case Kind::StandaloneFunctionDynamicallyReplaceableImpl:
@@ -496,7 +496,7 @@ public:
     case Kind::SuperMethod:
     case Kind::WitnessMethod:
     case Kind::DynamicMethod:
-      return Constant.getParameterListCount();
+      return Constant.hasCurriedParameters();
     }
 
     llvm_unreachable("Unhandled Kind in switch.");
@@ -4129,7 +4129,7 @@ public:
                FormalEvaluationScope &&writebackScope)
       : SGF(SGF), callee(std::move(callee)),
         initialWritebackScope(std::move(writebackScope)),
-        expectedSiteCount(callee.getParameterListCount()) {}
+        expectedSiteCount(callee.hasCurriedParameters() ? 2 : 1) {}
 
   /// A factory method for decomposing the apply expr \p e into a call
   /// emission.
@@ -4420,7 +4420,8 @@ CallEmission::applyNormalCall(SGFContext C) {
   firstLevelResult.formalType = callee.getSubstFormalType();
   auto origFormalType = callee.getOrigFormalType();
 
-  bool isCurried = (uncurriedSites.size() < callee.getParameterListCount());
+  bool isCurried = (uncurriedSites.size() <
+                    (callee.hasCurriedParameters() ? 2 : 1));
 
   // Get the callee type information.
   auto calleeTypeInfo = callee.getTypeInfo(SGF, isCurried);

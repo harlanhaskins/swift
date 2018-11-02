@@ -1921,7 +1921,7 @@ static bool isImporterGeneratedAccessor(const clang::Decl *clangDecl,
     return false;
 
   // Must be a type member.
-  if (constant.getParameterListCount() != 2)
+  if (!constant.hasCurriedParameters())
     return false;
 
   // Must be imported from a function.
@@ -2591,7 +2591,7 @@ static AbstractFunctionDecl *getBridgedFunction(SILDeclRef declRef) {
 static AbstractionPattern
 getAbstractionPatternForConstant(ASTContext &ctx, SILDeclRef constant,
                                  CanAnyFunctionType fnType,
-                                 unsigned numParameterLists) {
+                                 bool hasCurriedParameters) {
   if (!constant.isForeign)
     return AbstractionPattern(fnType);
 
@@ -2606,18 +2606,17 @@ getAbstractionPatternForConstant(ASTContext &ctx, SILDeclRef constant,
   // we're going to apply a foreign error convention that checks
   // for nil results.
   if (auto method = dyn_cast<clang::ObjCMethodDecl>(clangDecl)) {
-    assert(numParameterLists == 2 && "getting curried ObjC method type?");
+    assert(hasCurriedParameters && "getting curried ObjC method type?");
     auto foreignError = bridgedFn->getForeignErrorConvention();
     return AbstractionPattern::getCurriedObjCMethod(fnType, method,
                                                     foreignError);
   } else if (auto value = dyn_cast<clang::ValueDecl>(clangDecl)) {
-    if (numParameterLists == 1) {
+    if (hasCurriedParameters) {
+      // C function imported as a method.
+      return AbstractionPattern::getCurriedCFunctionAsMethod(fnType, bridgedFn);
+    } else {
       // C function imported as a function.
       return AbstractionPattern(fnType, value->getType().getTypePtr());
-    } else {
-      // C function imported as a method.
-      assert(numParameterLists == 2);
-      return AbstractionPattern::getCurriedCFunctionAsMethod(fnType, bridgedFn);
     }
   }
 
@@ -2627,16 +2626,16 @@ getAbstractionPatternForConstant(ASTContext &ctx, SILDeclRef constant,
 TypeConverter::LoweredFormalTypes
 TypeConverter::getLoweredFormalTypes(SILDeclRef constant,
                                      CanAnyFunctionType fnType) {
-  unsigned numParameterLists = constant.getParameterListCount();
+  bool hasCurriedParameters = constant.hasCurriedParameters();
   auto extInfo = fnType->getExtInfo();
 
   // Form an abstraction pattern for bridging purposes.
   AbstractionPattern bridgingFnPattern =
     getAbstractionPatternForConstant(Context, constant, fnType,
-                                     numParameterLists);
+                                     hasCurriedParameters);
 
   // Fast path: no uncurrying required.
-  if (numParameterLists == 1) {
+  if (!hasCurriedParameters) {
     auto bridgedFnType =
       getBridgedFunctionType(bridgingFnPattern, fnType, extInfo);
     bridgingFnPattern.rewriteType(bridgingFnPattern.getGenericSignature(),

@@ -4973,7 +4973,7 @@ void SILVTable::verify(const SILModule &M) const {
     } while (c);
     assert(c && "vtable entry must refer to a member of the vtable's class");
 
-    // All function vtable entries must be at their natural uncurry level.
+    // All function vtable entries must not be curried.
     assert(!entry.Method.isCurried && "vtable entry must not be curried");
 
     // Foreign entry points shouldn't appear in vtables.

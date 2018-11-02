@@ -331,7 +331,7 @@ void SILDeclRef::print(raw_ostream &OS) const {
     break;
   }
 
-  auto uncurryLevel = getParameterListCount() - 1;
+  auto uncurryLevel = hasCurriedParameters() ? 1 : 0;
   if (uncurryLevel != 0)
     OS << (isDot ? '.' : '!')  << uncurryLevel;
 

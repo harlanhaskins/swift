@@ -940,20 +940,20 @@ SubclassScope SILDeclRef::getSubclassScope() const {
   llvm_unreachable("Unhandled access level in switch.");
 }
 
-unsigned SILDeclRef::getParameterListCount() const {
+bool SILDeclRef::hasCurriedParameters() const {
   if (isCurried || !hasDecl() || kind == Kind::DefaultArgGenerator)
-    return 1;
+    return false;
 
   auto *vd = getDecl();
 
   if (auto *func = dyn_cast<AbstractFunctionDecl>(vd)) {
-    return func->hasImplicitSelfDecl() ? 2 : 1;
+    return func->hasImplicitSelfDecl();
   } else if (auto *ed = dyn_cast<EnumElementDecl>(vd)) {
-    return ed->hasAssociatedValues() ? 2 : 1;
+    return ed->hasAssociatedValues();
   } else if (isa<ClassDecl>(vd)) {
-    return 2;
+    return true;
   } else if (isa<VarDecl>(vd)) {
-    return 1;
+    return false;
   } else {
     llvm_unreachable("Unhandled ValueDecl for SILDeclRef");
   }

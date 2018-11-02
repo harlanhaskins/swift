@@ -892,7 +892,7 @@ emitRValueForDecl(SILLocation loc, ConcreteDeclRef declRef, Type ncRefType,
   // If the referenced decl isn't a VarDecl, it should be a constant of some
   // sort.
   SILDeclRef silDeclRef(decl);
-  if (silDeclRef.getParameterListCount() == 2) {
+  if (silDeclRef.hasCurriedParameters()) {
     // Unqualified reference to an instance method from a static context,
     // without applying 'self'.
     silDeclRef = silDeclRef.asCurried();

@@ -1325,13 +1325,12 @@ bool SILParser::parseSILDeclRef(SILDeclRef &Result,
 
   // Initialize Kind, uncurryLevel and IsObjC.
   SILDeclRef::Kind Kind = SILDeclRef::Kind::Func;
-  unsigned uncurryLevel = 0;
   bool IsObjC = false;
 
   if (!P.consumeIf(tok::sil_exclamation)) {
     // Construct SILDeclRef.
     Result = SILDeclRef(VD, Kind, /*isCurried=*/false, IsObjC);
-    if (uncurryLevel < Result.getParameterListCount() - 1)
+    if (Result.hasCurriedParameters())
       Result = Result.asCurried();
     return false;
   }
@@ -1342,6 +1341,7 @@ bool SILParser::parseSILDeclRef(SILDeclRef &Result,
   // We accept func|getter|setter|...|foreign or an integer when ParseState is
   // 0; accept foreign or an integer when ParseState is 1; accept foreign when
   // ParseState is 2.
+  unsigned uncurryLevel = 0;
   unsigned ParseState = 0;
   Identifier Id;
   do {
@@ -1417,7 +1417,7 @@ bool SILParser::parseSILDeclRef(SILDeclRef &Result,
 
   // Construct SILDeclRef.
   Result = SILDeclRef(VD, Kind, /*isCurried=*/false, IsObjC);
-  if (uncurryLevel < Result.getParameterListCount() - 1)
+  if (uncurryLevel != 0)
     Result = Result.asCurried();
   return false;
 }
