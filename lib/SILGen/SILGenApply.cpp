@@ -4420,8 +4420,7 @@ CallEmission::applyNormalCall(SGFContext C) {
   firstLevelResult.formalType = callee.getSubstFormalType();
   auto origFormalType = callee.getOrigFormalType();
 
-  bool isCurried = (uncurriedSites.size() <
-                    (callee.hasCurriedParameters() ? 2 : 1));
+  bool isCurried = (uncurriedSites.size() < expectedSiteCount);
 
   // Get the callee type information.
   auto calleeTypeInfo = callee.getTypeInfo(SGF, isCurried);
