@@ -2171,7 +2171,7 @@ bool SILDeserializer::readSILInstruction(SILFunction *Fn, SILBasicBlock *BB,
   case SILInstructionKind::ObjCMethodInst:
   case SILInstructionKind::ObjCSuperMethodInst: {
     // Format: a type, an operand and a SILDeclRef. Use SILOneTypeValuesLayout:
-    // type, Attr, SILDeclRef (DeclID, Kind, uncurryLevel), and an operand.
+    // type, Attr, SILDeclRef (DeclID, Kind, curried), and an operand.
     unsigned NextValueIndex = 0;
     SILDeclRef DRef = getSILDeclRef(MF, ListOfValues, NextValueIndex);
     SILType Ty = getSILType(MF->getType(TyID), (SILValueCategory)TyCategory);

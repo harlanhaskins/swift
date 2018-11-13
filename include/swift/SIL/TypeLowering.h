@@ -553,7 +553,7 @@ class TypeConverter {
   llvm::BumpPtrAllocator IndependentBPA;
 
   enum : unsigned {
-    /// There is a unique entry with this uncurry level in the
+    /// There is a unique entry with this curried status in the
     /// type-lowering map for every TLI we create.  The map has the
     /// responsibility to call the destructor for these entries.
     UniqueLoweringEntry = ~0U

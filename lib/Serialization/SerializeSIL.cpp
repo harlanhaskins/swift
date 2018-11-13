@@ -215,7 +215,7 @@ namespace {
     void processSILFunctionWorklist();
 
     /// Helper function to update ListOfValues for MethodInst. Format:
-    /// Attr, SILDeclRef (DeclID, Kind, uncurryLevel), and an operand.
+    /// Attr, SILDeclRef (DeclID, Kind, curried), and an operand.
     void handleMethodInst(const MethodInst *MI, SILValue operand,
                           SmallVectorImpl<ValueID> &ListOfValues);
 
@@ -509,7 +509,7 @@ IdentifierID SILSerializer::addSILFunctionRef(SILFunction *F) {
 }
 
 /// Helper function to update ListOfValues for MethodInst. Format:
-/// Attr, SILDeclRef (DeclID, Kind, uncurryLevel), and an operand.
+/// Attr, SILDeclRef (DeclID, Kind, curried), and an operand.
 void SILSerializer::handleMethodInst(const MethodInst *MI,
                                      SILValue operand,
                                      SmallVectorImpl<ValueID> &ListOfValues) {
@@ -1855,7 +1855,7 @@ void SILSerializer::writeSILInstruction(const SILInstruction &SI) {
   }
   case SILInstructionKind::WitnessMethodInst: {
     // Format: a type, an operand and a SILDeclRef. Use SILOneTypeValuesLayout:
-    // type, Attr, SILDeclRef (DeclID, Kind, uncurryLevel, IsObjC), and a type.
+    // type, Attr, SILDeclRef (DeclID, Kind, curried, IsObjC), and a type.
     const WitnessMethodInst *WMI = cast<WitnessMethodInst>(&SI);
     CanType Ty = WMI->getLookupType();
     SILType Ty2 = WMI->getType();
@@ -1881,7 +1881,7 @@ void SILSerializer::writeSILInstruction(const SILInstruction &SI) {
   }
   case SILInstructionKind::ClassMethodInst: {
     // Format: a type, an operand and a SILDeclRef. Use SILOneTypeValuesLayout:
-    // type, Attr, SILDeclRef (DeclID, Kind, uncurryLevel),
+    // type, Attr, SILDeclRef (DeclID, Kind, curried),
     // and an operand.
     const ClassMethodInst *CMI = cast<ClassMethodInst>(&SI);
     SILType Ty = CMI->getType();
@@ -1896,7 +1896,7 @@ void SILSerializer::writeSILInstruction(const SILInstruction &SI) {
   }
   case SILInstructionKind::SuperMethodInst: {
     // Format: a type, an operand and a SILDeclRef. Use SILOneTypeValuesLayout:
-    // type, Attr, SILDeclRef (DeclID, Kind, uncurryLevel),
+    // type, Attr, SILDeclRef (DeclID, Kind, curried),
     // and an operand.
     const SuperMethodInst *SMI = cast<SuperMethodInst>(&SI);
     SILType Ty = SMI->getType();
@@ -1911,7 +1911,7 @@ void SILSerializer::writeSILInstruction(const SILInstruction &SI) {
   }
   case SILInstructionKind::ObjCMethodInst: {
     // Format: a type, an operand and a SILDeclRef. Use SILOneTypeValuesLayout:
-    // type, Attr, SILDeclRef (DeclID, Kind, uncurryLevel),
+    // type, Attr, SILDeclRef (DeclID, Kind, curried),
     // and an operand.
     const ObjCMethodInst *OMI = cast<ObjCMethodInst>(&SI);
     SILType Ty = OMI->getType();

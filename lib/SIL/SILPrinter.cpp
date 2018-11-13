@@ -331,15 +331,15 @@ void SILDeclRef::print(raw_ostream &OS) const {
     break;
   }
 
-  auto uncurryLevel = hasCurriedParameters() ? 1 : 0;
-  if (uncurryLevel != 0)
-    OS << (isDot ? '.' : '!')  << uncurryLevel;
+  bool isCurried = hasCurriedParameters();
+  if (isCurried)
+    OS << '.curried';
 
   if (isForeign)
-    OS << ((isDot || uncurryLevel != 0) ? '.' : '!')  << "foreign";
+    OS << ((isDot || isCurried) ? '.' : '!')  << "foreign";
 
   if (isDirectReference)
-    OS << ((isDot || uncurryLevel != 0) ? '.' : '!')  << "direct";
+    OS << ((isDot || isCurried) ? '.' : '!')  << "direct";
 }
 
 void SILDeclRef::dump() const {

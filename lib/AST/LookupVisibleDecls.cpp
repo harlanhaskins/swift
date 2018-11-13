@@ -344,7 +344,7 @@ static void doDynamicLookup(VisibleDeclConsumer &Consumer,
         if (FD->isInvalid())
           break;
 
-        // Get the type without the first uncurry level with 'self'.
+        // Get the type without the first curried type with 'self'.
         CanType T = FD->getMethodInterfaceType()->getCanonicalType();
 
         auto Signature = std::make_pair(D->getBaseName(), T);

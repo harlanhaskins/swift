@@ -574,8 +574,8 @@ matchCallArguments(ArrayRef<AnyFunctionType::Param> args,
   return listener.relabelArguments(actualArgNames);
 }
 
-/// Find the callee declaration and uncurry level for a given call
-/// locator.
+/// Find the callee declaration, whether it is curried, argument labels, and
+/// whether there is a trailing closure for a given call locator.
 static std::tuple<ValueDecl *, bool, ArrayRef<Identifier>, bool>
 getCalleeDeclAndArgs(ConstraintSystem &cs,
                      ConstraintLocatorBuilder callLocator,

@@ -787,8 +787,7 @@ void CalleeCandidateInfo::filterListArgs(ArrayRef<AnyFunctionType::Param> actual
   // Now that we have the candidate list, figure out what the best matches from
   // the candidate list are, and remove all the ones that aren't at that level.
   filterList([&](OverloadCandidate candidate) -> ClosenessResultTy {
-    // If this isn't a function or isn't valid at this uncurry level, treat it
-    // as a general mismatch.
+    // If this isn't a function, treat it as a general mismatch.
     if (!candidate.hasParameters())
       return {CC_GeneralMismatch, {}};
     return evaluateCloseness(candidate, actualArgs);

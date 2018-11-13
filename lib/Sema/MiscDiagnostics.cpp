@@ -271,7 +271,7 @@ static void diagSyntacticUseRestrictions(TypeChecker &TC, const Expr *E,
         
         // Check the callee, looking through implicit conversions.
         auto base = Call->getFn();
-        unsigned uncurryLevel = 0;
+        bool isUncurried = false;
         while (auto conv = dyn_cast<ImplicitConversionExpr>(base))
           base = conv->getSubExpr();
 
@@ -303,14 +303,14 @@ static void diagSyntacticUseRestrictions(TypeChecker &TC, const Expr *E,
         // Otherwise, try to drill down through member calls for the purposes
         // of argument-matching code below.
         } else if (auto selfApply = dyn_cast<SelfApplyExpr>(base)) {
-          uncurryLevel++;
+          isUncurried = true;
           base = selfApply->getSemanticFn();
           if (auto calleeDRE = dyn_cast<DeclRefExpr>(base))
             callee = calleeDRE->getDeclRef();
 
         // Otherwise, check for a dynamic member.
         } else if (auto dynamicMRE = dyn_cast<DynamicMemberRefExpr>(base)) {
-          uncurryLevel++;
+          isUncurried = true;
           callee = dynamicMRE->getMember();
         }
 
@@ -338,7 +338,7 @@ static void diagSyntacticUseRestrictions(TypeChecker &TC, const Expr *E,
             // Also do some additional work based on how the function uses
             // the argument.
             if (callee) {
-              checkConvertedPointerArgument(callee, uncurryLevel, argIndex,
+              checkConvertedPointerArgument(callee, isUncurried, argIndex,
                                             unwrapped, operand);
             }
           }
@@ -444,11 +444,11 @@ static void diagSyntacticUseRestrictions(TypeChecker &TC, const Expr *E,
     }
 
     void checkConvertedPointerArgument(ConcreteDeclRef callee,
-                                       unsigned uncurryLevel,
+                                       bool isUncurried,
                                        unsigned argIndex,
                                        Expr *pointerExpr,
                                        Expr *storage) {
-      if (!isPointerIdentityArgument(callee, uncurryLevel, argIndex))
+      if (!isPointerIdentityArgument(callee, isUncurried, argIndex))
         return;
 
       // Flag that the argument is non-accessing.
@@ -464,7 +464,7 @@ static void diagSyntacticUseRestrictions(TypeChecker &TC, const Expr *E,
 
     /// Is the given call argument, known to be of pointer type, just used
     /// for its pointer identity?
-    bool isPointerIdentityArgument(ConcreteDeclRef ref, unsigned uncurryLevel,
+    bool isPointerIdentityArgument(ConcreteDeclRef ref, bool isUncurried,
                                    unsigned argIndex) {
       // FIXME: derive this from an attribute instead of hacking it based
       // on the target name!
@@ -479,14 +479,14 @@ static void diagSyntacticUseRestrictions(TypeChecker &TC, const Expr *E,
       }
 
       // NSObject.addObserver(_:forKeyPath:options:context:)
-      if (uncurryLevel == 1 && argIndex == 3) {
+      if (isUncurried && argIndex == 3) {
         return decl->getFullName().isCompoundName("addObserver",
                                                   { "", "forKeyPath",
                                                     "options", "context" });
       }
 
       // NSObject.removeObserver(_:forKeyPath:context:)
-      if (uncurryLevel == 1 && argIndex == 2) {
+      if (isUncurried && argIndex == 2) {
         return decl->getFullName().isCompoundName("removeObserver",
                                                   { "", "forKeyPath",
                                                     "context" });

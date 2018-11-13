@@ -99,9 +99,9 @@ namespace swift {
       return nullptr;
     }
 
-    /// Given a function candidate with an uncurry level, return the parameter
-    /// type at the specified uncurry level.  If there is an error getting to
-    /// the specified input, this returns a null Type.
+    /// Given a function candidate with parameters, return their type.
+    /// If there is an error getting to the specified input, this returns a null
+    /// Type.
     Type getArgumentType(ASTContext &ctx) const {
       if (!hasParameters())
         return Type();
@@ -117,9 +117,8 @@ namespace swift {
       return getFunctionType()->getParams();
     }
     
-    /// Given a function candidate with an uncurry level, return the parameter
-    /// type at the specified uncurry level.  If there is an error getting to
-    /// the specified input, this returns a null Type.
+    /// Given a function candidate, return its result type. If there is an error
+    /// getting to the specified input, this returns a null Type.
     Type getResultType() const {
       if (auto *funcTy = getFunctionType())
         return funcTy->getResult();

@@ -77,7 +77,7 @@ enum ForDefinition_t : bool {
 /// AbstractClosureExpr for an anonymous function.  In addition to the AST
 /// reference, there are discriminators for referencing different
 /// implementation-level entities associated with a single language-level
-/// declaration, such as uncurry levels of a function, the allocating and
+/// declaration, such as curried-ness of a function, the allocating and
 /// initializing entry points of a constructor, etc.
 struct SILDeclRef {
   using Loc = llvm::PointerUnion<ValueDecl *, AbstractClosureExpr *>;
@@ -301,9 +301,9 @@ struct SILDeclRef {
 
   bool hasCurriedParameters() const;
   
-  // Returns the SILDeclRef for an entity at a shallower uncurry level.
+  // Returns the curried SILDeclRef for an entity.
   SILDeclRef asCurried(bool curried = true) const {
-    assert(!isCurried && "can't safely go to deeper uncurry level");
+    assert(!isCurried && "decl is already curried");
     // Curry thunks are never foreign.
     bool willBeForeign = isForeign && !curried;
     bool willBeDirect = isDirectReference;

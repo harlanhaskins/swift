@@ -37,9 +37,9 @@ static void adjustFunctionTypeForOverride(Type &type) {
 }
 
 /// Drop the optionality of the result type of the given function type.
-static Type dropResultOptionality(Type type, unsigned uncurryLevel) {
+static Type dropResultOptionality(Type type, bool curried) {
   // We've hit the result type.
-  if (uncurryLevel == 0) {
+  if (!curried) {
     if (auto objectTy = type->getOptionalObjectType())
       return objectTy;
 
@@ -50,7 +50,7 @@ static Type dropResultOptionality(Type type, unsigned uncurryLevel) {
   auto fnType = type->castTo<AnyFunctionType>();
   auto parameters = fnType->getParams();
   Type resultType =
-      dropResultOptionality(fnType->getResult(), uncurryLevel - 1);
+      dropResultOptionality(fnType->getResult(), /*curried:*/false);
 
   // Produce the resulting function type.
   if (auto genericFn = dyn_cast<GenericFunctionType>(fnType)) {
@@ -114,7 +114,7 @@ Type swift::getMemberTypeForComparison(ASTContext &ctx, ValueDecl *member,
   // Ignore the optionality of initializers when comparing types;
   // we'll enforce this separately
   if (ctor) {
-    memberType = dropResultOptionality(memberType, 1);
+    memberType = dropResultOptionality(memberType, /*curried:*/true);
   }
 
   return memberType;

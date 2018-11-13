@@ -253,7 +253,7 @@ namespace {
 
 /// Abstractly represents a callee, which may be a constant or function value,
 /// and knows how to perform dynamic dispatch and reference the appropriate
-/// entry point at any valid uncurry level.
+/// entry point whether or not it is curried..
 class Callee {
 public:
   enum class Kind {

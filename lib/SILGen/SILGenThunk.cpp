@@ -86,13 +86,13 @@ SILGenFunction::emitDynamicMethodRef(SILLocation loc, SILDeclRef constant,
   return ManagedValue::forUnmanaged(B.createFunctionRefFor(loc, F));
 }
 
-static ManagedValue getNextUncurryLevelRef(SILGenFunction &SGF, SILLocation loc,
+static ManagedValue getUncurriedRef(SILGenFunction &SGF, SILLocation loc,
                                            SILDeclRef thunk,
                                            ManagedValue selfArg,
                                            SubstitutionMap curriedSubs) {
   auto *vd = thunk.getDecl();
 
-  // Reference the next uncurrying level of the function.
+  // Reference the uncurried version of the function.
   SILDeclRef next = SILDeclRef(vd, thunk.kind);
   assert(!next.isCurried);
 
@@ -162,7 +162,7 @@ void SILGenFunction::emitCurryThunk(SILDeclRef thunk) {
   // Forward substitutions.
   auto subs = F.getForwardingSubstitutionMap();
 
-  ManagedValue toFn = getNextUncurryLevelRef(*this, loc, thunk, selfArg, subs);
+  ManagedValue toFn = getUncurriedRef(*this, loc, thunk, selfArg, subs);
 
   // FIXME: Using the type from the ConstantInfo instead of looking at
   // getConstantOverrideInfo() for methods looks suspect in the presence
@@ -171,7 +171,7 @@ void SILGenFunction::emitCurryThunk(SILDeclRef thunk) {
   resultTy = F.mapTypeIntoContext(resultTy);
   auto substTy = toFn.getType().substGenericArgs(SGM.M, subs);
 
-  // Partially apply the next uncurry level and return the result closure.
+  // Partially apply the curried function and return the result closure.
   selfArg = selfArg.ensurePlusOne(*this, loc);
   auto calleeConvention = ParameterConvention::Direct_Guaranteed;
   auto closureTy = SILGenBuilder::getPartialApplyResultType(

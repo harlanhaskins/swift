@@ -1304,10 +1304,10 @@ static Optional<AccessorKind> getAccessorKind(StringRef ident) {
 }
 
 ///  sil-decl-ref ::= '#' sil-identifier ('.' sil-identifier)* sil-decl-subref?
-///  sil-decl-subref ::= '!' sil-decl-subref-part ('.' sil-decl-uncurry-level)?
+///  sil-decl-subref ::= '!' sil-decl-subref-part ('.' sil-decl-currying)?
 ///                      ('.' sil-decl-lang)?
-///  sil-decl-subref ::= '!' sil-decl-uncurry-level ('.' sil-decl-lang)?
-///  sil-decl-subref ::= '!' sil-decl-lang
+///  sil-decl-subref ::= '.' sil-decl-currying ('.' sil-decl-lang)?
+///  sil-decl-subref ::= '.' sil-decl-lang
 ///  sil-decl-subref-part ::= 'getter'
 ///  sil-decl-subref-part ::= 'setter'
 ///  sil-decl-subref-part ::= 'allocator'
@@ -1315,7 +1315,7 @@ static Optional<AccessorKind> getAccessorKind(StringRef ident) {
 ///  sil-decl-subref-part ::= 'enumelt'
 ///  sil-decl-subref-part ::= 'destroyer'
 ///  sil-decl-subref-part ::= 'globalaccessor'
-///  sil-decl-uncurry-level ::= [0-9]+
+///  sil-decl-currying ::= 'curried'
 ///  sil-decl-lang ::= 'foreign'
 bool SILParser::parseSILDeclRef(SILDeclRef &Result,
                                 SmallVectorImpl<ValueDecl *> &values) {
@@ -1323,25 +1323,25 @@ bool SILParser::parseSILDeclRef(SILDeclRef &Result,
   if (parseSILDottedPath(VD, values))
     return true;
 
-  // Initialize Kind, uncurryLevel and IsObjC.
+  // Initialize Kind and IsObjC.
   SILDeclRef::Kind Kind = SILDeclRef::Kind::Func;
   bool IsObjC = false;
+  bool isCurried = false;
 
   if (!P.consumeIf(tok::sil_exclamation)) {
     // Construct SILDeclRef.
-    Result = SILDeclRef(VD, Kind, /*isCurried=*/false, IsObjC);
+    Result = SILDeclRef(VD, Kind, isCurried, IsObjC);
     if (Result.hasCurriedParameters())
       Result = Result.asCurried();
     return false;
   }
 
-  // Handle sil-constant-kind-and-uncurry-level.
+  // Handle sil-constant-kind-and-currying.
   // ParseState indicates the value we just handled.
-  // 1 means we just handled Kind, 2 means we just handled uncurryLevel.
+  // 1 means we just handled Kind, 2 means we just handled currying.
   // We accept func|getter|setter|...|foreign or an integer when ParseState is
   // 0; accept foreign or an integer when ParseState is 1; accept foreign when
   // ParseState is 2.
-  unsigned uncurryLevel = 0;
   unsigned ParseState = 0;
   Identifier Id;
   do {
@@ -1404,12 +1404,11 @@ bool SILParser::parseSILDeclRef(SILDeclRef &Result,
       } else if (Id.str() == "foreign") {
         IsObjC = true;
         break;
-      } else
+      } else if (ParseState < 2 && Id.str() == "curried") {
+        isCurried = true;
+        ParseState = 2;
+      else
         break;
-    } else if (ParseState < 2 && P.Tok.is(tok::integer_literal)) {
-      parseIntegerLiteral(P.Tok.getText(), 0, uncurryLevel);
-      P.consumeToken(tok::integer_literal);
-      ParseState = 2;
     } else
       break;
 
@@ -1417,7 +1416,7 @@ bool SILParser::parseSILDeclRef(SILDeclRef &Result,
 
   // Construct SILDeclRef.
   Result = SILDeclRef(VD, Kind, /*isCurried=*/false, IsObjC);
-  if (uncurryLevel != 0)
+  if (isCurried)
     Result = Result.asCurried();
   return false;
 }

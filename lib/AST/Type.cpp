@@ -720,12 +720,13 @@ Type TypeBase::getWithoutParens() {
 }
 
 Type TypeBase::replaceCovariantResultType(Type newResultType,
-                                          unsigned uncurryLevel) {
-  if (uncurryLevel == 0) {
+                                          bool curried) {
+  if (!curried) {
     if (auto objectType = getOptionalObjectType()) {
       assert(!newResultType->getOptionalObjectType());
       return OptionalType::get(
-          objectType->replaceCovariantResultType(newResultType, uncurryLevel));
+          objectType->replaceCovariantResultType(newResultType, 
+                                                 /*curried:*/false));
     }
 
     return newResultType;
@@ -736,7 +737,7 @@ Type TypeBase::replaceCovariantResultType(Type newResultType,
   auto inputType = fnType->getParams();
   Type resultType =
     fnType->getResult()->replaceCovariantResultType(newResultType,
-                                                    uncurryLevel - 1);
+                                                    /*curried:*/false);
 
   // Produce the resulting function type.
   if (auto genericFn = dyn_cast<GenericFunctionType>(fnType)) {
@@ -3293,10 +3294,10 @@ Type TypeBase::adjustSuperclassMemberDeclType(const ValueDecl *baseDecl,
     type = type->replaceSelfParameterType(this);
     if (auto func = dyn_cast<FuncDecl>(baseDecl)) {
       if (func->hasDynamicSelf()) {
-        type = type->replaceCovariantResultType(this, /*uncurryLevel=*/2);
+        type = type->replaceCovariantResultType(this, /*curried=*/true);
       }
     } else if (isa<ConstructorDecl>(baseDecl)) {
-      type = type->replaceCovariantResultType(this, /*uncurryLevel=*/2);
+      type = type->replaceCovariantResultType(this, /*curried=*/true);
     }
   }
 

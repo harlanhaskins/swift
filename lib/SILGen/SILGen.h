@@ -257,7 +257,8 @@ public:
   void emitDefaultArgGenerators(SILDeclRef::Loc decl,
                                 ParameterList *paramList);
 
-  /// Emits the curry thunk between two uncurry levels of a function.
+  /// Emits the curry thunk between the curried and uncurried versions of a
+  /// function.
   void emitCurryThunk(SILDeclRef thunk);
   
   /// Emits a thunk from a foreign function to the native Swift convention.
