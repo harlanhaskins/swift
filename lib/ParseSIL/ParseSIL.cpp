@@ -1326,11 +1326,12 @@ bool SILParser::parseSILDeclRef(SILDeclRef &Result,
   // Initialize Kind and IsObjC.
   SILDeclRef::Kind Kind = SILDeclRef::Kind::Func;
   bool IsObjC = false;
-  bool isCurried = false;
+  bool isUncurried = false;
+  SourceLoc uncurriedLoc;
 
   if (!P.consumeIf(tok::sil_exclamation)) {
     // Construct SILDeclRef.
-    Result = SILDeclRef(VD, Kind, isCurried, IsObjC);
+    Result = SILDeclRef(VD, Kind, /*isCurried:*/false, IsObjC);
     if (Result.hasCurriedParameters())
       Result = Result.asCurried();
     return false;
@@ -1404,19 +1405,26 @@ bool SILParser::parseSILDeclRef(SILDeclRef &Result,
       } else if (Id.str() == "foreign") {
         IsObjC = true;
         break;
-      } else if (ParseState < 2 && Id.str() == "curried") {
-        isCurried = true;
+      } else if (ParseState < 2 && Id.str() == "uncurried") {
+        uncurriedLoc = P.Tok.getLoc();
+        isUncurried = true;
         ParseState = 2;
-      else
+      } else
         break;
     } else
       break;
 
   } while (P.consumeIf(tok::period));
 
+  // If the declaration is marked 'uncurried', but still has curried params,
+  // diagnose, and ignore the '.uncurried'.
+  if (isUncurried && Result.hasCurriedParameters()) {
+    P.diagnose(uncurriedLoc, diag::sil_uncurried_with_curried_params);
+  }
+
   // Construct SILDeclRef.
   Result = SILDeclRef(VD, Kind, /*isCurried=*/false, IsObjC);
-  if (isCurried)
+  if (Result.hasCurriedParameters())
     Result = Result.asCurried();
   return false;
 }

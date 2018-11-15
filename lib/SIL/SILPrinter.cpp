@@ -332,14 +332,14 @@ void SILDeclRef::print(raw_ostream &OS) const {
   }
 
   bool isCurried = hasCurriedParameters();
-  if (isCurried)
-    OS << '.curried';
+  if (!isCurried)
+    OS << ".uncurried";
 
   if (isForeign)
-    OS << ((isDot || isCurried) ? '.' : '!')  << "foreign";
+    OS << ((isDot || !isCurried) ? '.' : '!')  << "foreign";
 
   if (isDirectReference)
-    OS << ((isDot || isCurried) ? '.' : '!')  << "direct";
+    OS << ((isDot || !isCurried) ? '.' : '!')  << "direct";
 }
 
 void SILDeclRef::dump() const {

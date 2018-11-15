@@ -907,8 +907,8 @@ Declaration References
 ::
 
   sil-decl-ref ::= '#' sil-identifier ('.' sil-identifier)* sil-decl-subref?
-  sil-decl-subref ::= '!' sil-decl-subref-part ('.' sil-decl-currying)? ('.' sil-decl-lang)?
-  sil-decl-subref ::= '!' sil-decl-currying ('.' sil-decl-lang)?
+  sil-decl-subref ::= '!' sil-decl-subref-part ('.' sil-decl-uncurry-level)? ('.' sil-decl-lang)?
+  sil-decl-subref ::= '!' sil-decl-uncurry-level ('.' sil-decl-lang)?
   sil-decl-subref ::= '!' sil-decl-lang
   sil-decl-subref-part ::= 'getter'
   sil-decl-subref-part ::= 'setter'
@@ -921,7 +921,7 @@ Declaration References
   sil-decl-subref-part ::= 'ivardestroyer'
   sil-decl-subref-part ::= 'ivarinitializer'
   sil-decl-subref-part ::= 'defaultarg' '.' [0-9]+
-  sil-decl-currying ::= 'curried'
+  sil-decl-uncurry-level ::= [0-9]+
   sil-decl-lang ::= 'foreign'
 
 Some SIL instructions need to reference Swift declarations directly. These
@@ -945,26 +945,31 @@ entity discriminators:
   the *n*\ -th argument of a Swift ``func``
 - ``foreign``: a specific entry point for C/Objective-C interoperability
 
-Methods and subscripts in Swift can also be curried. For a method::
+Methods and curried function definitions in Swift also have multiple
+"uncurry levels" in SIL, representing the function at each possible
+partial application level. For a curried function declaration::
 
-  class Foo {
-    func foo(_ x: A) -> B
-  }
+  // Module example
+  func foo(_ x:A)(y:B)(z:C) -> D
 
-The declaration references and types for the curried and uncurried
-representations are as follows::
+The declaration references and types for the different uncurry levels are as
+follows::
 
-  #example.Foo.foo : $@convention(thin) (self: Foo) (x: A) -> B
-  #example.Foo.foo.curried : $@convention(thin) ((x: A), (self: Foo)) -> B
+  #example.foo!0 : $@convention(thin) (x:A) -> (y:B) -> (z:C) -> D
+  #example.foo!1 : $@convention(thin) ((y:B), (x:A)) -> (z:C) -> D
+  #example.foo!2 : $@convention(thin) ((z:C), (y:B), (x:A)) -> D
 
-Note that the uncurried argument clause is composed right-to-left, as specified
-in the `calling convention`_. The entry point itself is ``@convention(thin)``,
-but returns a thick function value carrying the partially applied arguments for
-its context.
+The deepest uncurry level is referred to as the **natural uncurry level**. In
+this specific example, the reference at the natural uncurry level is
+``#example.foo!2``.  Note that the uncurried argument clauses are composed
+right-to-left, as specified in the `calling convention`_. For uncurry levels
+less than the uncurry level, the entry point itself is ``@convention(thin)`` but
+returns a thick function value carrying the partially applied arguments for its
+context.
 
 `Dynamic dispatch`_ instructions such as ``class method`` require their method
-declaration reference to be uncurried (which applies both the "self" argument
-and the method arguments), because the curried representation
+declaration reference to be uncurried to at least uncurry level 1 (which applies
+both the "self" argument and the method arguments), because uncurry level zero
 represents the application of the method to its "self" argument, as in
 ``foo.method``, which is where the dynamic dispatch semantically occurs
 in Swift.
@@ -1513,23 +1518,22 @@ gets called in SIL as::
   %ws = <<make array from %w0, %w1, %w2>>
   apply %zang(%x, %y, %zs, %v, %ws)  : $(x:Int, (y:Int, z:Int...), v:Int, w:Int...) -> ()
 
-Curried Functions
+Function Currying
 `````````````````
 
-Methods and subscripts in Swift emit two SIL entry points, one for
-the curried and uncurried versions of the function. When a function is
-uncurried, its outermost argument clauses are combined into a tuple in
-right-to-left order.
+Curried function definitions in Swift emit multiple SIL entry points, one for
+each "uncurry level" of the function. When a function is uncurried, its
+outermost argument clauses are combined into a tuple in right-to-left order.
 For the following declaration::
 
-  class Foo {
-    func curried(_ x: A) -> Int {}
-  }
+  func curried(_ x:A)(y:B)(z:C)(w:D) -> Int {}
 
 The types of the SIL entry points are as follows::
 
-  sil @Foo.curried : $(self: Foo) -> (x: A) -> Int { ... }
-  sil @Foo.curried_uncurried : $((x: A), (self: Foo)) -> Int { ... }
+  sil @curried_0 : $(x:A) -> (y:B) -> (z:C) -> (w:D) -> Int { ... }
+  sil @curried_1 : $((y:B), (x:A)) -> (z:C) -> (w:D) -> Int { ... }
+  sil @curried_2 : $((z:C), (y:B), (x:A)) -> (w:D) -> Int { ... }
+  sil @curried_3 : $((w:D), (z:C), (y:B), (x:A)) -> Int { ... }
 
 @inout Arguments
 ````````````````
@@ -3087,7 +3091,7 @@ class_method
   %1 = class_method %0 : $T, #T.method!1 : $@convention(class_method) U -> V
   // %0 must be of a class type or class metatype $T
   // #T.method!1 must be a reference to a Swift native method of T or
-  // of one of its superclasses, and will be curried.
+  // of one of its superclasses, at uncurry level == 1
   // %1 will be of type $U -> V
 
 Looks up a method based on the dynamic type of a class or class metatype
@@ -3108,8 +3112,8 @@ objc_method
 
   %1 = objc_method %0 : $T, #T.method!1.foreign : $@convention(objc_method) U -> V
   // %0 must be of a class type or class metatype $T
-  // #T.method.curried must be a reference to an Objective-C method of T or
-  // of one of its superclasses, and will be curried.
+  // #T.method!1 must be a reference to an Objective-C method of T or
+  // of one of its superclasses, at uncurry level == 1
   // %1 will be of type $U -> V
 
 Performs Objective-C method dispatch using ``objc_msgSend()``.
@@ -3126,7 +3130,7 @@ super_method
   %1 = super_method %0 : $T, #Super.method!1 : $@convention(thin) U -> V
   // %0 must be of a non-root class type or class metatype $T
   // #Super.method!1 must be a reference to a native Swift method of T's
-  // superclass or of one of its ancestor classes, and be curried.
+  // superclass or of one of its ancestor classes, at uncurry level >= 1
   // %1 will be of type $@convention(thin) U -> V
 
 Looks up a method in the superclass of a class or class metatype instance.
@@ -3141,7 +3145,7 @@ objc_super_method
   %1 = super_method %0 : $T, #Super.method!1.foreign : $@convention(thin) U -> V
   // %0 must be of a non-root class type or class metatype $T
   // #Super.method!1.foreign must be a reference to an ObjC method of T's
-  // superclass or of one of its ancestor classes, and be curried.
+  // superclass or of one of its ancestor classes, at uncurry level >= 1
   // %1 will be of type $@convention(thin) U -> V
 
 This instruction performs an Objective-C message send using
@@ -3371,26 +3375,37 @@ caller promises not to release the closure while the function is being called.
 This instruction is used to implement both curry thunks and closures. A
 curried function in Swift::
 
-  class Foo {
-    func bar(_ x: Int) -> Int { /* body of bar */ }
-  }
+  func foo(_ a:A)(b:B)(c:C)(d:D) -> E { /* body of foo */ }
 
 emits curry thunks in SIL as follows (retains and releases omitted for
 clarity)::
 
-  func @Foo.bar : $@convention(method) (Int, @guaranteed Foo) -> Int {
-  entry(%x : $Int, %self : $Foo):
-    %zero = integer_literal $Builtin.Int64, 0
-    %zero_int = struct $Int (%4 : $Builtin.Int64)
-    return %zero_int : $Int
+  func @foo : $@convention(thin) A -> B -> C -> D -> E {
+  entry(%a : $A):
+    %foo_1 = function_ref @foo_1 : $@convention(thin) (B, A) -> C -> D -> E
+    %thunk = partial_apply %foo_1(%a) : $@convention(thin) (B, A) -> C -> D -> E
+    return %thunk : $B -> C -> D -> E
   }
 
-  // curry thunk of Foo.bar(x:)
-  func @Foo.bar_curried : $@convention(thin) (@guaranteed Foo) -> @owned @callee_guaranteed (Int) -> Int {
-  entry(%self: $Foo):
-    %foo_bar = class_method %self : $Foo, #Foo.bar.curried : (Foo) -> (Int) -> Int, $@convention(method) (Int, @guaranteed Foo) -> Int
-    %apply = partial_apply [callee_guaranteed] %foo_bar(%self) : $@convention(method) (Int, @guaranteed Foo) -> Int
-    return %result : $@callee_guaranteed (Int) -> Int
+  func @foo_1 : $@convention(thin) (B, A) -> C -> D -> E {
+  entry(%b : $B, %a : $A):
+    %foo_2 = function_ref @foo_2 : $@convention(thin) (C, B, A) -> D -> E
+    %thunk = partial_apply %foo_2(%b, %a) \
+      : $@convention(thin) (C, B, A) -> D -> E
+    return %thunk : $(B, A) -> C -> D -> E
+  }
+
+  func @foo_2 : $@convention(thin) (C, B, A) -> D -> E {
+  entry(%c : $C, %b : $B, %a : $A):
+    %foo_3 = function_ref @foo_3 : $@convention(thin) (D, C, B, A) -> E
+    %thunk = partial_apply %foo_3(%c, %b, %a) \
+      : $@convention(thin) (D, C, B, A) -> E
+    return %thunk : $(C, B, A) -> D -> E
+  }
+
+  func @foo_3 : $@convention(thin) (D, C, B, A) -> E {
+  entry(%d : $D, %c : $C, %b : $B, %a : $A):
+    // ... body of foo ...
   }
 
 A local function in Swift that captures context, such as ``bar`` in the

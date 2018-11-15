@@ -87,9 +87,8 @@ SILGenFunction::emitDynamicMethodRef(SILLocation loc, SILDeclRef constant,
 }
 
 static ManagedValue getUncurriedRef(SILGenFunction &SGF, SILLocation loc,
-                                           SILDeclRef thunk,
-                                           ManagedValue selfArg,
-                                           SubstitutionMap curriedSubs) {
+                                    SILDeclRef thunk, ManagedValue selfArg,
+                                    SubstitutionMap curriedSubs) {
   auto *vd = thunk.getDecl();
 
   // Reference the uncurried version of the function.
