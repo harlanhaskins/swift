@@ -31,7 +31,7 @@ func curry_pod(_ x: CurryTest) -> (Int) -> Int {
 // CHECK: sil shared [serializable] [thunk] @[[THUNK_FOO_2]] : $@convention(method) (Int, @guaranteed CurryTest) -> Int
 // CHECK: bb0([[ARG1:%.*]] : @trivial $Int, [[ARG2:%.*]] : @guaranteed $CurryTest):
 // CHECK:   [[COPIED_ARG2:%.*]] = copy_value [[ARG2]]
-// CHECK:   [[METHOD:%.*]] = objc_method [[COPIED_ARG2]] : $CurryTest, #CurryTest.pod!1.foreign
+// CHECK:   [[METHOD:%.*]] = objc_method [[COPIED_ARG2]] : $CurryTest, #CurryTest.pod.uncurried.foreign
 // CHECK:   [[RESULT:%.*]] = apply [[METHOD]]([[ARG1]], [[COPIED_ARG2]])
 // CHECK:   destroy_value [[COPIED_ARG2]]
 // CHECK:   return [[RESULT]]
@@ -59,14 +59,14 @@ func curry_bridged(_ x: CurryTest) -> (String?) -> String? {
 // CHECK: sil shared [serializable] [thunk] @[[THUNK_BAR_2]] : $@convention(method) (@guaranteed Optional<String>, @guaranteed CurryTest) -> @owned Optional<String>
 // CHECK: bb0([[OPT_STRING:%.*]] : @guaranteed $Optional<String>, [[SELF:%.*]] : @guaranteed $CurryTest):
 // CHECK:   [[COPY_OPT_STRING:%.*]] = copy_value [[OPT_STRING]]
-// CHECK:   switch_enum [[COPY_OPT_STRING]] : $Optional<String>, case #Optional.some!enumelt.1: [[SOME_BB:bb[0-9]+]],
+// CHECK:   switch_enum [[COPY_OPT_STRING]] : $Optional<String>, case #Optional.some!enumelt.uncurried: [[SOME_BB:bb[0-9]+]],
 //
 // CHECK: [[SOME_BB]]([[STRING:%.*]] : @owned $String):
 // CHECK:   [[BRIDGING_FUNC:%.*]] = function_ref @$sSS10FoundationE19_bridgeToObjectiveCSo8NSStringCyF
 // CHECK:   [[BORROWED_STRING:%.*]] = begin_borrow [[STRING]]
 // CHECK:   [[NSSTRING:%.*]] = apply [[BRIDGING_FUNC]]([[BORROWED_STRING]])
 // CHECK:   end_borrow [[BORROWED_STRING]]
-// CHECK:   [[OPT_NSSTRING:%.*]] = enum $Optional<NSString>, #Optional.some!enumelt.1, [[NSSTRING]] : $NSString
+// CHECK:   [[OPT_NSSTRING:%.*]] = enum $Optional<NSString>, #Optional.some!enumelt.uncurried, [[NSSTRING]] : $NSString
 // CHECK:   destroy_value [[STRING]]
 // CHECK:   br bb3([[OPT_NSSTRING]] : $Optional<NSString>)
 
@@ -76,15 +76,15 @@ func curry_bridged(_ x: CurryTest) -> (String?) -> String? {
 
 // CHECK: bb3([[OPT_NSSTRING:%.*]] : @owned $Optional<NSString>):
 // CHECK:   [[SELF_COPY:%.*]] = copy_value [[SELF]]
-// CHECK:   [[METHOD:%.*]] = objc_method [[SELF_COPY]] : $CurryTest, #CurryTest.bridged!1.foreign
+// CHECK:   [[METHOD:%.*]] = objc_method [[SELF_COPY]] : $CurryTest, #CurryTest.bridged.uncurried.foreign
 // CHECK:   [[RESULT_OPT_NSSTRING:%.*]] = apply [[METHOD]]([[OPT_NSSTRING]], [[SELF_COPY]]) : $@convention(objc_method) (Optional<NSString>, CurryTest) -> @autoreleased Optional<NSString>
-// CHECK:   switch_enum [[RESULT_OPT_NSSTRING]] : $Optional<NSString>, case #Optional.some!enumelt.1: [[SOME_BB:bb[0-9]+]],
+// CHECK:   switch_enum [[RESULT_OPT_NSSTRING]] : $Optional<NSString>, case #Optional.some!enumelt.uncurried: [[SOME_BB:bb[0-9]+]],
 
 // CHECK: [[SOME_BB]]([[RESULT_NSSTRING:%.*]] : @owned $NSString):
 // CHECK:   [[BRIDGE_FUNC:%.*]] = function_ref @$sSS10FoundationE36_unconditionallyBridgeFromObjectiveCySSSo8NSStringCSgFZ
-// CHECK:   [[REWRAP_RESULT_NSSTRING:%.*]] = enum $Optional<NSString>, #Optional.some!enumelt.1, [[RESULT_NSSTRING]]
+// CHECK:   [[REWRAP_RESULT_NSSTRING:%.*]] = enum $Optional<NSString>, #Optional.some!enumelt.uncurried, [[RESULT_NSSTRING]]
 // CHECK:   [[RESULT_STRING:%.*]] = apply [[BRIDGE_FUNC]]([[REWRAP_RESULT_NSSTRING]]
-// CHECK:   [[WRAPPED_RESULT_STRING:%.*]] = enum $Optional<String>, #Optional.some!enumelt.1, [[RESULT_STRING]]
+// CHECK:   [[WRAPPED_RESULT_STRING:%.*]] = enum $Optional<String>, #Optional.some!enumelt.uncurried, [[RESULT_STRING]]
 // CHECK:   br bb6([[WRAPPED_RESULT_STRING]] : $Optional<String>)
 
 // CHECK: bb5:
@@ -119,7 +119,7 @@ func curry_returnsInnerPointer(_ x: CurryTest) -> () -> UnsafeMutableRawPointer?
 // CHECK: sil shared [serializable] [thunk] @[[THUNK_RETURNSINNERPOINTER_2]] : $@convention(method) (@guaranteed CurryTest) -> Optional<UnsafeMutableRawPointer>
 // CHECK:  bb0([[ARG1:%.*]] : @guaranteed $CurryTest):
 // CHECK:   [[ARG1_COPY:%.*]] = copy_value [[ARG1]]
-// CHECK:   [[METHOD:%.*]] = objc_method [[ARG1_COPY]] : $CurryTest, #CurryTest.returnsInnerPointer!1.foreign
+// CHECK:   [[METHOD:%.*]] = objc_method [[ARG1_COPY]] : $CurryTest, #CurryTest.returnsInnerPointer.uncurried.foreign
 // CHECK:   [[RES:%.*]] = apply [[METHOD]]([[ARG1_COPY]]) : $@convention(objc_method) (CurryTest) -> @unowned_inner_pointer Optional<UnsafeMutableRawPointer>
 // CHECK:   autorelease_value 
 // CHECK:   return [[RES]]
@@ -129,7 +129,7 @@ func curry_returnsInnerPointer(_ x: CurryTest) -> () -> UnsafeMutableRawPointer?
 // CHECK: bb0([[ANY:%.*]] : @guaranteed $AnyObject):
 // CHECK:   [[OPENED_ANY:%.*]] = open_existential_ref [[ANY]]
 // CHECK:   [[OPENED_ANY_COPY:%.*]] = copy_value [[OPENED_ANY]]
-// CHECK:   dynamic_method_br [[OPENED_ANY_COPY]] : $@opened({{.*}}) AnyObject, #CurryTest.pod!1.foreign, [[HAS_METHOD:bb[0-9]+]]
+// CHECK:   dynamic_method_br [[OPENED_ANY_COPY]] : $@opened({{.*}}) AnyObject, #CurryTest.pod.uncurried.foreign, [[HAS_METHOD:bb[0-9]+]]
 // CHECK:   [[HAS_METHOD]]([[METHOD:%.*]] : @trivial $@convention(objc_method) (Int, @opened({{.*}}) AnyObject) -> Int):
 // CHECK:   [[OPENED_ANY_COPY_2:%.*]] = copy_value [[OPENED_ANY_COPY]]
 // CHECK:   partial_apply [callee_guaranteed] [[METHOD]]([[OPENED_ANY_COPY_2]])
@@ -143,7 +143,7 @@ func curry_pod_AnyObject(_ x: AnyObject) -> (Int) -> Int {
 // CHECK: bb0([[ANY:%.*]] : @guaranteed $AnyObject):
 // CHECK:   [[OPENED_ANY:%.*]] = open_existential_ref [[ANY]]
 // CHECK:   [[OPENED_ANY_COPY:%.*]] = copy_value [[OPENED_ANY]]
-// CHECK:   dynamic_method_br [[OPENED_ANY_COPY]] : $@opened({{.*}}) AnyObject, #CurryTest.normalOwnership!1.foreign, [[HAS_METHOD:bb[0-9]+]]
+// CHECK:   dynamic_method_br [[OPENED_ANY_COPY]] : $@opened({{.*}}) AnyObject, #CurryTest.normalOwnership.uncurried.foreign, [[HAS_METHOD:bb[0-9]+]]
 // CHECK: [[HAS_METHOD]]([[METHOD:%.*]] : @trivial $@convention(objc_method) (Optional<CurryTest>, @opened({{.*}}) AnyObject) -> @autoreleased Optional<CurryTest>):
 // CHECK:   [[OPENED_ANY_COPY_2:%.*]] = copy_value [[OPENED_ANY_COPY]]
 // CHECK:   [[PA:%.*]] = partial_apply [callee_guaranteed] [[METHOD]]([[OPENED_ANY_COPY_2]])
@@ -160,7 +160,7 @@ func curry_normalOwnership_AnyObject(_ x: AnyObject) -> (CurryTest?) -> CurryTes
 // CHECK: bb0([[ANY:%.*]] : @guaranteed $AnyObject):
 // CHECK:   [[OPENED_ANY:%.*]] = open_existential_ref [[ANY]]
 // CHECK:   [[OPENED_ANY_COPY:%.*]] = copy_value [[OPENED_ANY]]
-// CHECK:   dynamic_method_br [[SELF:%.*]] : $@opened({{.*}}) AnyObject, #CurryTest.weirdOwnership!1.foreign, [[HAS_METHOD:bb[0-9]+]]
+// CHECK:   dynamic_method_br [[SELF:%.*]] : $@opened({{.*}}) AnyObject, #CurryTest.weirdOwnership.uncurried.foreign, [[HAS_METHOD:bb[0-9]+]]
 //
 // CHECK: bb1([[METHOD:%.*]] : @trivial $@convention(objc_method) (@owned Optional<CurryTest>, @owned @opened({{.*}}) AnyObject) -> @owned Optional<CurryTest>):
 // CHECK:   [[OPENED_ANY_COPY_2:%.*]] = copy_value [[OPENED_ANY_COPY]]
@@ -175,7 +175,7 @@ func curry_weirdOwnership_AnyObject(_ x: AnyObject) -> (CurryTest?) -> CurryTest
 // CHECK: bb0([[ANY:%.*]] : @guaranteed $AnyObject):
 // CHECK:   [[OPENED_ANY:%.*]] = open_existential_ref [[ANY]]
 // CHECK:   [[OPENED_ANY_COPY:%.*]] = copy_value [[OPENED_ANY]]
-// CHECK:   dynamic_method_br [[OPENED_ANY_COPY]] : $@opened({{.*}}) AnyObject, #CurryTest.bridged!1.foreign, [[HAS_METHOD:bb[0-9]+]]
+// CHECK:   dynamic_method_br [[OPENED_ANY_COPY]] : $@opened({{.*}}) AnyObject, #CurryTest.bridged.uncurried.foreign, [[HAS_METHOD:bb[0-9]+]]
 // CHECK: } // end sil function '$s13objc_currying23curry_bridged_AnyObjectySSSgACcyXlF'
 func curry_bridged_AnyObject(_ x: AnyObject) -> (String?) -> String? {
   return x.bridged!
@@ -187,7 +187,7 @@ func curry_bridged_AnyObject(_ x: AnyObject) -> (String?) -> String? {
 // CHECK: bb0([[ANY:%.*]] : @guaranteed $AnyObject):
 // CHECK:   [[OPENED_ANY:%.*]] = open_existential_ref [[ANY]]
 // CHECK:   [[OPENED_ANY_COPY:%.*]] = copy_value [[OPENED_ANY]]
-// CHECK:   dynamic_method_br [[OPENED_ANY_COPY]] : $@opened({{.*}}) AnyObject, #CurryTest.returnsSelf!1.foreign, [[HAS_METHOD:bb[0-9]+]]
+// CHECK:   dynamic_method_br [[OPENED_ANY_COPY]] : $@opened({{.*}}) AnyObject, #CurryTest.returnsSelf.uncurried.foreign, [[HAS_METHOD:bb[0-9]+]]
 // CHECK: [[HAS_METHOD]]([[METHOD:%.*]] : @trivial $@convention(objc_method) (@opened({{.*}}) AnyObject) -> @autoreleased Optional<AnyObject>):
 // CHECK:   [[OPENED_ANY_COPY_2:%.*]] = copy_value [[OPENED_ANY_COPY]]
 // CHECK:   [[PA:%.*]] = partial_apply [callee_guaranteed] [[METHOD]]([[OPENED_ANY_COPY_2]])
@@ -200,7 +200,7 @@ func curry_returnsSelf_AnyObject(_ x: AnyObject) -> () -> AnyObject? {
 // CHECK: bb0([[ANY:%.*]] : @guaranteed $AnyObject):
 // CHECK:   [[OPENED_ANY:%.*]] = open_existential_ref [[ANY]]
 // CHECK:   [[OPENED_ANY_COPY:%.*]] = copy_value [[OPENED_ANY]]
-// CHECK:   dynamic_method_br [[OPENED_ANY_COPY]] : $@opened({{.*}}) AnyObject, #CurryTest.returnsInnerPointer!1.foreign, [[HAS_METHOD:bb[0-9]+]]
+// CHECK:   dynamic_method_br [[OPENED_ANY_COPY]] : $@opened({{.*}}) AnyObject, #CurryTest.returnsInnerPointer.uncurried.foreign, [[HAS_METHOD:bb[0-9]+]]
 // CHECK: [[HAS_METHOD]]([[METHOD:%.*]] : @trivial $@convention(objc_method) (@opened({{.*}}) AnyObject) -> @unowned_inner_pointer Optional<UnsafeMutableRawPointer>):
 // CHECK:   [[OPENED_ANY_COPY_2:%.*]] = copy_value [[OPENED_ANY_COPY]]
 // CHECK:   [[PA:%.*]] = partial_apply [callee_guaranteed] [[METHOD]]([[OPENED_ANY_COPY_2]])

@@ -63,7 +63,7 @@ func s030__________refCast<T, U>(_ x: T, to: U.Type) -> U {
 // CHECK-LABEL: sil shared [transparent] @$ss9PAndSEnumO1AyABs6EmptyP_p_SStcABmF : $@convention(method) (@in EmptyP, @owned String, @thin PAndSEnum.Type) -> @out PAndSEnum {
 // CHECK: bb0([[ARG0:%.*]] : @owned $EmptyP, [[ARG1:%.*]]  : @owned $String, [[ARG2:%.*]] : @trivial $@thin PAndSEnum.Type):
 // CHECK:   [[RTUPLE:%.*]] = tuple ([[ARG0]] : $EmptyP, [[ARG1]] : $String)
-// CHECK:   [[RETVAL:%.*]] = enum $PAndSEnum, #PAndSEnum.A!enumelt.1, [[RTUPLE]] : $(EmptyP, String)
+// CHECK:   [[RETVAL:%.*]] = enum $PAndSEnum, #PAndSEnum.A!enumelt.uncurried, [[RTUPLE]] : $(EmptyP, String)
 // CHECK:   return [[RETVAL]] : $PAndSEnum
 // CHECK-LABEL: } // end sil function '$ss9PAndSEnumO1AyABs6EmptyP_p_SStcABmF'
 // CHECK-LABEL: sil shared [transparent] [thunk] @$ss9PAndSEnumO1AyABs6EmptyP_p_SStcABmFTc : $@convention(thin) (@thin PAndSEnum.Type) -> @owned @callee_guaranteed (@in_guaranteed EmptyP, @guaranteed String) -> @out PAndSEnum {

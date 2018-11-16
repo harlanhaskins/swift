@@ -25,5 +25,5 @@ public func callsPublicRequirement(_ c: Conformer) {
 // CHECK-LABEL: sil [transparent] [thunk] @$s18opaque_conformance9ConformerVAA14PublicProtocolA2aDP17publicRequirementyyFTW : $@convention(witness_method: PublicProtocol) (@in_guaranteed Conformer) -> ()
 
 // CHECK-LABEL: sil_witness_table public_external Conformer: PublicProtocol module opaque_conformance {
-// CHECK-NEXT:    method #PublicProtocol.publicRequirement!1: <Self where Self : PublicProtocol> (Self) -> () -> () : @$s18opaque_conformance9ConformerVAA14PublicProtocolA2aDP17publicRequirementyyFTW
+// CHECK-NEXT:    method #PublicProtocol.publicRequirement.uncurried: <Self where Self : PublicProtocol> (Self) -> () -> () : @$s18opaque_conformance9ConformerVAA14PublicProtocolA2aDP17publicRequirementyyFTW
 // CHECK-NEXT: }

@@ -39,8 +39,8 @@ func test5(_ g: Gizmo) {
   // CHECK:   [[CLASS:%.*]] = metatype $@objc_metatype Gizmo.Type
   // CHECK:   [[READ:%.*]] = begin_access [read] [unknown] [[GIZMO_BOX_PB]] : $*Gizmo
   // CHECK:   [[V:%.*]] = load [copy] [[READ]]
-  // CHECK:   [[G:%.*]] = enum $Optional<Gizmo>, #Optional.some!enumelt.1, [[V]]
-  // CHECK:   [[METHOD:%.*]] = objc_method [[CLASS]] : {{.*}}, #Gizmo.inspect!1.foreign
+  // CHECK:   [[G:%.*]] = enum $Optional<Gizmo>, #Optional.some!enumelt.uncurried, [[V]]
+  // CHECK:   [[METHOD:%.*]] = objc_method [[CLASS]] : {{.*}}, #Gizmo.inspect.uncurried.foreign
   // CHECK:   apply [[METHOD]]([[G]], [[CLASS]])
   // CHECK:   destroy_value [[G]]
   // CHECK:   destroy_value [[GIZMO_BOX]]
@@ -61,8 +61,8 @@ func test6(_ g: Gizmo) {
   // CHECK:   [[CLASS:%.*]] = metatype $@objc_metatype Gizmo.Type
   // CHECK:   [[READ:%.*]] = begin_access [read] [unknown] [[GIZMO_BOX_PB]] : $*Gizmo
   // CHECK:   [[V:%.*]] = load [copy] [[READ]]
-  // CHECK:   [[G:%.*]] = enum $Optional<Gizmo>, #Optional.some!enumelt.1, [[V]]
-  // CHECK:   [[METHOD:%.*]] = objc_method [[CLASS]] : {{.*}}, #Gizmo.consume!1.foreign
+  // CHECK:   [[G:%.*]] = enum $Optional<Gizmo>, #Optional.some!enumelt.uncurried, [[V]]
+  // CHECK:   [[METHOD:%.*]] = objc_method [[CLASS]] : {{.*}}, #Gizmo.consume.uncurried.foreign
   // CHECK:   apply [[METHOD]]([[G]], [[CLASS]])
   // CHECK-NOT:  destroy_value [[G]]
   // CHECK:   destroy_value [[GIZMO_BOX]]
@@ -84,7 +84,7 @@ func test7(_ g: Gizmo) {
   // CHECK:   store [[ARG_COPY]] to [init] [[GIZMO_BOX_PB]]
   // CHECK:   [[READ:%.*]] = begin_access [read] [unknown] [[GIZMO_BOX_PB]] : $*Gizmo
   // CHECK:   [[G:%.*]] = load [copy] [[READ]]
-  // CHECK:   [[METHOD:%.*]] = objc_method [[G]] : {{.*}}, #Gizmo.fork!1.foreign
+  // CHECK:   [[METHOD:%.*]] = objc_method [[G]] : {{.*}}, #Gizmo.fork.uncurried.foreign
   // CHECK:   apply [[METHOD]]([[G]])
   // CHECK-NOT:  destroy_value [[G]]
   // CHECK:   destroy_value [[GIZMO_BOX]]
@@ -100,7 +100,7 @@ func test8(_ g: Gizmo) -> Gizmo {
   return g.clone()
   // CHECK: bb0([[G:%.*]] : @guaranteed $Gizmo):
   // CHECK-NOT:  copy_value
-  // CHECK:      [[METHOD:%.*]] = objc_method [[G]] : {{.*}}, #Gizmo.clone!1.foreign
+  // CHECK:      [[METHOD:%.*]] = objc_method [[G]] : {{.*}}, #Gizmo.clone.uncurried.foreign
   // CHECK-NOT:  copy_value [[RESULT]]
   // CHECK:      bb2([[RESULT:%.*]] : @owned $Gizmo):
   // CHECK-NOT:  copy_value [[RESULT]]
@@ -113,7 +113,7 @@ func test9(_ g: Gizmo) -> Gizmo {
   return g.duplicate()
   // CHECK: bb0([[G:%.*]] : @guaranteed $Gizmo):
   // CHECK-NOT:      copy_value [[G:%0]]
-  // CHECK: [[METHOD:%.*]] = objc_method [[G]] : {{.*}}, #Gizmo.duplicate!1.foreign
+  // CHECK: [[METHOD:%.*]] = objc_method [[G]] : {{.*}}, #Gizmo.duplicate.uncurried.foreign
   // CHECK-NEXT: [[RESULT:%.*]] = apply [[METHOD]]([[G]])
   // CHECK-NOT:  copy_value [[RESULT]]
   // CHECK: bb2([[RESULT:%.*]] : @owned $Gizmo):
@@ -128,13 +128,13 @@ func test10(_ g: Gizmo) -> AnyClass {
   // CHECK:      [[G_COPY:%.*]] = copy_value [[G]]
   // CHECK-NEXT: [[NS_G_COPY:%[0-9]+]] = upcast [[G_COPY]] : $Gizmo to $NSObject
   // CHECK-NEXT: [[NS_G_BORROW:%.*]] = begin_borrow [[NS_G_COPY]]
-  // CHECK-NEXT: [[GETTER:%[0-9]+]] = objc_method [[NS_G_BORROW]] : $NSObject, #NSObject.classProp!getter.1.foreign : (NSObject) -> () -> AnyObject.Type?, $@convention(objc_method) (NSObject) -> Optional<@objc_metatype AnyObject.Type>
+  // CHECK-NEXT: [[GETTER:%[0-9]+]] = objc_method [[NS_G_BORROW]] : $NSObject, #NSObject.classProp!getter.uncurried.foreign : (NSObject) -> () -> AnyObject.Type?, $@convention(objc_method) (NSObject) -> Optional<@objc_metatype AnyObject.Type>
   // CHECK-NEXT: [[OPT_OBJC:%.*]] = apply [[GETTER]]([[NS_G_BORROW]]) : $@convention(objc_method) (NSObject) -> Optional<@objc_metatype AnyObject.Type>
-  // CHECK-NEXT: switch_enum [[OPT_OBJC]] : $Optional<{{.*}}>, case #Optional.some!enumelt.1: [[SOME_BB:bb[0-9]+]], case #Optional.none!enumelt: [[NONE_BB:bb[0-9]+]]
+  // CHECK-NEXT: switch_enum [[OPT_OBJC]] : $Optional<{{.*}}>, case #Optional.some!enumelt.uncurried: [[SOME_BB:bb[0-9]+]], case #Optional.none!enumelt: [[NONE_BB:bb[0-9]+]]
   //
   // CHECK: [[SOME_BB]]([[OBJC:%.*]] : @trivial $@objc_metatype AnyObject.Type):
   // CHECK-NEXT: [[THICK:%.*]] = objc_to_thick_metatype [[OBJC]]
-  // CHECK:      [[T0:%.*]] = enum $Optional<@thick AnyObject.Type>, #Optional.some!enumelt.1, [[THICK]]
+  // CHECK:      [[T0:%.*]] = enum $Optional<@thick AnyObject.Type>, #Optional.some!enumelt.uncurried, [[THICK]]
   // CHECK:   bb{{.*}}(%{{.*}} : @trivial $Optional<@thick AnyObject.Type>):
   // CHECK:      destroy_value [[NS_G_COPY]] : $NSObject
   // CHECK:   bb{{.*}}([[RES:%.*]] : @trivial $@thick AnyObject.Type):
@@ -149,13 +149,13 @@ func test11(_ g: Gizmo) -> AnyClass {
   // CHECK: [[G_COPY:%.*]] = copy_value [[G]]
   // CHECK: [[NS_G_COPY:%[0-9]+]] = upcast [[G_COPY:%[0-9]+]] : $Gizmo to $NSObject
   // CHECK-NEXT: [[NS_G_BORROW:%.*]] = begin_borrow [[NS_G_COPY]]
-  // CHECK-NEXT: [[GETTER:%[0-9]+]] = objc_method [[NS_G_BORROW]] : $NSObject, #NSObject.qualifiedClassProp!getter.1.foreign : (NSObject) -> () -> NSAnsing.Type?, $@convention(objc_method) (NSObject) -> Optional<@objc_metatype NSAnsing.Type>
+  // CHECK-NEXT: [[GETTER:%[0-9]+]] = objc_method [[NS_G_BORROW]] : $NSObject, #NSObject.qualifiedClassProp!getter.uncurried.foreign : (NSObject) -> () -> NSAnsing.Type?, $@convention(objc_method) (NSObject) -> Optional<@objc_metatype NSAnsing.Type>
   // CHECK-NEXT: [[OPT_OBJC:%.*]] = apply [[GETTER]]([[NS_G_BORROW]]) : $@convention(objc_method) (NSObject) -> Optional<@objc_metatype NSAnsing.Type>
-  // CHECK-NEXT: switch_enum [[OPT_OBJC]] : $Optional<{{.*}}>, case #Optional.some!enumelt.1: [[SOME_BB:bb[0-9]+]], case #Optional.none!enumelt: [[NONE_BB:bb[0-9]+]]
+  // CHECK-NEXT: switch_enum [[OPT_OBJC]] : $Optional<{{.*}}>, case #Optional.some!enumelt.uncurried: [[SOME_BB:bb[0-9]+]], case #Optional.none!enumelt: [[NONE_BB:bb[0-9]+]]
   //
   // CHECK: [[SOME_BB]]([[OBJC:%.*]] : @trivial $@objc_metatype NSAnsing.Type):
   // CHECK-NEXT: [[THICK:%.*]] = objc_to_thick_metatype [[OBJC]]
-  // CHECK:      [[T0:%.*]] = enum $Optional<@thick NSAnsing.Type>, #Optional.some!enumelt.1, [[THICK]]
+  // CHECK:      [[T0:%.*]] = enum $Optional<@thick NSAnsing.Type>, #Optional.some!enumelt.uncurried, [[THICK]]
   // CHECK:   bb{{.*}}(%{{.*}} : @trivial $Optional<@thick NSAnsing.Type>):
   // CHECK:      destroy_value [[NS_G_COPY]] : $NSObject
   // CHECK:   bb{{.*}}([[RES:%.*]] : @trivial $@thick NSAnsing.Type):
@@ -196,7 +196,7 @@ func useInnerPointer(_ p: UnsafeMutableRawPointer) {}
 // Handle inner-pointer methods by autoreleasing self after the call.
 // CHECK-LABEL: sil hidden @$s26objc_ownership_conventions18innerPointerMethodyySo5GizmoCF : $@convention(thin) (@guaranteed Gizmo) -> () {
 // CHECK: bb0([[ARG:%.*]] : @guaranteed $Gizmo):
-// CHECK:         [[METHOD:%.*]] = objc_method [[ARG]] : $Gizmo, #Gizmo.getBytes!1.foreign : (Gizmo) -> () -> UnsafeMutableRawPointer, $@convention(objc_method) (Gizmo) -> @unowned_inner_pointer UnsafeMutableRawPointer
+// CHECK:         [[METHOD:%.*]] = objc_method [[ARG]] : $Gizmo, #Gizmo.getBytes.uncurried.foreign : (Gizmo) -> () -> UnsafeMutableRawPointer, $@convention(objc_method) (Gizmo) -> @unowned_inner_pointer UnsafeMutableRawPointer
 // CHECK:         [[ARG_COPY:%.*]] = copy_value [[ARG]]
 // => SEMANTIC ARC TODO: The apply below /should/ be on ARG_COPY. It is safe how
 // it is today though since we are using a reference type.
@@ -211,7 +211,7 @@ func innerPointerMethod(_ g: Gizmo) {
 
 // CHECK-LABEL: sil hidden @$s26objc_ownership_conventions20innerPointerPropertyyySo5GizmoCF : $@convention(thin) (@guaranteed Gizmo) -> () {
 // CHECK:       bb0([[ARG:%.*]] : @guaranteed $Gizmo):
-// CHECK:         [[METHOD:%.*]] = objc_method [[ARG]] : $Gizmo, #Gizmo.innerProperty!getter.1.foreign : (Gizmo) -> () -> UnsafeMutableRawPointer, $@convention(objc_method) (Gizmo) -> @unowned_inner_pointer UnsafeMutableRawPointer
+// CHECK:         [[METHOD:%.*]] = objc_method [[ARG]] : $Gizmo, #Gizmo.innerProperty!getter.uncurried.foreign : (Gizmo) -> () -> UnsafeMutableRawPointer, $@convention(objc_method) (Gizmo) -> @unowned_inner_pointer UnsafeMutableRawPointer
 // CHECK:         [[ARG_COPY:%.*]] = copy_value [[ARG]]
 // => SEMANTIC ARC TODO: The apply below should be on ARG_COPY. It is benign since objc objects are reference types.
 // CHECK:         [[PTR:%.*]] = apply [[METHOD]]([[ARG]])

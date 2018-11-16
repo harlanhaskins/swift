@@ -148,7 +148,7 @@ func testDispatchedClassInstanceProperty(d: D) {
 }
 // CHECK-LABEL: sil hidden @$s17access_marker_gen35testDispatchedClassInstanceProperty1dyAA1DC_tF
 // CHECK:     bb0([[D:%.*]] : @guaranteed $D
-// CHECK:       [[METHOD:%.*]] = class_method [[D]] : $D, #D.x!modify.1
+// CHECK:       [[METHOD:%.*]] = class_method [[D]] : $D, #D.x!modify.uncurried
 // CHECK:       begin_apply [[METHOD]]([[D]])
 // CHECK-NOT:   begin_access
 // CHECK:       end_apply

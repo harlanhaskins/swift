@@ -16,15 +16,15 @@ class C : B {
   func mopsy() {}
 }
 // CHECK: sil_vtable C {
-// CHECK:   #A.foo!1: {{.*}} : @$s7vtables1BC3foo{{[_0-9a-zA-Z]*}}F
-// CHECK:   #A.bar!1: {{.*}} : @$s7vtables1CC3bar{{[_0-9a-zA-Z]*}}F
-// CHECK:   #A.bas!1: {{.*}} : @$s7vtables1AC3bas{{[_0-9a-zA-Z]*}}F
-// CHECK:   #A.qux!1: {{.*}} : @$s7vtables1CC3qux{{[_0-9a-zA-Z]*}}F
-// CHECK:   #B.init!allocator.1: {{.*}} : @$s7vtables1CC{{[_0-9a-zA-Z]*}}fC
-// CHECK:   #B.zim!1: {{.*}} : @$s7vtables1BC3zim{{[_0-9a-zA-Z]*}}F
-// CHECK:   #B.zang!1: {{.*}} : @$s7vtables1CC4zang{{[_0-9a-zA-Z]*}}F
-// CHECK:   #C.flopsy!1: {{.*}} : @$s7vtables1CC6flopsy{{[_0-9a-zA-Z]*}}F
-// CHECK:   #C.mopsy!1: {{.*}} : @$s7vtables1CC5mopsy{{[_0-9a-zA-Z]*}}F
+// CHECK:   #A.foo.uncurried: {{.*}} : @$s7vtables1BC3foo{{[_0-9a-zA-Z]*}}F
+// CHECK:   #A.bar.uncurried: {{.*}} : @$s7vtables1CC3bar{{[_0-9a-zA-Z]*}}F
+// CHECK:   #A.bas.uncurried: {{.*}} : @$s7vtables1AC3bas{{[_0-9a-zA-Z]*}}F
+// CHECK:   #A.qux.uncurried: {{.*}} : @$s7vtables1CC3qux{{[_0-9a-zA-Z]*}}F
+// CHECK:   #B.init!allocator.uncurried: {{.*}} : @$s7vtables1CC{{[_0-9a-zA-Z]*}}fC
+// CHECK:   #B.zim.uncurried: {{.*}} : @$s7vtables1BC3zim{{[_0-9a-zA-Z]*}}F
+// CHECK:   #B.zang.uncurried: {{.*}} : @$s7vtables1CC4zang{{[_0-9a-zA-Z]*}}F
+// CHECK:   #C.flopsy.uncurried: {{.*}} : @$s7vtables1CC6flopsy{{[_0-9a-zA-Z]*}}F
+// CHECK:   #C.mopsy.uncurried: {{.*}} : @$s7vtables1CC5mopsy{{[_0-9a-zA-Z]*}}F
 // CHECK: }
 
 class A {
@@ -35,11 +35,11 @@ class A {
 }
 
 // CHECK: sil_vtable A {
-// CHECK:   #A.foo!1: {{.*}} : @$s7vtables1AC3foo{{[_0-9a-zA-Z]*}}F
-// CHECK:   #A.bar!1: {{.*}} : @$s7vtables1AC3bar{{[_0-9a-zA-Z]*}}F
-// CHECK:   #A.bas!1: {{.*}} : @$s7vtables1AC3bas{{[_0-9a-zA-Z]*}}F
-// CHECK:   #A.qux!1: {{.*}} : @$s7vtables1AC3qux{{[_0-9a-zA-Z]*}}F
-// CHECK:   #A.init!allocator.1: {{.*}} : @$s7vtables1AC{{[_0-9a-zA-Z]*}}fC
+// CHECK:   #A.foo.uncurried: {{.*}} : @$s7vtables1AC3foo{{[_0-9a-zA-Z]*}}F
+// CHECK:   #A.bar.uncurried: {{.*}} : @$s7vtables1AC3bar{{[_0-9a-zA-Z]*}}F
+// CHECK:   #A.bas.uncurried: {{.*}} : @$s7vtables1AC3bas{{[_0-9a-zA-Z]*}}F
+// CHECK:   #A.qux.uncurried: {{.*}} : @$s7vtables1AC3qux{{[_0-9a-zA-Z]*}}F
+// CHECK:   #A.init!allocator.uncurried: {{.*}} : @$s7vtables1AC{{[_0-9a-zA-Z]*}}fC
 // CHECK: }
 
 class B : A {
@@ -55,18 +55,18 @@ class B : A {
 }
 
 // CHECK: sil_vtable B {
-// CHECK:   #A.foo!1: {{.*}} : @$s7vtables1BC3foo{{[_0-9a-zA-Z]*}}F
-// CHECK:   #A.bar!1: {{.*}} : @$s7vtables1AC3bar{{[_0-9a-zA-Z]*}}F
-// CHECK:   #A.bas!1: {{.*}} : @$s7vtables1AC3bas{{[_0-9a-zA-Z]*}}F
-// CHECK:   #A.qux!1: {{.*}} : @$s7vtables1BC3qux{{[_0-9a-zA-Z]*}}F
-// CHECK:   #B.init!allocator.1: {{.*}} : @$s7vtables1BC{{[_0-9a-zA-Z]*}}fC
-// CHECK:   #B.zim!1: {{.*}} : @$s7vtables1BC3zim{{[_0-9a-zA-Z]*}}F
-// CHECK:   #B.zang!1: {{.*}} : @$s7vtables1BC4zang{{[_0-9a-zA-Z]*}}F
+// CHECK:   #A.foo.uncurried: {{.*}} : @$s7vtables1BC3foo{{[_0-9a-zA-Z]*}}F
+// CHECK:   #A.bar.uncurried: {{.*}} : @$s7vtables1AC3bar{{[_0-9a-zA-Z]*}}F
+// CHECK:   #A.bas.uncurried: {{.*}} : @$s7vtables1AC3bas{{[_0-9a-zA-Z]*}}F
+// CHECK:   #A.qux.uncurried: {{.*}} : @$s7vtables1BC3qux{{[_0-9a-zA-Z]*}}F
+// CHECK:   #B.init!allocator.uncurried: {{.*}} : @$s7vtables1BC{{[_0-9a-zA-Z]*}}fC
+// CHECK:   #B.zim.uncurried: {{.*}} : @$s7vtables1BC3zim{{[_0-9a-zA-Z]*}}F
+// CHECK:   #B.zang.uncurried: {{.*}} : @$s7vtables1BC4zang{{[_0-9a-zA-Z]*}}F
 // CHECK: }
 
 // CHECK: sil_vtable RequiredInitDerived {
-// CHECK-NEXT: #SimpleInitBase.init!allocator.1: {{.*}} : @$s7vtables19RequiredInitDerivedC{{[_0-9a-zA-Z]*}}fC
-// CHECK-NEXT: #RequiredInitDerived.deinit!deallocator.1: @$s7vtables19RequiredInitDerivedCfD
+// CHECK-NEXT: #SimpleInitBase.init!allocator.uncurried: {{.*}} : @$s7vtables19RequiredInitDerivedC{{[_0-9a-zA-Z]*}}fC
+// CHECK-NEXT: #RequiredInitDerived.deinit!deallocator.uncurried: @$s7vtables19RequiredInitDerivedCfD
 // CHECK-NEXT: }
 
 class SimpleInitBase { }
@@ -103,7 +103,7 @@ class DerivedWithoutDefaults : BaseWithDefaults {
 // CHECK:         #Observed.x!setter
 
 // CHECK-LABEL: sil_vtable DerivedWithoutDefaults {
-// CHECK:         #BaseWithDefaults.a!1: {{.*}} : @$s7vtables22DerivedWithoutDefaultsC1a{{[_0-9a-zA-Z]*}}F
+// CHECK:         #BaseWithDefaults.a.uncurried: {{.*}} : @$s7vtables22DerivedWithoutDefaultsC1a{{[_0-9a-zA-Z]*}}F
 
 
 

@@ -9,7 +9,7 @@ func archetype_method<T: X>(x: T, y: T) -> T {
   return x.selfTypes(x: y)
 }
 // CHECK-LABEL: sil hidden @$s9witnesses16archetype_method{{[_0-9a-zA-Z]*}}F{{.*}} : $@convention(thin) <T where T : X> (@in_guaranteed T, @in_guaranteed T) -> @out T {
-// CHECK:         [[METHOD:%.*]] = witness_method $T, #X.selfTypes!1 : {{.*}} : $@convention(witness_method: X) <τ_0_0 where τ_0_0 : X> (@in_guaranteed τ_0_0, @inout τ_0_0) -> @out τ_0_0
+// CHECK:         [[METHOD:%.*]] = witness_method $T, #X.selfTypes.uncurried : {{.*}} : $@convention(witness_method: X) <τ_0_0 where τ_0_0 : X> (@in_guaranteed τ_0_0, @inout τ_0_0) -> @out τ_0_0
 // CHECK:         apply [[METHOD]]<T>({{%.*}}, {{%.*}}, {{%.*}}) : $@convention(witness_method: X) <τ_0_0 where τ_0_0 : X> (@in_guaranteed τ_0_0, @inout τ_0_0) -> @out τ_0_0
 // CHECK:       }
 
@@ -18,7 +18,7 @@ func archetype_generic_method<T: X>(x: T, y: Loadable) -> Loadable {
   return x.generic(x: y)
 }
 // CHECK-LABEL: sil hidden @$s9witnesses24archetype_generic_method{{[_0-9a-zA-Z]*}}F{{.*}} : $@convention(thin) <T where T : X> (@in_guaranteed T, Loadable) -> Loadable {
-// CHECK:         [[METHOD:%.*]] = witness_method $T, #X.generic!1 : {{.*}} : $@convention(witness_method: X) <τ_0_0 where τ_0_0 : X><τ_1_0> (@in_guaranteed τ_1_0, @inout τ_0_0) -> @out τ_1_0
+// CHECK:         [[METHOD:%.*]] = witness_method $T, #X.generic.uncurried : {{.*}} : $@convention(witness_method: X) <τ_0_0 where τ_0_0 : X><τ_1_0> (@in_guaranteed τ_1_0, @inout τ_0_0) -> @out τ_1_0
 // CHECK:         apply [[METHOD]]<T, Loadable>({{%.*}}, {{%.*}}, {{%.*}}) : $@convention(witness_method: X) <τ_0_0 where τ_0_0 : X><τ_1_0> (@in_guaranteed τ_1_0, @inout τ_0_0) -> @out τ_1_0
 // CHECK:       }
 
@@ -32,7 +32,7 @@ protocol StaticMethod { static func staticMethod() }
 
 // CHECK-LABEL: sil hidden @$s9witnesses23archetype_static_method{{[_0-9a-zA-Z]*}}F : $@convention(thin) <T where T : StaticMethod> (@in_guaranteed T) -> ()
 func archetype_static_method<T: StaticMethod>(x: T) {
-  // CHECK: [[METHOD:%.*]] = witness_method $T, #StaticMethod.staticMethod!1 : {{.*}} : $@convention(witness_method: StaticMethod) <τ_0_0 where τ_0_0 : StaticMethod> (@thick τ_0_0.Type) -> ()
+  // CHECK: [[METHOD:%.*]] = witness_method $T, #StaticMethod.staticMethod.uncurried : {{.*}} : $@convention(witness_method: StaticMethod) <τ_0_0 where τ_0_0 : StaticMethod> (@thick τ_0_0.Type) -> ()
   // CHECK: apply [[METHOD]]<T>
   T.staticMethod()
 }
@@ -46,7 +46,7 @@ func protocol_method(x: Existentiable) -> Loadable {
   return x.foo()
 }
 // CHECK-LABEL: sil hidden @$s9witnesses15protocol_method1xAA8LoadableVAA13Existentiable_p_tF : $@convention(thin) (@in_guaranteed Existentiable) -> Loadable {
-// CHECK:         [[METHOD:%.*]] = witness_method $[[OPENED:@opened(.*) Existentiable]], #Existentiable.foo!1
+// CHECK:         [[METHOD:%.*]] = witness_method $[[OPENED:@opened(.*) Existentiable]], #Existentiable.foo.uncurried
 // CHECK:         apply [[METHOD]]<[[OPENED]]>({{%.*}})
 // CHECK:       }
 
@@ -54,7 +54,7 @@ func protocol_generic_method(x: Existentiable) -> Loadable {
   return x.generic()
 }
 // CHECK-LABEL: sil hidden @$s9witnesses23protocol_generic_method1xAA8LoadableVAA13Existentiable_p_tF : $@convention(thin) (@in_guaranteed Existentiable) -> Loadable {
-// CHECK:         [[METHOD:%.*]] = witness_method $[[OPENED:@opened(.*) Existentiable]], #Existentiable.generic!1
+// CHECK:         [[METHOD:%.*]] = witness_method $[[OPENED:@opened(.*) Existentiable]], #Existentiable.generic.uncurried
 // CHECK:         apply [[METHOD]]<[[OPENED]], Loadable>({{%.*}}, {{%.*}})
 // CHECK:       }
 
@@ -63,7 +63,7 @@ func protocol_generic_method(x: Existentiable) -> Loadable {
 }
 
 // CHECK-LABEL: sil hidden @$s9witnesses20protocol_objc_method1xyAA8ObjCAble_p_tF : $@convention(thin) (@guaranteed ObjCAble) -> ()
-// CHECK:         objc_method {{%.*}} : $@opened({{.*}}) ObjCAble, #ObjCAble.foo!1.foreign
+// CHECK:         objc_method {{%.*}} : $@opened({{.*}}) ObjCAble, #ObjCAble.foo.uncurried.foreign
 func protocol_objc_method(x: ObjCAble) {
   x.foo()
 }
@@ -399,7 +399,7 @@ final class IUOFailableClassModel: NonFailableClassRefinement, IUOFailableClassR
   // CHECK: bb0({{.*}}):
   // CHECK:   [[FUNC:%.*]] = function_ref @$s9witnesses21IUOFailableClassModelC3fooACSgSi_tcfC : $@convention(method) (Int, @thick IUOFailableClassModel.Type) -> @owned Optional<IUOFailableClassModel>
   // CHECK:   [[VALUE:%.*]] = apply [[FUNC]]({{.*}})
-  // CHECK:   switch_enum [[VALUE]] : $Optional<IUOFailableClassModel>, case #Optional.some!enumelt.1: [[SOMEBB:bb[0-9]+]], case #Optional.none!enumelt: [[NONEBB:bb[0-9]+]]
+  // CHECK:   switch_enum [[VALUE]] : $Optional<IUOFailableClassModel>, case #Optional.some!enumelt.uncurried: [[SOMEBB:bb[0-9]+]], case #Optional.none!enumelt: [[NONEBB:bb[0-9]+]]
   //
   // CHECK: [[NONEBB]]:
   // CHECK:   unreachable
@@ -463,7 +463,7 @@ class PropertyRequirementWitnessFromBase : PropertyRequirementBase, PropertyRequ
   // CHECK: bb0([[ARG2:%.*]] : @trivial $*PropertyRequirementWitnessFromBase):
   // CHECK-NEXT: [[ARG2_LOADED:%[0-9][0-9]*]] = load_borrow [[ARG2]]
   // CHECK-NEXT: [[CAST_ARG2_LOADED:%[0-9][0-9]*]] = upcast [[ARG2_LOADED]] : $PropertyRequirementWitnessFromBase to $PropertyRequirementBase
-  // CHECK-NEXT: [[METH:%.*]] = class_method [[CAST_ARG2_LOADED]] : $PropertyRequirementBase, #PropertyRequirementBase.width!modify.1
+  // CHECK-NEXT: [[METH:%.*]] = class_method [[CAST_ARG2_LOADED]] : $PropertyRequirementBase, #PropertyRequirementBase.width!modify.uncurried
   // CHECK-NEXT: ([[RES:%.*]], [[TOKEN:%.*]]) = begin_apply [[METH]]([[CAST_ARG2_LOADED]]) : $@yield_once @convention(method) (@guaranteed PropertyRequirementBase) -> @yields @inout Int
   // CHECK-NEXT: yield [[RES]]
   // CHECK:      end_apply [[TOKEN]]
@@ -483,7 +483,7 @@ class PropertyRequirementWitnessFromBase : PropertyRequirementBase, PropertyRequ
   // CHECK-LABEL: sil private [transparent] [thunk] @$s9witnesses34PropertyRequirementWitnessFromBaseCAA0bC0A2aDP5depthSivMTW
   // CHECK: bb0([[ARG2:%.*]] : @trivial $*PropertyRequirementWitnessFromBase):
   // CHECK: [[ARG2_LOADED:%[0-9][0-9]*]] = load_borrow [[ARG2]]
-  // CHECK: [[METH:%.*]] = class_method [[ARG2_LOADED]] : $PropertyRequirementWitnessFromBase, #PropertyRequirementWitnessFromBase.depth!modify.1
+  // CHECK: [[METH:%.*]] = class_method [[ARG2_LOADED]] : $PropertyRequirementWitnessFromBase, #PropertyRequirementWitnessFromBase.depth!modify.uncurried
   // CHECK-NEXT: ([[RES:%.*]], [[TOKEN:%.*]]) = begin_apply [[METH]]([[ARG2_LOADED]]) : $@yield_once @convention(method) (@guaranteed PropertyRequirementWitnessFromBase) -> @yields @inout Int
   // CHECK-NEXT: yield [[RES]]
   // CHECK:      end_apply [[TOKEN]]
@@ -504,7 +504,7 @@ class CrashableBase {
 // CHECK:       bb0(%0 : @trivial $*GenericCrashable<τ_0_0>):
 // CHECK-NEXT: [[SELF:%.*]] = load_borrow %0 : $*GenericCrashable<τ_0_0>
 // CHECK-NEXT: [[BASE:%.*]] = upcast [[SELF]] : $GenericCrashable<τ_0_0> to $CrashableBase
-// CHECK-NEXT: [[FN:%.*]] = class_method [[BASE]] : $CrashableBase, #CrashableBase.crash!1 : (CrashableBase) -> () -> (), $@convention(method) (@guaranteed CrashableBase) -> ()
+// CHECK-NEXT: [[FN:%.*]] = class_method [[BASE]] : $CrashableBase, #CrashableBase.crash.uncurried : (CrashableBase) -> () -> (), $@convention(method) (@guaranteed CrashableBase) -> ()
 // CHECK-NEXT: apply [[FN]]([[BASE]]) : $@convention(method) (@guaranteed CrashableBase) -> ()
 // CHECK-NEXT: [[RESULT:%.*]] = tuple ()
 // CHECK-NEXT: end_borrow [[SELF]]

@@ -221,7 +221,7 @@ func testAddrOnlyStructInitGenericConcrete() {
 // CHECK:   [[BORROWED_CURRY_THUNK:%.*]] = begin_borrow [[CURRY_THUNK]]
 // CHECK:   [[COPY_BORROWED_CURRY_THUNK:%.*]] = copy_value [[BORROWED_CURRY_THUNK]]
 // CHECK:   [[TMP:%.*]] = alloc_stack $T.SubType
-// CHECK:   [[WITNESS_METHOD:%.*]] = witness_method $T.SubType, #ProtocolInitNoArg.init!allocator.1 : <Self where Self : ProtocolInitNoArg> (Self.Type) -> () -> Self : $@convention(witness_method: ProtocolInitNoArg) <τ_0_0 where τ_0_0 : ProtocolInitNoArg> (@thick τ_0_0.Type) -> @out τ_0_0
+// CHECK:   [[WITNESS_METHOD:%.*]] = witness_method $T.SubType, #ProtocolInitNoArg.init!allocator.uncurried : <Self where Self : ProtocolInitNoArg> (Self.Type) -> () -> Self : $@convention(witness_method: ProtocolInitNoArg) <τ_0_0 where τ_0_0 : ProtocolInitNoArg> (@thick τ_0_0.Type) -> @out τ_0_0
 // CHECK:   apply [[WITNESS_METHOD]]<T.SubType>([[TMP]],
 // CHECK:   [[BORROWED_CURRY_THUNK:%.*]] = begin_borrow [[COPY_BORROWED_CURRY_THUNK]]
 // CHECK:   apply [[BORROWED_CURRY_THUNK]]([[Y]], [[TMP]])
@@ -246,7 +246,7 @@ func testAddrOnlyStructInitGenericAddrOnly<T : ProtocolInitAddressOnly>(t: T) {
 // Curry thunk.
 //
 // CHECK-LABEL: sil shared [thunk] @$ss20ProtocolInitLoadableP1txs5KlassC_tcfCTc : $@convention(thin) <Self where Self : ProtocolInitLoadable> (@thick Self.Type) -> @owned @callee_guaranteed (@guaranteed Klass) -> @out Self {
-// CHECK:   [[WITNESS_METHOD_REF:%.*]] = witness_method $Self, #ProtocolInitLoadable.init!allocator.1 : <Self where Self : ProtocolInitLoadable> (Self.Type) -> (Klass) -> Self : $@convention(witness_method: ProtocolInitLoadable) <τ_0_0 where τ_0_0 : ProtocolInitLoadable> (@owned Klass, @thick τ_0_0.Type) -> @out τ_0_0
+// CHECK:   [[WITNESS_METHOD_REF:%.*]] = witness_method $Self, #ProtocolInitLoadable.init!allocator.uncurried : <Self where Self : ProtocolInitLoadable> (Self.Type) -> (Klass) -> Self : $@convention(witness_method: ProtocolInitLoadable) <τ_0_0 where τ_0_0 : ProtocolInitLoadable> (@owned Klass, @thick τ_0_0.Type) -> @out τ_0_0
 // CHECK:   [[WITNESS_METHOD:%.*]] = partial_apply [callee_guaranteed] [[WITNESS_METHOD_REF]]<Self>(
 // CHECK:   [[CANONICAL_THUNK_REF:%.*]] = function_ref @$ss5KlassCxIegxr_ABxIeggr_s20ProtocolInitLoadableRzlTR : $@convention(thin) <τ_0_0 where τ_0_0 : ProtocolInitLoadable> (@guaranteed Klass, @guaranteed @callee_guaranteed (@owned Klass) -> @out τ_0_0) -> @out τ_0_0
 // CHECK:   [[CANONICAL_THUNK:%.*]] = partial_apply [callee_guaranteed] %3<Self>(%2) : $@convention(thin) <τ_0_0 where τ_0_0 : ProtocolInitLoadable> (@guaranteed Klass, @guaranteed @callee_guaranteed (@owned Klass) -> @out τ_0_0) -> @out τ_0_0

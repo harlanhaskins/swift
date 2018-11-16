@@ -65,12 +65,12 @@ public protocol P {
 // CHECK-LABEL: sil @$s22closure_lifetime_fixup10testModify1pyxz_tAA1PRzSS7ElementRtzlF : $@convention(thin) <T where T : P, T.Element == String> (@inout T) -> () {
 // CHECK: bb0
 // CHECK:  [[PA1:%.*]] = partial_apply [callee_guaranteed]
-// CHECK:  [[ENUM1:%.*]] = enum $Optional<@callee_guaranteed (@in_guaranteed String) -> @out Int>, #Optional.some!enumelt.1, [[PA1]] 
+// CHECK:  [[ENUM1:%.*]] = enum $Optional<@callee_guaranteed (@in_guaranteed String) -> @out Int>, #Optional.some!enumelt.uncurried, [[PA1]] 
 // CHECK:  [[CVT1:%.*]] = convert_escape_to_noescape [[PA1]]
 // CHECK:  [[PA2:%.*]] = partial_apply [callee_guaranteed]
-// CHECK:  [[ENUM2:%.*]] = enum $Optional<@callee_guaranteed (@in_guaranteed Int) -> @out String>, #Optional.some!enumelt.1, [[PA2]]
+// CHECK:  [[ENUM2:%.*]] = enum $Optional<@callee_guaranteed (@in_guaranteed Int) -> @out String>, #Optional.some!enumelt.uncurried, [[PA2]]
 // CHECK:  [[CVT2:%.*]] = convert_escape_to_noescape [[PA2]]
-// CHECK:  [[W:%.*]] = witness_method $T, #P.subscript!modify.1
+// CHECK:  [[W:%.*]] = witness_method $T, #P.subscript!modify.uncurried
 // CHECK:  ([[BUFFER:%.*]], [[TOKEN:%.*]]) = begin_apply [[W]]<T, Int>([[CVT1]], [[CVT2]], {{.*}})
 // CHECK:  end_apply [[TOKEN]]
 // CHECK:  release_value [[ENUM1]]

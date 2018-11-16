@@ -34,7 +34,7 @@ class CustomStringSubclass : CustomStringClass {}
 // CHECK-LABEL: sil hidden @$s8literals27returnsCustomStringSubclassAA0cdE0CyF : $@convention(thin) () -> @owned CustomStringSubclass
 // CHECK: [[METATYPE:%.*]] = metatype $@thick CustomStringSubclass.Type
 // CHECK: [[UPCAST:%.*]] = upcast [[METATYPE]] : $@thick CustomStringSubclass.Type to $@thick CustomStringClass.Type
-// CHECK: [[CTOR:%.*]] = class_method [[UPCAST]] : $@thick CustomStringClass.Type, #CustomStringClass.init!allocator.1 : (CustomStringClass.Type) -> (String) -> CustomStringClass, $@convention(method) (@owned String, @thick CustomStringClass.Type) -> @owned CustomStringClass
+// CHECK: [[CTOR:%.*]] = class_method [[UPCAST]] : $@thick CustomStringClass.Type, #CustomStringClass.init!allocator.uncurried : (CustomStringClass.Type) -> (String) -> CustomStringClass, $@convention(method) (@owned String, @thick CustomStringClass.Type) -> @owned CustomStringClass
 // CHECK: [[RESULT:%.*]] = apply [[CTOR]]({{%.*}}, [[UPCAST]])
 // CHECK: [[DOWNCAST:%.*]] = unchecked_ref_cast [[RESULT]] : $CustomStringClass to $CustomStringSubclass
 // CHECK: return [[DOWNCAST]]

@@ -41,8 +41,8 @@ class SubclassOfOutsideChild : ResilientOutsideChild {
 // Note: no entries for [inherited] methods
 
 // CHECK-LABEL: sil_vtable SubclassOfOutsideChild {
-// CHECK-NEXT:  #ResilientOutsideParent.init!allocator.1: (ResilientOutsideParent.Type) -> () -> ResilientOutsideParent : @$s16class_resilience22SubclassOfOutsideChildCACycfC [override]
-// CHECK-NEXT:  #ResilientOutsideParent.method!1: (ResilientOutsideParent) -> () -> () : @$s16class_resilience22SubclassOfOutsideChildC6methodyyF [override]
-// CHECK-NEXT:  #SubclassOfOutsideChild.newMethod!1: (SubclassOfOutsideChild) -> () -> () : @$s16class_resilience22SubclassOfOutsideChildC9newMethodyyF
-// CHECK-NEXT:  #SubclassOfOutsideChild.deinit!deallocator.1: @$s16class_resilience22SubclassOfOutsideChildCfD
+// CHECK-NEXT:  #ResilientOutsideParent.init!allocator.uncurried: (ResilientOutsideParent.Type) -> () -> ResilientOutsideParent : @$s16class_resilience22SubclassOfOutsideChildCACycfC [override]
+// CHECK-NEXT:  #ResilientOutsideParent.method.uncurried: (ResilientOutsideParent) -> () -> () : @$s16class_resilience22SubclassOfOutsideChildC6methodyyF [override]
+// CHECK-NEXT:  #SubclassOfOutsideChild.newMethod.uncurried: (SubclassOfOutsideChild) -> () -> () : @$s16class_resilience22SubclassOfOutsideChildC9newMethodyyF
+// CHECK-NEXT:  #SubclassOfOutsideChild.deinit!deallocator.uncurried: @$s16class_resilience22SubclassOfOutsideChildCfD
 // CHECK-NEXT: }

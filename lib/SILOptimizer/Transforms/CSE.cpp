@@ -1137,7 +1137,7 @@ static bool CSExistentialInstructions(SILFunctionArgument *Arg,
 /// witness_method):
 ///
 /// open_existential_addr %0 : $*Pingable to $*@opened("1E467EB8-...")
-/// witness_method $@opened("1E467EB8-...") Pingable, #Pingable.ping!1, %2
+/// witness_method $@opened("1E467EB8-...") Pingable, #Pingable.ping.uncurried, %2
 /// apply %3<@opened("1E467EB8-...") Pingable>(%2)
 ///
 /// \returns True if some instructions were modified.

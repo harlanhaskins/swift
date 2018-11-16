@@ -176,9 +176,9 @@ Here is an example of a ``.sil`` file::
   // Define a SIL vtable. This matches dynamically-dispatched method
   // identifiers to their implementations for a known static class type.
   sil_vtable Button {
-    #Button.onClick!1: @_TC5norms6Button7onClickfS0_FT_T_
-    #Button.onMouseDown!1: @_TC5norms6Button11onMouseDownfS0_FT_T_
-    #Button.onMouseUp!1: @_TC5norms6Button9onMouseUpfS0_FT_T_
+    #Button.onClick.uncurried: @_TC5norms6Button7onClickfS0_FT_T_
+    #Button.onMouseDown.uncurried: @_TC5norms6Button11onMouseDownfS0_FT_T_
+    #Button.onMouseUp.uncurried: @_TC5norms6Button9onMouseUpfS0_FT_T_
   }
 
 SIL Stage
@@ -955,8 +955,8 @@ partial application level. For a curried function declaration::
 The declaration references and types for the different uncurry levels are as
 follows::
 
-  #example.foo!0 : $@convention(thin) (x:A) -> (y:B) -> (z:C) -> D
-  #example.foo!1 : $@convention(thin) ((y:B), (x:A)) -> (z:C) -> D
+  #example.foo : $@convention(thin) (x:A) -> (y:B) -> (z:C) -> D
+  #example.foo.uncurried : $@convention(thin) ((y:B), (x:A)) -> (z:C) -> D
   #example.foo!2 : $@convention(thin) ((z:C), (y:B), (x:A)) -> D
 
 The deepest uncurry level is referred to as the **natural uncurry level**. In
@@ -1106,9 +1106,9 @@ class::
   sil @A_bas : $@convention(thin) (@owned A) -> ()
 
   sil_vtable A {
-    #A.foo!1: @A_foo
-    #A.bar!1: @A_bar
-    #A.bas!1: @A_bas
+    #A.foo.uncurried: @A_foo
+    #A.bar.uncurried: @A_bar
+    #A.bas.uncurried: @A_bas
   }
 
   class B : A {
@@ -1118,9 +1118,9 @@ class::
   sil @B_bar : $@convention(thin) (@owned B) -> ()
 
   sil_vtable B {
-    #A.foo!1: @A_foo
-    #A.bar!1: @B_bar
-    #A.bas!1: @A_bas
+    #A.foo.uncurried: @A_foo
+    #A.bar.uncurried: @B_bar
+    #A.bas.uncurried: @A_bas
   }
 
   class C : B {
@@ -1130,9 +1130,9 @@ class::
   sil @C_bas : $@convention(thin) (@owned C) -> ()
 
   sil_vtable C {
-    #A.foo!1: @A_foo
-    #A.bar!1: @B_bar
-    #A.bas!1: @C_bas
+    #A.foo.uncurried: @A_foo
+    #A.bar.uncurried: @B_bar
+    #A.bas.uncurried: @C_bas
   }
 
 Note that the declaration reference in the vtable is to the least-derived method
@@ -1772,7 +1772,7 @@ independently assured of validity.  For example, a class method may
 return a class reference::
 
   bb0(%0 : $MyClass):
-    %1 = class_method %0 : $MyClass, #MyClass.foo!1
+    %1 = class_method %0 : $MyClass, #MyClass.foo.uncurried
     %2 = apply %1(%0) : $@convention(method) (@guaranteed MyClass) -> @owned MyOtherClass
     // use of %2 goes here; no use of %1
     strong_release %2 : $MyOtherClass
@@ -3075,7 +3075,7 @@ Swift native methods and always use vtable dispatch.
 
 The ``objc_method`` and ``objc_super_method`` instructions must reference
 Objective-C methods (indicated by the ``foreign`` marker on a method
-reference, as in ``#NSObject.description!1.foreign``).
+reference, as in ``#NSObject.description.uncurried.foreign``).
 
 Note that ``objc_msgSend`` invocations can only be used as the callee
 of an ``apply`` instruction or ``partial_apply`` instruction. They cannot
@@ -3088,9 +3088,9 @@ class_method
   sil-instruction ::= 'class_method' sil-method-attributes?
                         sil-operand ',' sil-decl-ref ':' sil-type
 
-  %1 = class_method %0 : $T, #T.method!1 : $@convention(class_method) U -> V
+  %1 = class_method %0 : $T, #T.method.uncurried : $@convention(class_method) U -> V
   // %0 must be of a class type or class metatype $T
-  // #T.method!1 must be a reference to a Swift native method of T or
+  // #T.method.uncurried must be a reference to a Swift native method of T or
   // of one of its superclasses, at uncurry level == 1
   // %1 will be of type $U -> V
 
@@ -3110,9 +3110,9 @@ objc_method
   sil-instruction ::= 'objc_method' sil-method-attributes?
                         sil-operand ',' sil-decl-ref ':' sil-type
 
-  %1 = objc_method %0 : $T, #T.method!1.foreign : $@convention(objc_method) U -> V
+  %1 = objc_method %0 : $T, #T.method.uncurried.foreign : $@convention(objc_method) U -> V
   // %0 must be of a class type or class metatype $T
-  // #T.method!1 must be a reference to an Objective-C method of T or
+  // #T.method.uncurried must be a reference to an Objective-C method of T or
   // of one of its superclasses, at uncurry level == 1
   // %1 will be of type $U -> V
 
@@ -3127,9 +3127,9 @@ super_method
   sil-instruction ::= 'super_method' sil-method-attributes?
                         sil-operand ',' sil-decl-ref ':' sil-type
 
-  %1 = super_method %0 : $T, #Super.method!1 : $@convention(thin) U -> V
+  %1 = super_method %0 : $T, #Super.method.uncurried : $@convention(thin) U -> V
   // %0 must be of a non-root class type or class metatype $T
-  // #Super.method!1 must be a reference to a native Swift method of T's
+  // #Super.method.uncurried must be a reference to a native Swift method of T's
   // superclass or of one of its ancestor classes, at uncurry level >= 1
   // %1 will be of type $@convention(thin) U -> V
 
@@ -3142,9 +3142,9 @@ objc_super_method
   sil-instruction ::= 'super_method' sil-method-attributes?
                         sil-operand ',' sil-decl-ref ':' sil-type
 
-  %1 = super_method %0 : $T, #Super.method!1.foreign : $@convention(thin) U -> V
+  %1 = super_method %0 : $T, #Super.method.uncurried.foreign : $@convention(thin) U -> V
   // %0 must be of a non-root class type or class metatype $T
-  // #Super.method!1.foreign must be a reference to an ObjC method of T's
+  // #Super.method.uncurried.foreign must be a reference to an ObjC method of T's
   // superclass or of one of its ancestor classes, at uncurry level >= 1
   // %1 will be of type $@convention(thin) U -> V
 
@@ -3158,10 +3158,10 @@ witness_method
   sil-instruction ::= 'witness_method' sil-method-attributes?
                         sil-type ',' sil-decl-ref ':' sil-type
 
-  %1 = witness_method $T, #Proto.method!1 \
+  %1 = witness_method $T, #Proto.method.uncurried \
     : $@convention(witness_method) <Self: Proto> U -> V
   // $T must be an archetype
-  // #Proto.method!1 must be a reference to a method of one of the protocol
+  // #Proto.method.uncurried must be a reference to a method of one of the protocol
   //   constraints on T
   // <Self: Proto> U -> V must be the type of the referenced method,
   //   generic on Self
@@ -3863,10 +3863,10 @@ an `inject_enum_addr`_ instruction::
   sil @init_with_data : $(AddressOnlyType) -> AddressOnlyEnum {
   entry(%0 : $*AddressOnlyEnum, %1 : $*AddressOnlyType):
     // Store the data argument for the case.
-    %2 = init_enum_data_addr %0 : $*AddressOnlyEnum, #AddressOnlyEnum.HasData!enumelt.1
+    %2 = init_enum_data_addr %0 : $*AddressOnlyEnum, #AddressOnlyEnum.HasData!enumelt.uncurried
     copy_addr [take] %2 to [initialization] %1 : $*AddressOnlyType
     // Inject the tag.
-    inject_enum_addr %0 : $*AddressOnlyEnum, #AddressOnlyEnum.HasData!enumelt.1
+    inject_enum_addr %0 : $*AddressOnlyEnum, #AddressOnlyEnum.HasData!enumelt.uncurried
     return
   }
 
@@ -3883,7 +3883,7 @@ discriminator and is done with the `switch_enum`_ terminator::
 
   sil @switch_foo : $(Foo) -> () {
   entry(%foo : $Foo):
-    switch_enum %foo : $Foo, case #Foo.A!enumelt.1: a_dest, case #Foo.B!enumelt.1: b_dest
+    switch_enum %foo : $Foo, case #Foo.A!enumelt.uncurried: a_dest, case #Foo.B!enumelt.uncurried: b_dest
 
   a_dest(%a : $Int):
     /* use %a */
@@ -3900,15 +3900,15 @@ projecting the enum value with `unchecked_take_enum_data_addr`_::
 
   sil @switch_foo : $<T> (Foo<T>) -> () {
   entry(%foo : $*Foo<T>):
-    switch_enum_addr %foo : $*Foo<T>, case #Foo.A!enumelt.1: a_dest, \
-      case #Foo.B!enumelt.1: b_dest
+    switch_enum_addr %foo : $*Foo<T>, case #Foo.A!enumelt.uncurried: a_dest, \
+      case #Foo.B!enumelt.uncurried: b_dest
 
   a_dest:
-    %a = unchecked_take_enum_data_addr %foo : $*Foo<T>, #Foo.A!enumelt.1
+    %a = unchecked_take_enum_data_addr %foo : $*Foo<T>, #Foo.A!enumelt.uncurried
     /* use %a */
 
   b_dest:
-    %b = unchecked_take_enum_data_addr %foo : $*Foo<T>, #Foo.B!enumelt.1
+    %b = unchecked_take_enum_data_addr %foo : $*Foo<T>, #Foo.B!enumelt.uncurried
     /* use %b */
   }
 
@@ -3934,7 +3934,7 @@ enum
   sil-instruction ::= 'enum' sil-type ',' sil-decl-ref (',' sil-operand)?
 
   %1 = enum $U, #U.EmptyCase!enumelt
-  %1 = enum $U, #U.DataCase!enumelt.1, %0 : $T
+  %1 = enum $U, #U.DataCase!enumelt.uncurried, %0 : $T
   // $U must be an enum type
   // #U.DataCase or #U.EmptyCase must be a case of enum $U
   // If #U.Case has a data type $T, %0 must be a value of type $T
@@ -3950,7 +3950,7 @@ unchecked_enum_data
 
   sil-instruction ::= 'unchecked_enum_data' sil-operand ',' sil-decl-ref
 
-  %1 = unchecked_enum_data %0 : $U, #U.DataCase!enumelt.1
+  %1 = unchecked_enum_data %0 : $U, #U.DataCase!enumelt.uncurried
   // $U must be an enum type
   // #U.DataCase must be a case of enum $U with data
   // %1 will be of object type $T for the data type of case U.DataCase
@@ -3965,7 +3965,7 @@ init_enum_data_addr
 
   sil-instruction ::= 'init_enum_data_addr' sil-operand ',' sil-decl-ref
 
-  %1 = init_enum_data_addr %0 : $*U, #U.DataCase!enumelt.1
+  %1 = init_enum_data_addr %0 : $*U, #U.DataCase!enumelt.uncurried
   // $U must be an enum type
   // #U.DataCase must be a case of enum $U with data
   // %1 will be of address type $*T for the data type of case U.DataCase
@@ -4007,7 +4007,7 @@ unchecked_take_enum_data_addr
 
   sil-instruction ::= 'unchecked_take_enum_data_addr' sil-operand ',' sil-decl-ref
 
-  %1 = unchecked_take_enum_data_addr %0 : $*U, #U.DataCase!enumelt.1
+  %1 = unchecked_take_enum_data_addr %0 : $*U, #U.DataCase!enumelt.uncurried
   // $U must be an enum type
   // #U.DataCase must be a case of enum $U with data
   // %1 will be of address type $*T for the data type of case U.DataCase
@@ -5234,8 +5234,8 @@ the original enum value. For example::
   entry(%x : $Foo):
     switch_enum %x : $Foo,       \
       case #Foo.Nothing!enumelt: nothing, \
-      case #Foo.OneInt!enumelt.1:  one_int, \
-      case #Foo.TwoInts!enumelt.1: two_ints
+      case #Foo.OneInt!enumelt.uncurried:  one_int, \
+      case #Foo.TwoInts!enumelt.uncurried: two_ints
 
   nothing:
     %zero = integer_literal $Int, 0
@@ -5303,9 +5303,9 @@ dynamic_method_br
   sil-terminator ::= 'dynamic_method_br' sil-operand ',' sil-decl-ref
                        ',' sil-identifier ',' sil-identifier
 
-  dynamic_method_br %0 : $P, #X.method!1, bb1, bb2
+  dynamic_method_br %0 : $P, #X.method.uncurried, bb1, bb2
   // %0 must be of protocol type
-  // #X.method!1 must be a reference to an @objc method of any class
+  // #X.method.uncurried must be a reference to an @objc method of any class
   // or protocol type
 
 Looks up the implementation of an Objective-C method with the same

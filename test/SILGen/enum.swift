@@ -41,7 +41,7 @@ func Optionable_cases(_ x: Int) {
   _ = Optionable.mere
 
   // CHECK-NEXT:  [[METATYPE:%.*]] = metatype $@thin Optionable.Type
-  // CHECK-NEXT:  [[RES:%.*]] = enum $Optionable, #Optionable.mere!enumelt.1, %0 : $Int
+  // CHECK-NEXT:  [[RES:%.*]] = enum $Optionable, #Optionable.mere!enumelt.uncurried, %0 : $Int
   _ = Optionable.mere(x)
 }
 
@@ -52,7 +52,7 @@ func Optionable_cases(_ x: Int) {
 // CHECK-NEXT: }
 
 // CHECK-LABEL: sil shared [transparent] @$ss10OptionableO4mereyABSicABmF
-// CHECK:        [[RES:%.*]] = enum $Optionable, #Optionable.mere!enumelt.1, %0 : $Int
+// CHECK:        [[RES:%.*]] = enum $Optionable, #Optionable.mere!enumelt.uncurried, %0 : $Int
 // CHECK-NEXT:   return [[RES]] : $Optionable
 // CHECK-NEXT: }
 
@@ -95,9 +95,9 @@ func AddressOnly_cases(_ s: S) {
 
   // CHECK-NEXT:  [[METATYPE:%.*]] = metatype $@thin AddressOnly.Type
   // CHECK-NEXT:  [[PHANTOM:%.*]] = alloc_stack $AddressOnly
-  // CHECK-NEXT:  [[PAYLOAD:%.*]] = init_enum_data_addr [[PHANTOM]] : $*AddressOnly, #AddressOnly.phantom!enumelt.1
+  // CHECK-NEXT:  [[PAYLOAD:%.*]] = init_enum_data_addr [[PHANTOM]] : $*AddressOnly, #AddressOnly.phantom!enumelt.uncurried
   // CHECK-NEXT:  store %0 to [trivial] [[PAYLOAD]]
-  // CHECK-NEXT:  inject_enum_addr [[PHANTOM]] : $*AddressOnly, #AddressOnly.phantom!enumelt.1
+  // CHECK-NEXT:  inject_enum_addr [[PHANTOM]] : $*AddressOnly, #AddressOnly.phantom!enumelt.uncurried
   // CHECK-NEXT:  destroy_addr [[PHANTOM]]
   // CHECK-NEXT:  dealloc_stack [[PHANTOM]]
 
@@ -116,9 +116,9 @@ func AddressOnly_cases(_ s: S) {
 
 // CHECK-LABEL: sil shared [transparent] @$ss11AddressOnlyO4mereyABs1P_pcABmF : $@convention
 // CHECK: bb0([[ARG0:%.*]] : @trivial $*AddressOnly, [[ARG1:%.*]] : @trivial $*P, [[ARG2:%.*]] : @trivial $@thin AddressOnly.Type):
-// CHECK:        [[RET_DATA:%.*]] = init_enum_data_addr [[ARG0]] : $*AddressOnly, #AddressOnly.mere!enumelt.1
+// CHECK:        [[RET_DATA:%.*]] = init_enum_data_addr [[ARG0]] : $*AddressOnly, #AddressOnly.mere!enumelt.uncurried
 // CHECK-NEXT:   copy_addr [take] [[ARG1]] to [initialization] [[RET_DATA]] : $*P
-// CHECK-NEXT:   inject_enum_addr [[ARG0]] : $*AddressOnly, #AddressOnly.mere!enumelt.1
+// CHECK-NEXT:   inject_enum_addr [[ARG0]] : $*AddressOnly, #AddressOnly.mere!enumelt.uncurried
 // CHECK:        return
 // CHECK-NEXT: } // end sil function '$ss11AddressOnlyO4mereyABs1P_pcABmF'
 
@@ -162,7 +162,7 @@ func PolyOptionable_specialized_cases(_ t: Int) {
   _ = PolyOptionable<Int>.nought
 
 // CHECK-NEXT:    [[METATYPE:%.*]] = metatype $@thin PolyOptionable<Int>.Type
-// CHECK-NEXT:    [[NOUGHT:%.*]] = enum $PolyOptionable<Int>, #PolyOptionable.mere!enumelt.1, %0
+// CHECK-NEXT:    [[NOUGHT:%.*]] = enum $PolyOptionable<Int>, #PolyOptionable.mere!enumelt.uncurried, %0
   _ = PolyOptionable<Int>.mere(t)
 
 // CHECK:         return
@@ -190,12 +190,12 @@ enum Foo { case A(P, String) }
 // Foo.A(_:)
 // CHECK-LABEL: sil shared [transparent] @$ss3FooO1AyABs1P_p_SStcABmF
 // CHECK: bb0([[ARG0:%.*]] : @trivial $*Foo, [[ARG1:%.*]] : @trivial $*P, [[ARG2:%.*]] : @owned $String, [[ARG3:%.*]] : @trivial $@thin Foo.Type):
-// CHECK:         [[PAYLOAD:%.*]] = init_enum_data_addr [[ARG0]] : $*Foo, #Foo.A!enumelt.1
+// CHECK:         [[PAYLOAD:%.*]] = init_enum_data_addr [[ARG0]] : $*Foo, #Foo.A!enumelt.uncurried
 // CHECK-NEXT:    [[LEFT:%.*]] = tuple_element_addr [[PAYLOAD]] : $*(P, String), 0
 // CHECK-NEXT:    [[RIGHT:%.*]] = tuple_element_addr [[PAYLOAD]] : $*(P, String), 1
 // CHECK-NEXT:    copy_addr [take] [[ARG1]] to [initialization] [[LEFT]] : $*P
 // CHECK-NEXT:    store [[ARG2]] to [init] [[RIGHT]]
-// CHECK-NEXT:    inject_enum_addr [[ARG0]] : $*Foo, #Foo.A!enumelt.1
+// CHECK-NEXT:    inject_enum_addr [[ARG0]] : $*Foo, #Foo.A!enumelt.uncurried
 // CHECK:         return
 // CHECK-NEXT:  } // end sil function '$ss3FooO1AyABs1P_p_SStcABmF'
 
@@ -209,7 +209,7 @@ enum Indirect<T> {
 }
 // CHECK-LABEL: sil{{.*}} @{{.*}}makeIndirectEnum{{.*}} : $@convention(thin) <T> (@in_guaranteed T) -> @owned Indirect<T>
 // CHECK: [[BOX:%.*]] = alloc_box $<τ_0_0> { var (τ_0_0, other: τ_0_0) } <T>
-// CHECK: enum $Indirect<T>, #Indirect.payload!enumelt.1, [[BOX]] : $<τ_0_0> { var (τ_0_0, other: τ_0_0) } <T>
+// CHECK: enum $Indirect<T>, #Indirect.payload!enumelt.uncurried, [[BOX]] : $<τ_0_0> { var (τ_0_0, other: τ_0_0) } <T>
 func makeIndirectEnum<T>(_ payload: T) -> Indirect<T> {
   return Indirect.payload((payload, other: payload))
 }

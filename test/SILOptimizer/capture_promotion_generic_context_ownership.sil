@@ -91,7 +91,7 @@ sil @generic_promotable_box2 : $@convention(thin) <T> (@in R<T>, @in Int, @owned
 entry(%0 : @trivial $*R<T>, %1 : @trivial $*Int, %b : @owned $<τ_0_0> { var E<(R<τ_0_0>)->Int> } <T>):
   %a = project_box %b : $<τ_0_0> { var E<(R<τ_0_0>)->Int> } <T>, 0
   %e = load [copy] %a : $*E<(R<T>)->Int>
-  switch_enum %e : $E<(R<T>)->Int>, case #E.Some!enumelt.1 : bb1, default bb2
+  switch_enum %e : $E<(R<T>)->Int>, case #E.Some!enumelt.uncurried : bb1, default bb2
 
 bb1(%f : @owned $@callee_guaranteed (@in_guaranteed R<T>) -> @out Int):
   %bf = begin_borrow %f : $@callee_guaranteed (@in_guaranteed R<T>) -> @out Int

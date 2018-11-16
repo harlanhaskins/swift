@@ -66,19 +66,19 @@ extension Nonfinal: Encodable where T: Encodable {}
 // Witness tables for Final
 
 // CHECK-LABEL: sil_witness_table hidden <T where T : Encodable> Final<T>: Encodable module synthesized_conformance_class {
-// CHECK-NEXT:   method #Encodable.encode!1: <Self where Self : Encodable> (Self) -> (Encoder) throws -> () : @$s29synthesized_conformance_class5FinalCyxGSEAASERzlSE6encode2toys7Encoder_p_tKFTW	// protocol witness for Encodable.encode(to:) in conformance <A> Final<A>
+// CHECK-NEXT:   method #Encodable.encode.uncurried: <Self where Self : Encodable> (Self) -> (Encoder) throws -> () : @$s29synthesized_conformance_class5FinalCyxGSEAASERzlSE6encode2toys7Encoder_p_tKFTW	// protocol witness for Encodable.encode(to:) in conformance <A> Final<A>
 // CHECK-NEXT:   conditional_conformance (T: Encodable): dependent
 // CHECK-NEXT: }
 
 // CHECK-LABEL: sil_witness_table hidden <T where T : Decodable> Final<T>: Decodable module synthesized_conformance_class {
-// CHECK-NEXT:   method #Decodable.init!allocator.1: <Self where Self : Decodable> (Self.Type) -> (Decoder) throws -> Self : @$s29synthesized_conformance_class5FinalCyxGSeAASeRzlSe4fromxs7Decoder_p_tKcfCTW	// protocol witness for Decodable.init(from:) in conformance <A> Final<A>
+// CHECK-NEXT:   method #Decodable.init!allocator.uncurried: <Self where Self : Decodable> (Self.Type) -> (Decoder) throws -> Self : @$s29synthesized_conformance_class5FinalCyxGSeAASeRzlSe4fromxs7Decoder_p_tKcfCTW	// protocol witness for Decodable.init(from:) in conformance <A> Final<A>
 // CHECK-NEXT:   conditional_conformance (T: Decodable): dependent
 // CHECK-NEXT: }
 
 // Witness tables for Nonfinal
 
 // CHECK-LABEL: sil_witness_table hidden <T where T : Encodable> Nonfinal<T>: Encodable module synthesized_conformance_class {
-// CHECK-NEXT:   method #Encodable.encode!1: <Self where Self : Encodable> (Self) -> (Encoder) throws -> () : @$s29synthesized_conformance_class8NonfinalCyxGSEAASERzlSE6encode2toys7Encoder_p_tKFTW	// protocol witness for Encodable.encode(to:) in conformance <A> Nonfinal<A>
+// CHECK-NEXT:   method #Encodable.encode.uncurried: <Self where Self : Encodable> (Self) -> (Encoder) throws -> () : @$s29synthesized_conformance_class8NonfinalCyxGSEAASERzlSE6encode2toys7Encoder_p_tKFTW	// protocol witness for Encodable.encode(to:) in conformance <A> Nonfinal<A>
 // CHECK-NEXT:   conditional_conformance (T: Encodable): dependent
 // CHECK-NEXT: }
 

@@ -30,7 +30,7 @@ func testClonable(c: Clonable) {
   // CHECK: [[THUNK:%.*]] = partial_apply [callee_guaranteed] [[THUNK_FN]]<@opened("{{.*}}") Clonable>({{.*}}) : $@convention(thin) <τ_0_0 where τ_0_0 : Clonable> (@guaranteed @callee_guaranteed () -> @thick τ_0_0.Type) -> @thick Clonable.Type
   let _: () -> Clonable.Type = c.cloneMetatype
 
-  // CHECK: [[METHOD_FN:%.*]] = witness_method $@opened("{{.*}}") Clonable, #Clonable.getCloneFn!1 : {{.*}}, {{.*}} : $*@opened("{{.*}}") Clonable : $@convention(witness_method: Clonable) <τ_0_0 where τ_0_0 : Clonable> (@in_guaranteed τ_0_0) -> @owned @callee_guaranteed () -> @out τ_0_0
+  // CHECK: [[METHOD_FN:%.*]] = witness_method $@opened("{{.*}}") Clonable, #Clonable.getCloneFn.uncurried : {{.*}}, {{.*}} : $*@opened("{{.*}}") Clonable : $@convention(witness_method: Clonable) <τ_0_0 where τ_0_0 : Clonable> (@in_guaranteed τ_0_0) -> @owned @callee_guaranteed () -> @out τ_0_0
   // CHECK: [[RESULT:%.*]] = apply [[METHOD_FN]]<@opened("{{.*}}") Clonable>({{.*}}) : $@convention(witness_method: Clonable) <τ_0_0 where τ_0_0 : Clonable> (@in_guaranteed τ_0_0) -> @owned @callee_guaranteed () -> @out τ_0_0
   // CHECK: [[THUNK_FN:%.*]] = function_ref @$sxIegr_22partial_apply_protocol8Clonable_pIegr_AaBRzlTR : $@convention(thin) <τ_0_0 where τ_0_0 : Clonable> (@guaranteed @callee_guaranteed () -> @out τ_0_0) -> @out Clonable
   // CHECK: [[THUNK:%.*]] = partial_apply [callee_guaranteed] [[THUNK_FN]]<@opened("{{.*}}") Clonable>([[RESULT]])
@@ -58,7 +58,7 @@ func testClonable(c: Clonable) {
 // CHECK-NEXT:    [[INNER_RESULT:%.*]] = alloc_stack $Optional<τ_0_0>
 // CHECK-NEXT:    apply %1([[INNER_RESULT]])
 // CHECK-NEXT:    [[OUTER_RESULT:%.*]] = alloc_stack $Optional<Clonable>
-// CHECK-NEXT:    switch_enum_addr [[INNER_RESULT]] : $*Optional<{{.*}}>, case #Optional.some!enumelt.1: [[SOME_BB:bb[0-9]+]],
+// CHECK-NEXT:    switch_enum_addr [[INNER_RESULT]] : $*Optional<{{.*}}>, case #Optional.some!enumelt.uncurried: [[SOME_BB:bb[0-9]+]],
 // CHECK:       [[SOME_BB]]:
 // CHECK-NEXT:    [[INNER_RESULT_ADDR:%.*]] = unchecked_take_enum_data_addr [[INNER_RESULT]]
 // CHECK-NEXT:    [[SOME_PAYLOAD:%.*]] = alloc_stack $Clonable
@@ -112,7 +112,7 @@ func testClonableInGenericContext<T>(c: Clonable, t: T) {
   // CHECK: [[THUNK:%.*]] = partial_apply [callee_guaranteed] [[THUNK_FN]]<@opened("{{.*}}") Clonable>({{.*}}) : $@convention(thin) <τ_0_0 where τ_0_0 : Clonable> (@guaranteed @callee_guaranteed () -> @thick τ_0_0.Type) -> @thick Clonable.Type
   let _: () -> Clonable.Type = c.cloneMetatype
 
-  // CHECK: [[METHOD_FN:%.*]] = witness_method $@opened("{{.*}}") Clonable, #Clonable.getCloneFn!1 : {{.*}}, {{.*}} : $*@opened("{{.*}}") Clonable : $@convention(witness_method: Clonable) <τ_0_0 where τ_0_0 : Clonable> (@in_guaranteed τ_0_0) -> @owned @callee_guaranteed () -> @out τ_0_0
+  // CHECK: [[METHOD_FN:%.*]] = witness_method $@opened("{{.*}}") Clonable, #Clonable.getCloneFn.uncurried : {{.*}}, {{.*}} : $*@opened("{{.*}}") Clonable : $@convention(witness_method: Clonable) <τ_0_0 where τ_0_0 : Clonable> (@in_guaranteed τ_0_0) -> @owned @callee_guaranteed () -> @out τ_0_0
   // CHECK: [[RESULT:%.*]] = apply [[METHOD_FN]]<@opened("{{.*}}") Clonable>({{.*}}) : $@convention(witness_method: Clonable) <τ_0_0 where τ_0_0 : Clonable> (@in_guaranteed τ_0_0) -> @owned @callee_guaranteed () -> @out τ_0_0
   // CHECK: [[THUNK_FN:%.*]] = function_ref @$sxIegr_22partial_apply_protocol8Clonable_pIegr_AaBRzlTR : $@convention(thin) <τ_0_0 where τ_0_0 : Clonable> (@guaranteed @callee_guaranteed () -> @out τ_0_0) -> @out Clonable
   // CHECK: [[THUNK:%.*]] = partial_apply [callee_guaranteed] [[THUNK_FN]]<@opened("{{.*}}") Clonable>([[RESULT]]) : $@convention(thin) <τ_0_0 where τ_0_0 : Clonable> (@guaranteed @callee_guaranteed () -> @out τ_0_0) -> @out Clonable

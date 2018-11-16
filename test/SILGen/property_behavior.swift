@@ -193,12 +193,12 @@ func exerciseStorage<T>(_ sx: inout S3<T>, _ sy: inout S3<Int>,
 
 // CHECK-LABEL: sil_witness_table private <T> S2<T>: withStorage module property_behavior {
 // CHECK:         associated_type Value: T
-// CHECK:         method #withStorage.storage!getter.1
-// CHECK:         method #withStorage.storage!setter.1
-// CHECK:         method #withStorage.storage!materializeForSet.1
+// CHECK:         method #withStorage.storage!getter.uncurried
+// CHECK:         method #withStorage.storage!setter.uncurried
+// CHECK:         method #withStorage.storage!materializeForSet.uncurried
 
 // CHECK-LABEL: sil_witness_table private <T> C2<T>: withStorage module property_behavior {
 // CHECK:         associated_type Value: T
-// CHECK:         method #withStorage.storage!getter.1
-// CHECK:         method #withStorage.storage!setter.1
-// CHECK:         method #withStorage.storage!materializeForSet.1
+// CHECK:         method #withStorage.storage!getter.uncurried
+// CHECK:         method #withStorage.storage!setter.uncurried
+// CHECK:         method #withStorage.storage!materializeForSet.uncurried

@@ -62,7 +62,7 @@ public func returnOptionalEscape() -> (() ->())?
 // NOPEEPHOLE:  switch_enum {{.*}}bb1
 // NOPEEPHOLE: bb1([[V2:%.*]]: $@callee_guaranteed () -> ()):
 // NOPEEPHOLE:  destroy_addr [[SLOT]]
-// NOPEEPHOLE:  [[SOME:%.*]] = enum $Optional<@callee_guaranteed () -> ()>, #Optional.some!enumelt.1, [[V2]]
+// NOPEEPHOLE:  [[SOME:%.*]] = enum $Optional<@callee_guaranteed () -> ()>, #Optional.some!enumelt.uncurried, [[V2]]
 // NOPEEPHOLE:  store [[SOME]] to [[SLOT]]
 // NOPEEPHOLE:  convert_escape_to_noescape %
 // NOPEEPHOLE-NOT:  strong_release

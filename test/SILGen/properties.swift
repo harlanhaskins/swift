@@ -108,7 +108,7 @@ func physical_struct_lvalue(_ c: Int) {
 // CHECK: bb0([[ARG0:%.*]] : @guaranteed $Ref,
  func physical_class_lvalue(_ r: Ref, a: Int) {
     r.y = a
-   // CHECK: [[FN:%[0-9]+]] = class_method [[ARG0]] : $Ref, #Ref.y!setter.1
+   // CHECK: [[FN:%[0-9]+]] = class_method [[ARG0]] : $Ref, #Ref.y!setter.uncurried
    // CHECK: apply [[FN]](%1, [[ARG0]]) : $@convention(method) (Int, @guaranteed Ref) -> ()
   }
 
@@ -119,12 +119,12 @@ func physical_subclass_lvalue(_ r: RefSubclass, a: Int) {
   r.y = a
   // CHECK: [[ARG1_COPY:%.*]] = copy_value [[ARG1]] : $RefSubclass
   // CHECK: [[R_SUP:%[0-9]+]] = upcast [[ARG1_COPY]] : $RefSubclass to $Ref
-  // CHECK: [[FN:%[0-9]+]] = class_method [[R_SUP]] : $Ref, #Ref.y!setter.1 : (Ref) -> (Int) -> (), $@convention(method) (Int, @guaranteed Ref) -> ()
+  // CHECK: [[FN:%[0-9]+]] = class_method [[R_SUP]] : $Ref, #Ref.y!setter.uncurried : (Ref) -> (Int) -> (), $@convention(method) (Int, @guaranteed Ref) -> ()
   // CHECK: apply [[FN]]([[ARG2]], [[R_SUP]]) :
   // CHECK: destroy_value [[R_SUP]]
   r.w = a
 
-  // CHECK: [[FN:%[0-9]+]] = class_method [[ARG1]] : $RefSubclass, #RefSubclass.w!setter.1
+  // CHECK: [[FN:%[0-9]+]] = class_method [[ARG1]] : $RefSubclass, #RefSubclass.w!setter.uncurried
   // CHECK: apply [[FN]](%1, [[ARG1]]) : $@convention(method) (Int, @guaranteed RefSubclass) -> ()
   // CHECK-NOT: destroy_value [[ARG1]]
   // CHECK: } // end sil function '$s10properties24physical_subclass_lvalue{{[_0-9a-zA-Z]*}}F'
@@ -154,7 +154,7 @@ func physical_class_rvalue() -> Int {
   // CHECK: [[FUNC:%[0-9]+]] = function_ref @$s10properties12class_rvalueAA3RefCyF
   // CHECK: [[CLASS:%[0-9]+]] = apply [[FUNC]]()
   // CHECK: [[BORROW:%.*]] = begin_borrow [[CLASS]]
-  // CHECK: [[FN:%[0-9]+]] = class_method [[BORROW]] : $Ref, #Ref.y!getter.1
+  // CHECK: [[FN:%[0-9]+]] = class_method [[BORROW]] : $Ref, #Ref.y!getter.uncurried
   // CHECK: [[RET:%[0-9]+]] = apply [[FN]]([[BORROW]])
   // CHECK: return [[RET]]
 }
@@ -202,7 +202,7 @@ func logical_struct_in_reftype_set(_ value: inout Val, z1: Int) {
   // -- getters and setters
   // -- val.ref.val_prop
   // CHECK: [[BORROW:%.*]] = begin_borrow [[VAL_REF]]
-  // CHECK: [[MAT_VAL_PROP_METHOD:%[0-9]+]] = class_method {{.*}} : $Ref, #Ref.val_prop!modify.1 : (Ref) -> ()
+  // CHECK: [[MAT_VAL_PROP_METHOD:%[0-9]+]] = class_method {{.*}} : $Ref, #Ref.val_prop!modify.uncurried : (Ref) -> ()
   // CHECK: ([[VAL_REF_VAL_PROP_MAT:%[0-9]+]], [[TOKEN:%.*]]) = begin_apply [[MAT_VAL_PROP_METHOD]]([[BORROW]])
   // -- val.ref.val_prop.z_tuple
   // CHECK: [[V_R_VP_Z_TUPLE_MAT:%[0-9]+]] = alloc_stack $(Int, Int)
@@ -792,7 +792,7 @@ class rdar16151899Derived : rdar16151899Base {
         // CHECK:  [[BASEPTR:%[0-9]+]] = upcast {{.*}} : $rdar16151899Derived to $rdar16151899Base
         // CHECK: load{{.*}}Int
         // CHECK-NEXT: end_access {{.*}} : $*Int
-        // CHECK-NEXT: [[SETTER:%[0-9]+]] = class_method {{.*}} : $rdar16151899Base, #rdar16151899Base.x!setter.1 : (rdar16151899Base)
+        // CHECK-NEXT: [[SETTER:%[0-9]+]] = class_method {{.*}} : $rdar16151899Base, #rdar16151899Base.x!setter.uncurried : (rdar16151899Base)
         // CHECK-NEXT: apply [[SETTER]]({{.*}}, [[BASEPTR]]) 
     }
 }
@@ -980,10 +980,10 @@ class GenericClass<T> {
 // CHECK-LABEL: sil hidden @$s10properties12genericPropsyyAA12GenericClassCySSGF : $@convention(thin) (@guaranteed GenericClass<String>) -> () {
 func genericProps(_ x: GenericClass<String>) {
   // CHECK: bb0([[ARG:%.*]] : @guaranteed $GenericClass<String>):
-  // CHECK:   class_method [[ARG]] : $GenericClass<String>, #GenericClass.x!getter.1
+  // CHECK:   class_method [[ARG]] : $GenericClass<String>, #GenericClass.x!getter.uncurried
   // CHECK:   apply {{.*}}<String>({{.*}}, [[ARG]]) : $@convention(method) <τ_0_0> (@guaranteed GenericClass<τ_0_0>) -> @out τ_0_0
   let _ = x.x
-  // CHECK:   class_method [[ARG]] : $GenericClass<String>, #GenericClass.y!getter.1
+  // CHECK:   class_method [[ARG]] : $GenericClass<String>, #GenericClass.y!getter.uncurried
   // CHECK:   apply {{.*}}<String>([[ARG]]) : $@convention(method) <τ_0_0> (@guaranteed GenericClass<τ_0_0>) -> Int
   let _ = x.y
   // CHECK:   [[Z:%.*]] = ref_element_addr [[ARG]] : $GenericClass<String>, #GenericClass.z
@@ -1020,7 +1020,7 @@ class ClassWithLetProperty {
   // This property is marked dynamic, so go through the getter, always.
   func ReturnDynamicConstant() -> Int { return q }
 // CHECK-LABEL: sil hidden @$s10properties20ClassWithLetPropertyC21ReturnDynamicConstant{{[_0-9a-zA-Z]*}}F
-// CHECK: objc_method %0 : $ClassWithLetProperty, #ClassWithLetProperty.q!getter.1.foreign
+// CHECK: objc_method %0 : $ClassWithLetProperty, #ClassWithLetProperty.q!getter.uncurried.foreign
 }
 
 
@@ -1187,7 +1187,7 @@ public class DerivedClassWithPublicProperty : BaseClassWithInternalProperty {
 // CHECK-NEXT:    [[SUPER:%.*]] = upcast [[SELF_COPY]] : $DerivedClassWithPublicProperty to $BaseClassWithInternalProperty
 // CHECK-NEXT:    [[BORROWED_SUPER:%.*]] = begin_borrow [[SUPER]]
 // CHECK-NEXT:    [[DOWNCAST_BORROWED_SUPER:%.*]] = unchecked_ref_cast [[BORROWED_SUPER]] : $BaseClassWithInternalProperty to $DerivedClassWithPublicProperty
-// CHECK-NEXT:    [[METHOD:%.*]] = super_method [[DOWNCAST_BORROWED_SUPER]] : $DerivedClassWithPublicProperty, #BaseClassWithInternalProperty.x!getter.1 : (BaseClassWithInternalProperty) -> () -> (), $@convention(method) (@guaranteed BaseClassWithInternalProperty) -> ()
+// CHECK-NEXT:    [[METHOD:%.*]] = super_method [[DOWNCAST_BORROWED_SUPER]] : $DerivedClassWithPublicProperty, #BaseClassWithInternalProperty.x!getter.uncurried : (BaseClassWithInternalProperty) -> () -> (), $@convention(method) (@guaranteed BaseClassWithInternalProperty) -> ()
 // CHECK-NEXT:    [[RESULT:%.*]] = apply [[METHOD]]([[BORROWED_SUPER]]) : $@convention(method) (@guaranteed BaseClassWithInternalProperty) -> ()
 // CHECK-NEXT:    end_borrow [[BORROWED_SUPER]]
 // CHECK-NEXT:    destroy_value [[SUPER]] : $BaseClassWithInternalProperty
@@ -1216,7 +1216,7 @@ protocol NonmutatingProtocol {
 // CHECK-NEXT:   end_access [[C_INOUT]] : $*ReferenceType
 // CHECK-NEXT:   [[C_BORROW:%.*]] = begin_borrow [[C]]
 // CHECK-NEXT:   [[C_FIELD_BOX:%.*]] = alloc_stack $NonmutatingProtocol
-// CHECK-NEXT:   [[GETTER:%.*]] = class_method [[C_BORROW]] : $ReferenceType, #ReferenceType.p!getter.1 : (ReferenceType) -> () -> NonmutatingProtocol, $@convention(method) (@guaranteed ReferenceType) -> @out NonmutatingProtocol
+// CHECK-NEXT:   [[GETTER:%.*]] = class_method [[C_BORROW]] : $ReferenceType, #ReferenceType.p!getter.uncurried : (ReferenceType) -> () -> NonmutatingProtocol, $@convention(method) (@guaranteed ReferenceType) -> @out NonmutatingProtocol
 // CHECK-NEXT:   apply [[GETTER]]([[C_FIELD_BOX]], [[C_BORROW]]) : $@convention(method) (@guaranteed ReferenceType) -> @out NonmutatingProtocol
 // CHECK-NEXT:   end_borrow [[C_BORROW]]
 
@@ -1226,7 +1226,7 @@ protocol NonmutatingProtocol {
 // CHECK-NEXT:   destroy_value [[C]] : $ReferenceType
 // CHECK-NEXT:   [[C_FIELD_BORROW:%.*]] = alloc_stack
 // CHECK-NEXT:   copy_addr [[C_FIELD_COPY]] to [initialization] [[C_FIELD_BORROW]]
-// CHECK-NEXT:   [[GETTER:%.*]] = witness_method $@opened("{{.*}}") NonmutatingProtocol, #NonmutatingProtocol.x!getter.1 : <Self where Self : NonmutatingProtocol> (Self) -> () -> Int, [[C_FIELD_PAYLOAD]] : $*@opened("{{.*}}") NonmutatingProtocol : $@convention(witness_method: NonmutatingProtocol) <τ_0_0 where τ_0_0 : NonmutatingProtocol> (@in_guaranteed τ_0_0) -> Int
+// CHECK-NEXT:   [[GETTER:%.*]] = witness_method $@opened("{{.*}}") NonmutatingProtocol, #NonmutatingProtocol.x!getter.uncurried : <Self where Self : NonmutatingProtocol> (Self) -> () -> Int, [[C_FIELD_PAYLOAD]] : $*@opened("{{.*}}") NonmutatingProtocol : $@convention(witness_method: NonmutatingProtocol) <τ_0_0 where τ_0_0 : NonmutatingProtocol> (@in_guaranteed τ_0_0) -> Int
 // CHECK-NEXT:   [[RESULT_VALUE:%.*]] = apply [[GETTER]]<@opened("{{.*}}") NonmutatingProtocol>([[C_FIELD_BORROW]]) : $@convention(witness_method: NonmutatingProtocol) <τ_0_0 where τ_0_0 : NonmutatingProtocol> (@in_guaranteed τ_0_0) -> Int
 // CHECK-NEXT:   destroy_addr [[C_FIELD_BORROW]]
 // CHECK-NEXT:   destroy_addr [[C_FIELD_COPY]] : $*@opened("{{.*}}") NonmutatingProtocol

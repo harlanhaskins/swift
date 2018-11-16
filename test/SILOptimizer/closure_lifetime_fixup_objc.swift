@@ -19,7 +19,7 @@ public protocol DangerousEscaper {
 
 // Extend the lifetime to the end of this function (2).
 // CHECK:   strong_retain [[ARG]] : $@callee_guaranteed () -> ()
-// CHECK:   [[OPT_CLOSURE:%.*]] = enum $Optional<@callee_guaranteed () -> ()>, #Optional.some!enumelt.1, [[ARG]] : $@callee_guaranteed () -> ()
+// CHECK:   [[OPT_CLOSURE:%.*]] = enum $Optional<@callee_guaranteed () -> ()>, #Optional.some!enumelt.uncurried, [[ARG]] : $@callee_guaranteed () -> ()
 
 // CHECK:   [[NE:%.*]] = convert_escape_to_noescape [[ARG]] : $@callee_guaranteed () -> () to $@noescape @callee_guaranteed () -> ()
 // CHECK:   [[WITHOUT_ACTUALLY_ESCAPING_THUNK:%.*]] = function_ref @$sIg_Ieg_TR : $@convention(thin) (@noescape @callee_guaranteed () -> ()) -> ()
@@ -37,7 +37,7 @@ public protocol DangerousEscaper {
 // CHECK:   [[BLOCK:%.*]] = init_block_storage_header [[BLOCK_STORAGE]] : $*@block_storage @callee_guaranteed () -> (), invoke [[BLOCK_INVOKE]] : $@convention(c) (@inout_aliasable @block_storage @callee_guaranteed () -> ()) -> (), type $@convention(block) @noescape () -> ()
 
 // Optional sentinel (4).
-// CHECK:   [[OPT_SENTINEL:%.*]] = enum $Optional<@callee_guaranteed () -> ()>, #Optional.some!enumelt.1, [[SENTINEL]] : $@callee_guaranteed () -> ()
+// CHECK:   [[OPT_SENTINEL:%.*]] = enum $Optional<@callee_guaranteed () -> ()>, #Optional.some!enumelt.uncurried, [[SENTINEL]] : $@callee_guaranteed () -> ()
 
 // Copy of sentinel closure (5).
 // CHECK:   [[BLOCK_COPY:%.*]] = copy_block [[BLOCK]] : $@convention(block) @noescape () -> ()
@@ -48,7 +48,7 @@ public protocol DangerousEscaper {
 
 // Release of closure copy (1).
 // CHECK:   strong_release %0 : $@callee_guaranteed () -> ()
-// CHECK:   [[METH:%.*]] = objc_method [[OE]] : $@opened("{{.*}}") DangerousEscaper, #DangerousEscaper.malicious!1.foreign : <Self where Self : DangerousEscaper> (Self) -> (() -> ()) -> (), $@convention(objc_method) <τ_0_0 where τ_0_0 : DangerousEscaper> (@convention(block) @noescape () -> (), τ_0_0) -> ()
+// CHECK:   [[METH:%.*]] = objc_method [[OE]] : $@opened("{{.*}}") DangerousEscaper, #DangerousEscaper.malicious.uncurried.foreign : <Self where Self : DangerousEscaper> (Self) -> (() -> ()) -> (), $@convention(objc_method) <τ_0_0 where τ_0_0 : DangerousEscaper> (@convention(block) @noescape () -> (), τ_0_0) -> ()
 // CHECK:   apply [[METH]]<@opened("{{.*}}") DangerousEscaper>([[BLOCK_COPY]], [[OE]]) : $@convention(objc_method) <τ_0_0 where τ_0_0 : DangerousEscaper> (@convention(block) @noescape () -> (), τ_0_0) -> ()
 
 // Release sentinel closure copy (5).
@@ -89,8 +89,8 @@ func getDispatchQueue() -> DispatchQueue
 // CHECK: bb0([[SELF:%.*]] : $C):
 // CHECK:   [[F:%.*]] = function_ref @$s27closure_lifetime_fixup_objc1CCfdyyXEfU_
 // CHECK:   [[PA:%.*]] = partial_apply [callee_guaranteed] [[F]](%0)
-// CHECK:   [[OPT:%.*]] = enum $Optional<@callee_guaranteed () -> ()>, #Optional.some!enumelt.1, [[PA]]
-// CHECK:   [[DEINIT:%.*]] = objc_super_method [[SELF]] : $C, #NSObject.deinit!deallocator.1.foreign
+// CHECK:   [[OPT:%.*]] = enum $Optional<@callee_guaranteed () -> ()>, #Optional.some!enumelt.uncurried, [[PA]]
+// CHECK:   [[DEINIT:%.*]] = objc_super_method [[SELF]] : $C, #NSObject.deinit!deallocator.uncurried.foreign
 // CHECK:   release_value [[OPT]] : $Optional<@callee_guaranteed () -> ()>
 // CHECK:   [[SUPER:%.*]] = upcast [[SELF]] : $C to $NSObject               // user: %34
 // CHECK-NEXT:   apply [[DEINIT]]([[SUPER]]) : $@convention(objc_method) (NSObject) -> ()

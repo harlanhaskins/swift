@@ -84,7 +84,7 @@ extension Klass {
   // CHECK-LABEL: sil hidden [dynamic_replacement_for "$s23dynamically_replaceable5KlassC08dynamic_B0yyF"] @$s23dynamically_replaceable5KlassC11replacementyyF : $@convention(method) (@guaranteed Klass) -> () {
   // CHECK: [[FN:%.*]] = prev_dynamic_function_ref @$s23dynamically_replaceable5KlassC11replacementyyF
   // CHECK: apply [[FN]](%0) : $@convention(method) (@guaranteed Klass) -> ()
-  // CHECK: [[METHOD:%.*]] = class_method %0 : $Klass, #Klass.dynamic_replaceable2!1
+  // CHECK: [[METHOD:%.*]] = class_method %0 : $Klass, #Klass.dynamic_replaceable2.uncurried
   // CHECK: = apply [[METHOD]](%0) : $@convention(method) (@guaranteed Klass) -> ()
   // CHECK: return
   @_dynamicReplacement(for: dynamic_replaceable())

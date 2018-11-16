@@ -523,7 +523,7 @@ bb0(%0 : @trivial $*(Int, Int)):
 // CHECK-LABEL: sil hidden @inlinedEnumValue
 sil hidden @inlinedEnumValue : $@convention(thin) (Int) -> (@out Optional<Int>, Int) {
 bb0(%0 : @trivial $*Optional<Int>, %1 : @trivial $Int):
-  %6 = unchecked_take_enum_data_addr %0 : $*Optional<Int>, #Optional.some!enumelt.1
+  %6 = unchecked_take_enum_data_addr %0 : $*Optional<Int>, #Optional.some!enumelt.uncurried
   %7 = begin_access [read] [static] %6 : $*Int
   %8 = load [trivial] %7 : $*Int
   end_access %7 : $*Int
@@ -747,7 +747,7 @@ bb0(%0 : @trivial $Int):
   %10 = function_ref @thunkForCalleeGuaranteed : $@convention(c) (@inout_aliasable @block_storage @callee_guaranteed () -> ()) -> ()
   %11 = init_block_storage_header %7 : $*@block_storage @callee_guaranteed () -> (), invoke %10 : $@convention(c) (@inout_aliasable @block_storage @callee_guaranteed () -> ()) -> (), type $@convention(block) @noescape () -> ()
   %12 = copy_block %11 : $@convention(block) @noescape () -> ()
-  %13 = enum $Optional<@convention(block) @noescape () -> ()>, #Optional.some!enumelt.1, %12 : $@convention(block) @noescape () -> ()
+  %13 = enum $Optional<@convention(block) @noescape () -> ()>, #Optional.some!enumelt.uncurried, %12 : $@convention(block) @noescape () -> ()
   %14 = begin_access [modify] [unknown] %3 : $*Int // expected-error {{overlapping accesses, but modification requires exclusive access; consider copying to a local variable}}
   %15 = apply %4(%14, %13) : $@convention(thin) (@inout Int, @owned Optional<@convention(block) @noescape () -> ()>) -> ()
   end_access %14 : $*Int
@@ -1053,7 +1053,7 @@ bb0(%0 : @guaranteed $ClassWithStoredProperty, %1 : @trivial $Int32):
 
 sil @mutatingNoescapeHelper : $@convention(thin) (Optional<UnsafePointer<Int32>>, @inout_aliasable Int32) -> () {
 bb0(%0 : @trivial $Optional<UnsafePointer<Int32>>, %1 : @trivial $*Int32):
-  %up = unchecked_enum_data %0 : $Optional<UnsafePointer<Int32>>, #Optional.some!enumelt.1
+  %up = unchecked_enum_data %0 : $Optional<UnsafePointer<Int32>>, #Optional.some!enumelt.uncurried
   %p = struct_extract %up : $UnsafePointer<Int32>, #UnsafePointer._rawValue
   %adr = pointer_to_address %p : $Builtin.RawPointer to [strict] $*Int32
   %val = load [trivial] %adr : $*Int32
@@ -1066,7 +1066,7 @@ bb0(%0 : @trivial $Optional<UnsafePointer<Int32>>, %1 : @trivial $*Int32):
 
 sil shared [transparent] [serializable] [reabstraction_thunk] @mutatingNoescapeThunk : $@convention(thin) (UnsafePointer<Int32>, @guaranteed @callee_guaranteed (Optional<UnsafePointer<Int32>>) -> ()) -> () {
 bb0(%0 : @trivial $UnsafePointer<Int32>, %1 : @guaranteed $@callee_guaranteed (Optional<UnsafePointer<Int32>>) -> ()):
-  %e = enum $Optional<UnsafePointer<Int32>>, #Optional.some!enumelt.1, %0 : $UnsafePointer<Int32>
+  %e = enum $Optional<UnsafePointer<Int32>>, #Optional.some!enumelt.uncurried, %0 : $UnsafePointer<Int32>
   %c = apply %1(%e) : $@callee_guaranteed (Optional<UnsafePointer<Int32>>) -> ()
   %v = tuple ()
   return %v : $()

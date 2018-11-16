@@ -130,8 +130,8 @@ protocol Frobable {
 }
 
 // CHECK-LABEL: sil hidden @$s9writeback12test_generic{{[_0-9a-zA-Z]*}}F 
-// CHECK:         witness_method $Runce, #Runcible.frob!modify.1
-// CHECK:         witness_method $Runce.Frob, #Frobable.anse!setter.1
+// CHECK:         witness_method $Runce, #Runcible.frob!modify.uncurried
+// CHECK:         witness_method $Runce.Frob, #Frobable.anse!setter.uncurried
 func test_generic<Runce: Runcible>(runce runce: inout Runce, anse: Runce.Frob.Anse) {
   runce.frob.anse = anse
 }
@@ -146,10 +146,10 @@ func loadAddressOnly() -> Fungible {
 }
 
 // CHECK-LABEL: sil hidden @$s9writeback10loadMember{{[_0-9a-zA-Z]*}}F
-// CHECK:         witness_method $Runce, #Runcible.frob!getter.1
-// CHECK:         witness_method $Runce.Frob, #Frobable.anse!getter.1
-// CHECK-NOT:     witness_method $Runce.Frob, #Frobable.anse!setter.1
-// CHECK-NOT:     witness_method $Runce, #Runcible.frob!setter.1
+// CHECK:         witness_method $Runce, #Runcible.frob!getter.uncurried
+// CHECK:         witness_method $Runce.Frob, #Frobable.anse!getter.uncurried
+// CHECK-NOT:     witness_method $Runce.Frob, #Frobable.anse!setter.uncurried
+// CHECK-NOT:     witness_method $Runce, #Runcible.frob!setter.uncurried
 func loadMember<Runce: Runcible>(runce runce: Runce) -> Runce.Frob.Anse {
   return runce.frob.anse
 }

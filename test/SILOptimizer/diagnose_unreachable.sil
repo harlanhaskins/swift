@@ -284,8 +284,8 @@ enum Singleton {
 sil @constant_fold_switch_enum_with_payload : $@convention(thin) (Int, UnicodeScalar) -> (Int, UnicodeScalar) {
 bb0(%6 : $Int, %10 : $UnicodeScalar):
   %11 = tuple (%6 : $Int, %10 : $UnicodeScalar)
-  %12 = enum $Singleton, #Singleton.x!enumelt.1, %11 : $(Int, UnicodeScalar)
-  switch_enum %12 : $Singleton, case #Singleton.x!enumelt.1: bb1
+  %12 = enum $Singleton, #Singleton.x!enumelt.uncurried, %11 : $(Int, UnicodeScalar)
+  switch_enum %12 : $Singleton, case #Singleton.x!enumelt.uncurried: bb1
 
 bb1(%15 : $(Int, UnicodeScalar)):
   br bb2(%15 : $(Int, UnicodeScalar))

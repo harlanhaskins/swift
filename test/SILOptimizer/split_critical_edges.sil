@@ -65,9 +65,9 @@ class X {
 // CHECK: bb0(
 // CHECK:   cond_br %1, bb1, bb2
 // CHECK: bb1:
-// CHECK:   dynamic_method_br {{.*}} : $Builtin.UnknownObject, #X.f!1.foreign, bb3, bb4
+// CHECK:   dynamic_method_br {{.*}} : $Builtin.UnknownObject, #X.f.uncurried.foreign, bb3, bb4
 // CHECK: bb2:
-// CHECK:   dynamic_method_br {{.*}} : $Builtin.UnknownObject, #X.f!1.foreign, bb5, bb6
+// CHECK:   dynamic_method_br {{.*}} : $Builtin.UnknownObject, #X.f.uncurried.foreign, bb5, bb6
 // CHECK: bb3({{.*}} : $@convention(objc_method) (Builtin.UnknownObject) -> ())
 // CHECK:   br bb7
 // CHECK: bb4:
@@ -92,7 +92,7 @@ lookup1:
   strong_retain %4 : $AnyObject
   %6 = open_existential_ref %4 : $AnyObject to $@opened("01234567-89ab-cdef-0123-000000000000") AnyObject
   %7 = unchecked_ref_cast %6 : $@opened("01234567-89ab-cdef-0123-000000000000") AnyObject to $Builtin.UnknownObject
-  dynamic_method_br %7 : $Builtin.UnknownObject, #X.f!1.foreign, bb1, bb2
+  dynamic_method_br %7 : $Builtin.UnknownObject, #X.f.uncurried.foreign, bb1, bb2
 
 lookup2:
   %21 = alloc_box $<τ_0_0> { var τ_0_0 } <AnyObject>
@@ -103,7 +103,7 @@ lookup2:
   strong_retain %24 : $AnyObject
   %26 = open_existential_ref %24 : $AnyObject to $@opened("12345678-89ab-cdef-0123-000000000000") AnyObject
   %27 = unchecked_ref_cast %26 : $@opened("12345678-89ab-cdef-0123-000000000000") AnyObject to $Builtin.UnknownObject
-  dynamic_method_br %27 : $Builtin.UnknownObject, #X.f!1.foreign, bb3, bb4
+  dynamic_method_br %27 : $Builtin.UnknownObject, #X.f.uncurried.foreign, bb3, bb4
 
 bb1(%8 : $@convention(objc_method) (Builtin.UnknownObject) -> ()):
   br bb5

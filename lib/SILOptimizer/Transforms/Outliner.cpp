@@ -203,20 +203,20 @@ struct SwitchInfo {
 /// Pattern for a bridged property call.
 ///
 ///  bb7:
-///    %30 = unchecked_take_enum_data_addr %19 : $*Optional<UITextField>, #Optional.some!enumelt.1
+///    %30 = unchecked_take_enum_data_addr %19 : $*Optional<UITextField>, #Optional.some!enumelt.uncurried
 ///    %31 = load %30 : $*UITextField
 ///    strong_retain %31 : $UITextField
-///    %33 = objc_method %31 : $UITextField, #UITextField.text!getter.1.foreign : (UITextField) -> () -> String?, $@convention(objc_method) (UITextField) -> @autoreleased Optional<NSString>
+///    %33 = objc_method %31 : $UITextField, #UITextField.text!getter.uncurried.foreign : (UITextField) -> () -> String?, $@convention(objc_method) (UITextField) -> @autoreleased Optional<NSString>
 ///    %34 = apply %33(%31) : $@convention(objc_method) (UITextField) -> @autoreleased Optional<NSString>
-///    switch_enum %34 : $Optional<NSString>, case #Optional.some!enumelt.1: bb8, case #Optional.none!enumelt: bb9
+///    switch_enum %34 : $Optional<NSString>, case #Optional.some!enumelt.uncurried: bb8, case #Optional.none!enumelt: bb9
 ///
 ///  bb8(%36 : $NSString):
 ///    // function_ref static String._unconditionallyBridgeFromObjectiveC(_:)
 ///    %37 = function_ref @$SSS10FoundationE36_unconditionallyBridgeFromObjectiveCSSSo8NSStringCSgFZ : $@convention(method) (@owned Optional<NSString>, @thin String.Type) -> @owned String
-///    %38 = enum $Optional<NSString>, #Optional.some!enumelt.1, %36 : $NSString
+///    %38 = enum $Optional<NSString>, #Optional.some!enumelt.uncurried, %36 : $NSString
 ///    %39 = metatype $@thin String.Type
 ///    %40 = apply %37(%38, %39) : $@convention(method) (@owned Optional<NSString>, @thin String.Type) -> @owned String
-///    %41 = enum $Optional<String>, #Optional.some!enumelt.1, %40 : $String
+///    %41 = enum $Optional<String>, #Optional.some!enumelt.uncurried, %40 : $String
 ///    br bb10(%41 : $Optional<String>)
 ///
 ///  bb9:
@@ -462,7 +462,7 @@ static bool matchSwitch(SwitchInfo &SI, SILInstruction *Inst,
   if (!FunRef || !FunRef->hasOneUse())
     return false;
 
-  // %38 = enum $Optional<NSString>, #Optional.some!enumelt.1, %36 : $NSString
+  // %38 = enum $Optional<NSString>, #Optional.some!enumelt.uncurried, %36 : $NSString
   ADVANCE_ITERATOR_OR_RETURN_FALSE(It);
   auto *SomeEnum = dyn_cast<EnumInst>(It);
   if (!SomeEnum || !SomeEnum->hasOperand() || SomeEnum->getOperand() != SomeBBArg)
@@ -497,7 +497,7 @@ static bool matchSwitch(SwitchInfo &SI, SILInstruction *Inst,
   if (BridgeFun->getName() != bridgeWitness.mangle())
     return false;
 
-  // %41 = enum $Optional<String>, #Optional.some!enumelt.1, %40 : $String
+  // %41 = enum $Optional<String>, #Optional.some!enumelt.uncurried, %40 : $String
   ADVANCE_ITERATOR_OR_RETURN_FALSE(It);
   auto *Enum3 = dyn_cast<EnumInst>(It);
   if (!Enum3 || !Enum3->hasOneUse() || !Enum3->hasOperand() ||
@@ -528,16 +528,16 @@ static bool matchSwitch(SwitchInfo &SI, SILInstruction *Inst,
 
 bool BridgedProperty::matchMethodCall(SILBasicBlock::iterator It) {
   // Matches:
-  //    %33 = objc_method %31 : $UITextField, #UITextField.text!getter.1.foreign : (UITextField) -> () -> String?, $@convention(objc_method) (UITextField) -> @autoreleased Optional<NSString>
+  //    %33 = objc_method %31 : $UITextField, #UITextField.text!getter.uncurried.foreign : (UITextField) -> () -> String?, $@convention(objc_method) (UITextField) -> @autoreleased Optional<NSString>
   //    %34 = apply %33(%31) : $@convention(objc_method) (UITextField) -> @autoreleased Optional<NSString>
-  //    switch_enum %34 : $Optional<NSString>, case #Optional.some!enumelt.1: bb8, case #Optional.none!enumelt: bb9
+  //    switch_enum %34 : $Optional<NSString>, case #Optional.some!enumelt.uncurried: bb8, case #Optional.none!enumelt: bb9
   //
   //  bb8(%36 : $NSString):
   //    %37 = function_ref @$SSS10FoundationE36_unconditionallyBridgeFromObjectiveCSSSo8NSStringCSgFZ : $@convention(method) (@owned Optional<NSString>, @thin String.Type) -> @owned String
-  //    %38 = enum $Optional<NSString>, #Optional.some!enumelt.1, %36 : $NSString
+  //    %38 = enum $Optional<NSString>, #Optional.some!enumelt.uncurried, %36 : $NSString
   //    %39 = metatype $@thin String.Type
   //    %40 = apply %37(%38, %39) : $@convention(method) (@owned Optional<NSString>, @thin String.Type) -> @owned String
-  //    %41 = enum $Optional<String>, #Optional.some!enumelt.1, %40 : $String
+  //    %41 = enum $Optional<String>, #Optional.some!enumelt.uncurried, %40 : $String
   //    br bb10(%41 : $Optional<String>)
   //
   //  bb9:
@@ -547,7 +547,7 @@ bool BridgedProperty::matchMethodCall(SILBasicBlock::iterator It) {
   //  bb10(%45 : $Optional<String>):
   //
 
-  // %33 = objc_method %31 : $UITextField, #UITextField.text!getter.1.foreign
+  // %33 = objc_method %31 : $UITextField, #UITextField.text!getter.uncurried.foreign
   ObjCMethod = dyn_cast<ObjCMethodInst>(It);
   SILValue Instance =
       FirstInst != ObjCMethod ? FirstInst : ObjCMethod->getOperand();
@@ -569,7 +569,7 @@ bool BridgedProperty::matchMethodCall(SILBasicBlock::iterator It) {
       PropApply->getArgument(0) != Instance || !PropApply->hasOneUse())
     return false;
 
-  // switch_enum %34 : $Optional<NSString>, case #Optional.some!enumelt.1: bb8, case #Optional.none!enumelt: bb9
+  // switch_enum %34 : $Optional<NSString>, case #Optional.some!enumelt.uncurried: bb8, case #Optional.none!enumelt: bb9
   ADVANCE_ITERATOR_OR_RETURN_FALSE(It);
   return matchSwitch(switchInfo, &*It, PropApply);
 }
@@ -580,16 +580,16 @@ bool BridgedProperty::matchInstSequence(SILBasicBlock::iterator It) {
   //    %31 = load %30 : $*UITextField
   //    strong_retain %31 : $UITextField
   // ]
-  //    %33 = objc_method %31 : $UITextField, #UITextField.text!getter.1.foreign : (UITextField) -> () -> String?, $@convention(objc_method) (UITextField) -> @autoreleased Optional<NSString>
+  //    %33 = objc_method %31 : $UITextField, #UITextField.text!getter.uncurried.foreign : (UITextField) -> () -> String?, $@convention(objc_method) (UITextField) -> @autoreleased Optional<NSString>
   //    %34 = apply %33(%31) : $@convention(objc_method) (UITextField) -> @autoreleased Optional<NSString>
-  //    switch_enum %34 : $Optional<NSString>, case #Optional.some!enumelt.1: bb8, case #Optional.none!enumelt: bb9
+  //    switch_enum %34 : $Optional<NSString>, case #Optional.some!enumelt.uncurried: bb8, case #Optional.none!enumelt: bb9
   //
   //  bb8(%36 : $NSString):
   //    %37 = function_ref @$SSS10FoundationE36_unconditionallyBridgeFromObjectiveCSSSo8NSStringCSgFZ : $@convention(method) (@owned Optional<NSString>, @thin String.Type) -> @owned String
-  //    %38 = enum $Optional<NSString>, #Optional.some!enumelt.1, %36 : $NSString
+  //    %38 = enum $Optional<NSString>, #Optional.some!enumelt.uncurried, %36 : $NSString
   //    %39 = metatype $@thin String.Type
   //    %40 = apply %37(%38, %39) : $@convention(method) (@owned Optional<NSString>, @thin String.Type) -> @owned String
-  //    %41 = enum $Optional<String>, #Optional.some!enumelt.1, %40 : $String
+  //    %41 = enum $Optional<String>, #Optional.some!enumelt.uncurried, %40 : $String
   //    br bb10(%41 : $Optional<String>)
   //
   //  bb9:
@@ -656,7 +656,7 @@ namespace {
 /// %15 = function_ref @$SSS10FoundationE19_bridgeToObjectiveCSo8NSStringCyF
 /// %16 = apply %15(%14) :
 ///         $@convention(method) (@guaranteed String) -> @owned NSString
-/// %17 = enum $Optional<NSString>, #Optional.some!enumelt.1, %16 : $NSString
+/// %17 = enum $Optional<NSString>, #Optional.some!enumelt.uncurried, %16 : $NSString
 /// release_value %14 : $String
 ///
 /// apply %objcMethod(%17, ...) : $@convention(objc_method) (Optional<NSString> ...) ->
@@ -726,7 +726,7 @@ BridgedArgument BridgedArgument::match(unsigned ArgIdx, SILValue Arg,
   // %15 = function_ref @$SSS10FoundationE19_bridgeToObjectiveCSo8NSStringCyF
   // %16 = apply %15(%14) :
   //         $@convention(method) (@guaranteed String) -> @owned NSString
-  // %17 = enum $Optional<NSString>, #Optional.some!enumelt.1, %16 : $NSString
+  // %17 = enum $Optional<NSString>, #Optional.some!enumelt.uncurried, %16 : $NSString
   // release_value %14 : $String
   // ...
   // apply %objcMethod(%17, ...) : $@convention(objc_method) (Optional<NSString> ...) ->
@@ -793,10 +793,10 @@ namespace {
 //
 // bb1(%23 : $NSString):
 //   %24 = function_ref @_unconditionallyBridgeFromObjectiveC
-//   %25 = enum $Optional<NSString>, #Optional.some!enumelt.1, %23 : $NSString
+//   %25 = enum $Optional<NSString>, #Optional.some!enumelt.uncurried, %23 : $NSString
 //   %26 = metatype $@thin String.Type
 //   %27 = apply %24(%25, %26)
-//   %28 = enum $Optional<String>, #Optional.some!enumelt.1, %27 : $String
+//   %28 = enum $Optional<String>, #Optional.some!enumelt.uncurried, %27 : $String
 //   br bb3(%28 : $Optional<String>)
 //
 // bb2:
@@ -830,10 +830,10 @@ void BridgedReturn::outline(SILFunction *Fun, ApplyInst *NewOutlinedCall) {
 //
 // bb1(%23 : $NSString):
 //   %24 = function_ref @$SSS10FoundationE36_unconditionallyBridgeFromObjectiveC
-//   %25 = enum $Optional<NSString>, #Optional.some!enumelt.1, %23 : $NSString
+//   %25 = enum $Optional<NSString>, #Optional.some!enumelt.uncurried, %23 : $NSString
 //   %26 = metatype $@thin String.Type
 //   %27 = apply %24(%25, %26)
-//   %28 = enum $Optional<String>, #Optional.some!enumelt.1, %27 : $String
+//   %28 = enum $Optional<String>, #Optional.some!enumelt.uncurried, %27 : $String
 //   br bb3(%28 : $Optional<String>)
 //
 // bb2:

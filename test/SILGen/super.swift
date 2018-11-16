@@ -93,7 +93,7 @@ public class ChildToResilientParent : ResilientOutsideParent {
     // CHECK:   [[UPCAST_SELF:%.*]] = upcast [[COPY_SELF]]
     // CHECK:   [[BORROW_UPCAST_SELF:%.*]] = begin_borrow [[UPCAST_SELF]]
     // CHECK:   [[CAST_BORROW_BACK_TO_BASE:%.*]] = unchecked_ref_cast [[BORROW_UPCAST_SELF]]
-    // CHECK:   [[FUNC:%.*]] = super_method [[CAST_BORROW_BACK_TO_BASE]] : $ChildToResilientParent, #ResilientOutsideParent.method!1 : (ResilientOutsideParent) -> () -> (), $@convention(method) (@guaranteed ResilientOutsideParent) -> ()
+    // CHECK:   [[FUNC:%.*]] = super_method [[CAST_BORROW_BACK_TO_BASE]] : $ChildToResilientParent, #ResilientOutsideParent.method.uncurried : (ResilientOutsideParent) -> () -> (), $@convention(method) (@guaranteed ResilientOutsideParent) -> ()
     // CHECK:   end_borrow [[BORROW_UPCAST_SELF]]
     // CHECK:   apply [[FUNC]]([[UPCAST_SELF]])
     super.method()
@@ -104,7 +104,7 @@ public class ChildToResilientParent : ResilientOutsideParent {
   public override class func classMethod() {
     // CHECK: bb0([[METASELF:%.*]] : @trivial $@thick ChildToResilientParent.Type):
     // CHECK:   [[UPCAST_METASELF:%.*]] = upcast [[METASELF]]
-    // CHECK:   [[FUNC:%.*]] = super_method [[SELF]] : $@thick ChildToResilientParent.Type, #ResilientOutsideParent.classMethod!1 : (ResilientOutsideParent.Type) -> () -> (), $@convention(method) (@thick ResilientOutsideParent.Type) -> ()
+    // CHECK:   [[FUNC:%.*]] = super_method [[SELF]] : $@thick ChildToResilientParent.Type, #ResilientOutsideParent.classMethod.uncurried : (ResilientOutsideParent.Type) -> () -> (), $@convention(method) (@thick ResilientOutsideParent.Type) -> ()
     // CHECK:   apply [[FUNC]]([[UPCAST_METASELF]])
     super.classMethod()
   }
@@ -115,7 +115,7 @@ public class ChildToResilientParent : ResilientOutsideParent {
     // CHECK: bb0([[METASELF:%.*]] : @trivial $@thick ChildToResilientParent.Type):
     // CHECK:   [[CAST_METASELF:%.*]] = unchecked_trivial_bit_cast [[METASELF]] : $@thick ChildToResilientParent.Type to $@thick @dynamic_self ChildToResilientParent.Type
     // CHECK:   [[UPCAST_CAST_METASELF:%.*]] = upcast [[CAST_METASELF]] : $@thick @dynamic_self ChildToResilientParent.Type to $@thick ResilientOutsideParent.Type
-    // CHECK:   [[FUNC:%.*]] = super_method [[METASELF]] : $@thick ChildToResilientParent.Type, #ResilientOutsideParent.classMethod!1 : (ResilientOutsideParent.Type) -> () -> ()
+    // CHECK:   [[FUNC:%.*]] = super_method [[METASELF]] : $@thick ChildToResilientParent.Type, #ResilientOutsideParent.classMethod.uncurried : (ResilientOutsideParent.Type) -> () -> ()
     // CHECK:   apply [[FUNC]]([[UPCAST_CAST_METASELF]])
     // CHECK: unreachable
     super.classMethod()
@@ -131,7 +131,7 @@ public class ChildToFixedParent : OutsideParent {
     // CHECK:   [[UPCAST_COPY_SELF:%.*]] = upcast [[COPY_SELF]]
     // CHECK:   [[BORROWED_UPCAST_COPY_SELF:%.*]] = begin_borrow [[UPCAST_COPY_SELF]]
     // CHECK:   [[DOWNCAST_BORROWED_UPCAST_COPY_SELF:%.*]] = unchecked_ref_cast [[BORROWED_UPCAST_COPY_SELF]] : $OutsideParent to $ChildToFixedParent
-    // CHECK:   [[FUNC:%.*]] = super_method [[DOWNCAST_BORROWED_UPCAST_COPY_SELF]] : $ChildToFixedParent, #OutsideParent.method!1 : (OutsideParent) -> () -> (), $@convention(method) (@guaranteed OutsideParent) -> ()
+    // CHECK:   [[FUNC:%.*]] = super_method [[DOWNCAST_BORROWED_UPCAST_COPY_SELF]] : $ChildToFixedParent, #OutsideParent.method.uncurried : (OutsideParent) -> () -> (), $@convention(method) (@guaranteed OutsideParent) -> ()
     // CHECK:   end_borrow [[BORROWED_UPCAST_COPY_SELF]]
     // CHECK:   apply [[FUNC]]([[UPCAST_COPY_SELF]])
     super.method()
@@ -142,7 +142,7 @@ public class ChildToFixedParent : OutsideParent {
   public override class func classMethod() {
     // CHECK: bb0([[SELF:%.*]] : @trivial $@thick ChildToFixedParent.Type):
     // CHECK:   [[UPCAST_SELF:%.*]] = upcast [[SELF]]
-    // CHECK:   [[FUNC:%.*]] = super_method [[SELF]] : $@thick ChildToFixedParent.Type, #OutsideParent.classMethod!1 : (OutsideParent.Type) -> () -> (), $@convention(method) (@thick OutsideParent.Type) -> ()
+    // CHECK:   [[FUNC:%.*]] = super_method [[SELF]] : $@thick ChildToFixedParent.Type, #OutsideParent.classMethod.uncurried : (OutsideParent.Type) -> () -> (), $@convention(method) (@thick OutsideParent.Type) -> ()
     // CHECK:   apply [[FUNC]]([[UPCAST_SELF]])
     super.classMethod()
   }
@@ -153,7 +153,7 @@ public class ChildToFixedParent : OutsideParent {
     // CHECK: bb0([[SELF:%.*]] : @trivial $@thick ChildToFixedParent.Type):
     // CHECK:   [[FIRST_CAST:%.*]] = unchecked_trivial_bit_cast [[SELF]]
     // CHECK:   [[SECOND_CAST:%.*]] = upcast [[FIRST_CAST]]
-    // CHECK:   [[FUNC:%.*]] = super_method [[SELF]] : $@thick ChildToFixedParent.Type, #OutsideParent.classMethod!1 : (OutsideParent.Type) -> () -> ()
+    // CHECK:   [[FUNC:%.*]] = super_method [[SELF]] : $@thick ChildToFixedParent.Type, #OutsideParent.classMethod.uncurried : (OutsideParent.Type) -> () -> ()
     // CHECK:   apply [[FUNC]]([[SECOND_CAST]])
     // CHECK:   unreachable
     super.classMethod()

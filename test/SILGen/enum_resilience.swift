@@ -12,7 +12,7 @@ import resilient_enum
 // CHECK-LABEL: sil hidden @$s15enum_resilience15resilientSwitchyy0c1_A06MediumOF : $@convention(thin) (@in_guaranteed Medium) -> ()
 // CHECK:         [[BOX:%.*]] = alloc_stack $Medium
 // CHECK-NEXT:    copy_addr %0 to [initialization] [[BOX]]
-// CHECK-NEXT:    switch_enum_addr [[BOX]] : $*Medium, case #Medium.Paper!enumelt: bb1, case #Medium.Canvas!enumelt: bb2, case #Medium.Pamphlet!enumelt.1: bb3, case #Medium.Postcard!enumelt.1: bb4, default bb5
+// CHECK-NEXT:    switch_enum_addr [[BOX]] : $*Medium, case #Medium.Paper!enumelt: bb1, case #Medium.Canvas!enumelt: bb2, case #Medium.Pamphlet!enumelt.uncurried: bb3, case #Medium.Postcard!enumelt.uncurried: bb4, default bb5
 // CHECK:       bb1:
 // CHECK-NEXT:    dealloc_stack [[BOX]]
 // CHECK-NEXT:    br bb6
@@ -85,7 +85,7 @@ func resilientSwitchUnknownCase(_ m: Medium) -> Int32 {
 
 // CHECK-LABEL: sil hidden @$s15enum_resilience36resilientSwitchUnknownCaseExhaustiveys5Int32V0c1_A06MediumOF : $@convention(thin) (@in_guaranteed Medium) -> Int32 {
 func resilientSwitchUnknownCaseExhaustive(_ m: Medium) -> Int32 {
-  // CHECK: switch_enum_addr %2 : $*Medium, case #Medium.Paper!enumelt: [[PAPER:[^ ]+]], case #Medium.Canvas!enumelt: [[CANVAS:[^ ]+]], case #Medium.Pamphlet!enumelt.1: [[PAMPHLET:[^ ]+]], case #Medium.Postcard!enumelt.1: [[POSTCARD:[^ ]+]], default [[DEFAULT:[^ ]+]]
+  // CHECK: switch_enum_addr %2 : $*Medium, case #Medium.Paper!enumelt: [[PAPER:[^ ]+]], case #Medium.Canvas!enumelt: [[CANVAS:[^ ]+]], case #Medium.Pamphlet!enumelt.uncurried: [[PAMPHLET:[^ ]+]], case #Medium.Postcard!enumelt.uncurried: [[POSTCARD:[^ ]+]], default [[DEFAULT:[^ ]+]]
   switch m {
   // CHECK: [[PAPER]]:
   // CHECK: integer_literal $Builtin.IntLiteral, 0

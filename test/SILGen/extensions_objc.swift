@@ -16,10 +16,10 @@ extension Foo {
 // CHECK: bb0([[ARG:%.*]] : @guaranteed $Foo):
 func extensionReferences(_ x: Foo) {
   // dynamic extension methods are still dynamically dispatched.
-  // CHECK: objc_method [[ARG]] : $Foo, #Foo.kay!1.foreign
+  // CHECK: objc_method [[ARG]] : $Foo, #Foo.kay.uncurried.foreign
   x.kay()
 
-  // CHECK: objc_method [[ARG]] : $Foo, #Foo.cox!getter.1.foreign
+  // CHECK: objc_method [[ARG]] : $Foo, #Foo.cox!getter.uncurried.foreign
   _ = x.cox
 
 }
@@ -33,4 +33,4 @@ func extensionMethodCurrying(_ x: Foo) {
 // CHECK-LABEL: sil shared [transparent] [serializable] [thunk] @$s15extensions_objc3FooC3kayyyFTD
 // CHECK:         bb0([[SELF:%.*]] : @guaranteed $Foo):
 // CHECK:           [[SELF_COPY:%.*]] = copy_value [[SELF]]
-// CHECK:           objc_method [[SELF_COPY]] : $Foo, #Foo.kay!1.foreign
+// CHECK:           objc_method [[SELF_COPY]] : $Foo, #Foo.kay.uncurried.foreign

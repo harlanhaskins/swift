@@ -328,7 +328,7 @@ bb1:
   %11 = struct_element_addr %1 : $*UnfoldSequence<Element, State>, #UnfoldSequence._state
   strong_retain %9 : $@callee_guaranteed (@inout State) -> @out Optional<Element>
   %13 = apply %9(%10, %11) : $@callee_guaranteed (@inout State) -> @out Optional<Element>
-  switch_enum_addr %10 : $*Optional<Element>, case #Optional.some!enumelt.1: bb3, case #Optional.none!enumelt: bb2
+  switch_enum_addr %10 : $*Optional<Element>, case #Optional.some!enumelt.uncurried: bb3, case #Optional.none!enumelt: bb2
 
 bb2:
   destroy_addr %10 : $*Optional<Element>
@@ -345,13 +345,13 @@ bb2:
   br bb5
 
 bb3:
-  %27 = unchecked_take_enum_data_addr %10 : $*Optional<Element>, #Optional.some!enumelt.1
-  %28 = init_enum_data_addr %0 : $*Optional<Element>, #Optional.some!enumelt.1
+  %27 = unchecked_take_enum_data_addr %10 : $*Optional<Element>, #Optional.some!enumelt.uncurried
+  %28 = init_enum_data_addr %0 : $*Optional<Element>, #Optional.some!enumelt.uncurried
   copy_addr [take] %27 to [initialization] %28 : $*Element
   dealloc_stack %10 : $*Optional<Element>
   destroy_addr %6 : $*UnfoldSequence<Element, State>
   dealloc_stack %6 : $*UnfoldSequence<Element, State>
-  inject_enum_addr %0 : $*Optional<Element>, #Optional.some!enumelt.1
+  inject_enum_addr %0 : $*Optional<Element>, #Optional.some!enumelt.uncurried
   br bb5
 
 bb4:

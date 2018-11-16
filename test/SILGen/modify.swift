@@ -62,7 +62,7 @@ extension Derived : Abstractable {}
 // CHECK: bb0(%0 : @trivial $*Derived):
 // CHECK-NEXT: [[T0:%.*]] = load_borrow %0 : $*Derived
 // CHECK-NEXT: [[SELF:%.*]] = upcast [[T0]] : $Derived to $Base
-// CHECK-NEXT: [[FN:%.*]] = class_method [[SELF]] : $Base, #Base.storedFunction!modify.1
+// CHECK-NEXT: [[FN:%.*]] = class_method [[SELF]] : $Base, #Base.storedFunction!modify.uncurried
 // CHECK-NEXT: ([[SUPER_ADDR:%.*]], [[TOKEN:%.*]]) = begin_apply [[FN]]([[SELF]])
 // CHECK-NEXT: [[SUB_ADDR:%.*]] = alloc_stack $@callee_guaranteed () -> @out Int
 // CHECK-NEXT: [[SUPER_FN:%.*]] = load [take] [[SUPER_ADDR]]
@@ -468,7 +468,7 @@ class LazyClassProperty {
 }
 
 // CHECK-LABEL: sil hidden @$s6modify30inoutAccessOfLazyClassProperty1lyAA0efG0Cz_tF
-// CHECK:    class_method {{.*}} : $LazyClassProperty, #LazyClassProperty.cat!modify.1
+// CHECK:    class_method {{.*}} : $LazyClassProperty, #LazyClassProperty.cat!modify.uncurried
 func inoutAccessOfLazyClassProperty(l: inout LazyClassProperty) {
   increment(&l.cat)
 }
@@ -543,16 +543,16 @@ extension HasConditionalSubscript: ConditionalSubscript where T: ConditionalSubs
 // CHECK:         function_ref @$s6modify23HasConditionalSubscriptVA2A0cD0RzlEyACyxGSicig
 
 // CHECK-LABEL: sil_vtable DerivedForOverride {
-// CHECK:   #BaseForOverride.valueStored!getter.1: (BaseForOverride) -> () -> Int : @$s6modify18DerivedForOverrideC11valueStoredSivg
-// CHECK:   #BaseForOverride.valueStored!setter.1: (BaseForOverride) -> (Int) -> () : @$s6modify18DerivedForOverrideC11valueStoredSivs
-// CHECK:   #BaseForOverride.valueStored!modify.1: (BaseForOverride) -> () -> () : @$s6modify18DerivedForOverrideC11valueStoredSivM
-// CHECK:   #BaseForOverride.valueComputed!getter.1: (BaseForOverride) -> () -> Int : @$s6modify18DerivedForOverrideC13valueComputedSivg
-// CHECK:   #BaseForOverride.valueComputed!setter.1: (BaseForOverride) -> (Int) -> () : @$s6modify18DerivedForOverrideC13valueComputedSivs
-// CHECK:   #BaseForOverride.valueComputed!modify.1: (BaseForOverride) -> () -> () : @$s6modify18DerivedForOverrideC13valueComputedSivM
+// CHECK:   #BaseForOverride.valueStored!getter.uncurried: (BaseForOverride) -> () -> Int : @$s6modify18DerivedForOverrideC11valueStoredSivg
+// CHECK:   #BaseForOverride.valueStored!setter.uncurried: (BaseForOverride) -> (Int) -> () : @$s6modify18DerivedForOverrideC11valueStoredSivs
+// CHECK:   #BaseForOverride.valueStored!modify.uncurried: (BaseForOverride) -> () -> () : @$s6modify18DerivedForOverrideC11valueStoredSivM
+// CHECK:   #BaseForOverride.valueComputed!getter.uncurried: (BaseForOverride) -> () -> Int : @$s6modify18DerivedForOverrideC13valueComputedSivg
+// CHECK:   #BaseForOverride.valueComputed!setter.uncurried: (BaseForOverride) -> (Int) -> () : @$s6modify18DerivedForOverrideC13valueComputedSivs
+// CHECK:   #BaseForOverride.valueComputed!modify.uncurried: (BaseForOverride) -> () -> () : @$s6modify18DerivedForOverrideC13valueComputedSivM
 // CHECK: }
 
 // CHECK-LABEL: sil_witness_table hidden Bill: Totalled module modify {
-// CHECK:   method #Totalled.total!getter.1: {{.*}} : @$s6modify4BillVAA8TotalledA2aDP5totalSivgTW
-// CHECK:   method #Totalled.total!setter.1: {{.*}} : @$s6modify4BillVAA8TotalledA2aDP5totalSivsTW
-// CHECK:   method #Totalled.total!modify.1: {{.*}} : @$s6modify4BillVAA8TotalledA2aDP5totalSivMTW
+// CHECK:   method #Totalled.total!getter.uncurried: {{.*}} : @$s6modify4BillVAA8TotalledA2aDP5totalSivgTW
+// CHECK:   method #Totalled.total!setter.uncurried: {{.*}} : @$s6modify4BillVAA8TotalledA2aDP5totalSivsTW
+// CHECK:   method #Totalled.total!modify.uncurried: {{.*}} : @$s6modify4BillVAA8TotalledA2aDP5totalSivMTW
 // CHECK: }

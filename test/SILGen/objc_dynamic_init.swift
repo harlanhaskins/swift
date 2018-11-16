@@ -39,7 +39,7 @@ final class Bobamathing: Thingamabob {
 // CHECK:         function_ref @{{.*}}Gadget{{.*}}fC :
 
 // CHECK-LABEL: sil_vtable Gadget {
-// CHECK-NOT:     #Gadget.init!allocator.1
+// CHECK-NOT:     #Gadget.init!allocator.uncurried
 
 // CHECK-LABEL: sil_vtable Gizmo {
-// CHECK-NOT:     #Gadget.init!allocator.1
+// CHECK-NOT:     #Gadget.init!allocator.uncurried

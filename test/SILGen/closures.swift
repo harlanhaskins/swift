@@ -439,7 +439,7 @@ class SuperSub : SuperBase {
   func a() {
     // CHECK: sil private @[[INNER_FUNC_1]] : $@convention(thin) (@guaranteed SuperSub) -> () {
     // CHECK: bb0([[ARG:%.*]] : @guaranteed $SuperSub):
-    // CHECK:   [[CLASS_METHOD:%.*]] = class_method [[ARG]] : $SuperSub, #SuperSub.boom!1
+    // CHECK:   [[CLASS_METHOD:%.*]] = class_method [[ARG]] : $SuperSub, #SuperSub.boom.uncurried
     // CHECK:   = apply [[CLASS_METHOD]]([[ARG]])
     // CHECK:   [[ARG_COPY:%.*]] = copy_value [[ARG]]
     // CHECK:   [[ARG_COPY_SUPER:%.*]] = upcast [[ARG_COPY]] : $SuperSub to $SuperBase
@@ -468,7 +468,7 @@ class SuperSub : SuperBase {
     func b1() {
       // CHECK: sil private @[[INNER_FUNC_2]] : $@convention(thin) (@guaranteed SuperSub) -> () {
       // CHECK: bb0([[ARG:%.*]] : @guaranteed $SuperSub):
-      // CHECK:   [[CLASS_METHOD:%.*]] = class_method [[ARG]] : $SuperSub, #SuperSub.boom!1
+      // CHECK:   [[CLASS_METHOD:%.*]] = class_method [[ARG]] : $SuperSub, #SuperSub.boom.uncurried
       // CHECK:   = apply [[CLASS_METHOD]]([[ARG]]) : $@convention(method) (@guaranteed SuperSub) -> ()
       // CHECK:   [[ARG_COPY:%.*]] = copy_value [[ARG]]
       // CHECK:   [[ARG_COPY_SUPER:%.*]] = upcast [[ARG_COPY]] : $SuperSub to $SuperBase
@@ -502,7 +502,7 @@ class SuperSub : SuperBase {
   func c() {
     // CHECK: sil private @[[INNER_FUNC_1]] : $@convention(thin) (@guaranteed SuperSub) -> ()
     // CHECK: bb0([[ARG:%.*]] : @guaranteed $SuperSub):
-    // CHECK:   [[CLASS_METHOD:%.*]] = class_method [[ARG]] : $SuperSub, #SuperSub.boom!1
+    // CHECK:   [[CLASS_METHOD:%.*]] = class_method [[ARG]] : $SuperSub, #SuperSub.boom.uncurried
     // CHECK:   = apply [[CLASS_METHOD]]([[ARG]]) : $@convention(method) (@guaranteed SuperSub) -> ()
     // CHECK:   [[ARG_COPY:%.*]] = copy_value [[ARG]]
     // CHECK:   [[ARG_COPY_SUPER:%.*]] = upcast [[ARG_COPY]] : $SuperSub to $SuperBase

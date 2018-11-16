@@ -21,7 +21,7 @@ func getStaticFunc1<T: Foo>(t: T.Type) -> () -> () {
 }
 
 // CHECK-LABEL: sil shared [thunk] @$s21partial_apply_generic3FooP10staticFunc{{[_0-9a-zA-Z]*}}FZ
-// CHECK: [[REF:%.*]] = witness_method $Self, #Foo.staticFunc!1
+// CHECK: [[REF:%.*]] = witness_method $Self, #Foo.staticFunc.uncurried
 // CHECK-NEXT: partial_apply [callee_guaranteed] [[REF]]<Self>(%0)
 // CHECK-NEXT: return
 
@@ -48,7 +48,7 @@ func getInstanceFunc1<T: Foo>(t: T) -> () -> () {
 
 // CHECK-LABEL: sil shared [thunk] @$s21partial_apply_generic3FooP12instanceFunc{{[_0-9a-zA-Z]*}}F
 // CHECK: bb0([[ARG:%.*]] : @trivial $*Self):
-// CHECK: [[REF:%.*]] = witness_method $Self, #Foo.instanceFunc!1
+// CHECK: [[REF:%.*]] = witness_method $Self, #Foo.instanceFunc.uncurried
 // CHECK-NEXT: [[STACK:%.*]] = alloc_stack $Self
 // CHECK-NEXT: copy_addr [[ARG]] to [initialization] [[STACK]]
 // CHECK-NEXT: partial_apply [callee_guaranteed] [[REF]]<Self>([[STACK]])
@@ -83,7 +83,7 @@ func getNonCanonicalSelfFunc<T : Foo, U : Panda>(t: T.Type) -> (T) -> (U) -> () 
 // curry thunk of Foo.makesSelfNonCanonical<A where ...> (A1) -> ()
 // CHECK-LABEL: sil shared [thunk] @$s21partial_apply_generic3FooP21makesSelfNonCanonicalyyqd__7CuddlesQyd__RszAA5PandaRd__lFTc : $@convention(thin) <Self><T where Self == T.Cuddles, T : Panda> (@in_guaranteed Self) -> @owned @callee_guaranteed (@in_guaranteed T) -> () {
 // CHECK: bb0([[ARG:%.*]] : @trivial $*Self):
-// CHECK: [[REF:%.*]] = witness_method $Self, #Foo.makesSelfNonCanonical!1 : <Self><T where Self == T.Cuddles, T : Panda> (Self) -> (T) -> () : $@convention(witness_method: Foo) <τ_0_0><τ_1_0 where τ_0_0 == τ_1_0.Cuddles, τ_1_0 : Panda> (@in_guaranteed τ_1_0, @in_guaranteed τ_0_0) -> ()
+// CHECK: [[REF:%.*]] = witness_method $Self, #Foo.makesSelfNonCanonical.uncurried : <Self><T where Self == T.Cuddles, T : Panda> (Self) -> (T) -> () : $@convention(witness_method: Foo) <τ_0_0><τ_1_0 where τ_0_0 == τ_1_0.Cuddles, τ_1_0 : Panda> (@in_guaranteed τ_1_0, @in_guaranteed τ_0_0) -> ()
 // CHECK-NEXT: [[STACK:%.*]] = alloc_stack $Self
 // CHECK-NEXT: copy_addr [[ARG]] to [initialization] [[STACK]] : $*Self
 // CHECK-NEXT: [[CLOSURE:%.*]] = partial_apply [callee_guaranteed] [[REF]]<Self, T>([[STACK]])

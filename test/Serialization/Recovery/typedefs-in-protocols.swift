@@ -115,18 +115,18 @@ public struct ProtoLibImpl : Proto {
 // This is mostly to check when changes are necessary for the CHECK-IR lines
 // above.
 // CHECK-WITNESS-TABLE-LABEL: sil_witness_table{{.*}} ProtoLibImpl: Proto module Lib {
-// 0 CHECK-WITNESS-TABLE-NEXT: #Proto.unwrappedProp!getter.1:
-// 1 CHECK-WITNESS-TABLE-NEXT: #Proto.unwrappedProp!setter.1:
-// 2 CHECK-WITNESS-TABLE-NEXT: #Proto.unwrappedProp!modify.1:
-// 3 CHECK-WITNESS-TABLE-NEXT: #Proto.wrappedProp!getter.1:
-// 4 CHECK-WITNESS-TABLE-NEXT: #Proto.wrappedProp!setter.1:
-// 5 CHECK-WITNESS-TABLE-NEXT: #Proto.wrappedProp!modify.1:
-// 6 CHECK-WITNESS-TABLE-NEXT: #Proto.returnsUnwrappedMethod!1:
-// 7 CHECK-WITNESS-TABLE-NEXT: #Proto.returnsWrappedMethod!1:
-// 8 CHECK-WITNESS-TABLE-NEXT: #Proto.subscript!getter.1:
-// 9 CHECK-WITNESS-TABLE-NEXT: #Proto.init!allocator.1:
-// 10 CHECK-WITNESS-TABLE-NEXT: #Proto.init!allocator.1:
-// 11 CHECK-WITNESS-TABLE-NEXT: #Proto.lastMethod!1:
+// 0 CHECK-WITNESS-TABLE-NEXT: #Proto.unwrappedProp!getter.uncurried:
+// 1 CHECK-WITNESS-TABLE-NEXT: #Proto.unwrappedProp!setter.uncurried:
+// 2 CHECK-WITNESS-TABLE-NEXT: #Proto.unwrappedProp!modify.uncurried:
+// 3 CHECK-WITNESS-TABLE-NEXT: #Proto.wrappedProp!getter.uncurried:
+// 4 CHECK-WITNESS-TABLE-NEXT: #Proto.wrappedProp!setter.uncurried:
+// 5 CHECK-WITNESS-TABLE-NEXT: #Proto.wrappedProp!modify.uncurried:
+// 6 CHECK-WITNESS-TABLE-NEXT: #Proto.returnsUnwrappedMethod.uncurried:
+// 7 CHECK-WITNESS-TABLE-NEXT: #Proto.returnsWrappedMethod.uncurried:
+// 8 CHECK-WITNESS-TABLE-NEXT: #Proto.subscript!getter.uncurried:
+// 9 CHECK-WITNESS-TABLE-NEXT: #Proto.init!allocator.uncurried:
+// 10 CHECK-WITNESS-TABLE-NEXT: #Proto.init!allocator.uncurried:
+// 11 CHECK-WITNESS-TABLE-NEXT: #Proto.lastMethod.uncurried:
 // CHECK-WITNESS-TABLE: }
 
 #endif // TEST

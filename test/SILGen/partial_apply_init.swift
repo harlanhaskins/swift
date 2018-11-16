@@ -39,7 +39,7 @@ func class_init_partial_apply(c: C.Type) {
 // CHECK-LABEL: sil shared [thunk] @$s18partial_apply_init1CC{{[_0-9a-zA-Z]*}}fCTcTd
 // CHECK:         function_ref @$s18partial_apply_init1CC{{[_0-9a-zA-Z]*}}fC
 // CHECK-LABEL: sil shared [thunk] @$s18partial_apply_init1CC{{[_0-9a-zA-Z]*}}fC
-// CHECK:         class_method %0 : $@thick C.Type, #C.init!allocator.1
+// CHECK:         class_method %0 : $@thick C.Type, #C.init!allocator.uncurried
 
 // CHECK-LABEL: sil hidden @$s18partial_apply_init010archetype_c1_a1_B0{{[_0-9a-zA-Z]*}}F
 func archetype_init_partial_apply<T: C>(t: T.Type) where T: P {
@@ -60,7 +60,7 @@ func archetype_init_partial_apply<T: C>(t: T.Type) where T: P {
 }
 
 // CHECK-LABEL: sil shared [thunk] @$s18partial_apply_init1PP{{[_0-9a-zA-Z]*}}fC
-// CHECK:         witness_method $Self, #P.init!allocator.1
+// CHECK:         witness_method $Self, #P.init!allocator.uncurried
 // CHECK-LABEL: sil shared [thunk] @$s18partial_apply_init1PPAAE{{[_0-9a-zA-Z]*}}fC
 // CHECK:         function_ref @$s18partial_apply_init1PPAAE{{[_0-9a-zA-Z]*}}fC
 

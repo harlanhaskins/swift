@@ -100,7 +100,7 @@ func testMethodCall() {
   l.mem();
   // CHECK-LABEL: sil hidden @$s13sil_locations14testMethodCallyyF
   
-  // CHECK: class_method {{.[0-9]+}} : $LocationClass, #LocationClass.mem!1 {{.*}}, loc "{{.*}}":[[@LINE-3]]:5
+  // CHECK: class_method {{.[0-9]+}} : $LocationClass, #LocationClass.mem.uncurried {{.*}}, loc "{{.*}}":[[@LINE-3]]:5
 }
 
 func multipleReturnsImplicitAndExplicit() {

@@ -68,7 +68,7 @@ func test_property(_ x: Error) -> String {
 // FIXME: Extraneous copy here
 // CHECK-NEXT:    [[COPY:%[0-9]+]] = alloc_stack $[[VALUE_TYPE]]
 // CHECK-NEXT:    copy_addr [[VALUE]] to [initialization] [[COPY]] : $*[[VALUE_TYPE]]
-// CHECK:         [[METHOD:%.*]] = witness_method $[[VALUE_TYPE]], #Error._domain!getter.1
+// CHECK:         [[METHOD:%.*]] = witness_method $[[VALUE_TYPE]], #Error._domain!getter.uncurried
 // -- self parameter of witness is @in_guaranteed; no need to copy since
 //    value in box is immutable and box is guaranteed
 // CHECK:         [[RESULT:%.*]] = apply [[METHOD]]<[[VALUE_TYPE]]>([[COPY]])
@@ -93,7 +93,7 @@ func test_property_of_lvalue(_ x: Error) -> String {
 // CHECK:         copy_addr [[VALUE]] to [initialization] [[COPY]]
 // CHECK:         [[BORROW:%.*]] = alloc_stack $[[VALUE_TYPE]]
 // CHECK:         copy_addr [[COPY]] to [initialization] [[BORROW]]
-// CHECK:         [[METHOD:%.*]] = witness_method $[[VALUE_TYPE]], #Error._domain!getter.1
+// CHECK:         [[METHOD:%.*]] = witness_method $[[VALUE_TYPE]], #Error._domain!getter.uncurried
 // CHECK:         [[RESULT:%.*]] = apply [[METHOD]]<[[VALUE_TYPE]]>([[BORROW]])
 // CHECK:         destroy_addr [[COPY]]
 // CHECK:         dealloc_stack [[COPY]]

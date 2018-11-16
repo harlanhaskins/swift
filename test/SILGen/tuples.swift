@@ -118,7 +118,7 @@ func testTupleUnsplat() {
   let x = 1, y = 2
 
   // CHECK: [[TUPLE:%.+]] = tuple ([[X]] : $Int, [[Y]] : $Int)
-  // CHECK: enum $GenericEnum<(Int, Int)>, #GenericEnum.one!enumelt.1, [[TUPLE]]
+  // CHECK: enum $GenericEnum<(Int, Int)>, #GenericEnum.one!enumelt.uncurried, [[TUPLE]]
   _ = GenericEnum<(Int, Int)>.one((x, y))
 
   // CHECK: [[THUNK:%.+]] = function_ref @$sSi_SitIegn_S2iIegyy_TR

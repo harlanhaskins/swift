@@ -6,7 +6,7 @@ class X {
 
   // Convenience inits must dynamically dispatch designated inits...
   // CHECK-LABEL: sil hidden @$s32convenience_init_peer_delegation1XC0A0ACyt_tcfC
-  // CHECK:         class_method {{%.*}}, #X.init!allocator.1
+  // CHECK:         class_method {{%.*}}, #X.init!allocator.uncurried
   convenience init(convenience: ()) {
     self.init()
   }
@@ -29,7 +29,7 @@ class X {
 
   // Convenience inits must dynamically dispatch required peer convenience inits
   // CHECK-LABEL: sil hidden @$s32convenience_init_peer_delegation1XC25requiredDoubleConvenienceACyt_tcfC
-  // CHECK:         class_method {{%.*}}, #X.init!allocator.1
+  // CHECK:         class_method {{%.*}}, #X.init!allocator.uncurried
   required convenience init(requiredDoubleConvenience: ()) {
     self.init(requiredDoubleConvenience: ())
   }
@@ -69,11 +69,11 @@ func invocations(xt: X.Type) {
   // CHECK: function_ref @$s32convenience_init_peer_delegation1XC25requiredDoubleConvenienceACyt_tcfC
   _ = X(requiredDoubleConvenience: ())
 
-  // CHECK: class_method {{%.*}}, #X.init!allocator.1
+  // CHECK: class_method {{%.*}}, #X.init!allocator.uncurried
   _ = xt.init(required: ())
-  // CHECK: class_method {{%.*}}, #X.init!allocator.1
+  // CHECK: class_method {{%.*}}, #X.init!allocator.uncurried
   _ = xt.init(requiredConvenience: ())
-  // CHECK: class_method {{%.*}}, #X.init!allocator.1
+  // CHECK: class_method {{%.*}}, #X.init!allocator.uncurried
   _ = xt.init(requiredDoubleConvenience: ())
 }
 

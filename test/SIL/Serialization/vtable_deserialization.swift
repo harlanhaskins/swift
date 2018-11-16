@@ -25,15 +25,15 @@ Class.firstMethod()
 // Make sure we deserialized the vtable.
 
 // CHECK:      sil_vtable [serialized] Class {
-// CHECK-NEXT:   #Class.firstMethod!1: (Class.Type) -> () -> () : @$s28vtable_deserialization_input5ClassC11firstMethodyyFZ
-// CHECK-NEXT:   #Class.secondMethod!1: (Class.Type) -> () -> () : @$s28vtable_deserialization_input5ClassC12secondMethodyyFZ
-// CHECK-NEXT:   #Class.thirdMethod!1: (Class.Type) -> () -> () : @$s28vtable_deserialization_input5ClassC11thirdMethodyyFZ
-// CHECK-NEXT:   #Class.deinit!deallocator.1: @$s28vtable_deserialization_input5ClassCfD
+// CHECK-NEXT:   #Class.firstMethod.uncurried: (Class.Type) -> () -> () : @$s28vtable_deserialization_input5ClassC11firstMethodyyFZ
+// CHECK-NEXT:   #Class.secondMethod.uncurried: (Class.Type) -> () -> () : @$s28vtable_deserialization_input5ClassC12secondMethodyyFZ
+// CHECK-NEXT:   #Class.thirdMethod.uncurried: (Class.Type) -> () -> () : @$s28vtable_deserialization_input5ClassC11thirdMethodyyFZ
+// CHECK-NEXT:   #Class.deinit!deallocator.uncurried: @$s28vtable_deserialization_input5ClassCfD
 // CHECK-NEXT: }
 
 // OPT:      sil_vtable Class {
-// OPT-NEXT:   #Class.firstMethod!1: (Class.Type) -> () -> () : @$s28vtable_deserialization_input5ClassC11firstMethodyyFZ
-// OPT-NEXT:   #Class.secondMethod!1: (Class.Type) -> () -> () : @$s28vtable_deserialization_input5ClassC12secondMethodyyFZ
-// OPT-NEXT:   #Class.thirdMethod!1: (Class.Type) -> () -> () : @$s28vtable_deserialization_input5ClassC11thirdMethodyyFZ
-// OPT-NEXT:   #Class.deinit!deallocator.1: @$s28vtable_deserialization_input5ClassCfD
+// OPT-NEXT:   #Class.firstMethod.uncurried: (Class.Type) -> () -> () : @$s28vtable_deserialization_input5ClassC11firstMethodyyFZ
+// OPT-NEXT:   #Class.secondMethod.uncurried: (Class.Type) -> () -> () : @$s28vtable_deserialization_input5ClassC12secondMethodyyFZ
+// OPT-NEXT:   #Class.thirdMethod.uncurried: (Class.Type) -> () -> () : @$s28vtable_deserialization_input5ClassC11thirdMethodyyFZ
+// OPT-NEXT:   #Class.deinit!deallocator.uncurried: @$s28vtable_deserialization_input5ClassCfD
 // OPT-NEXT: }

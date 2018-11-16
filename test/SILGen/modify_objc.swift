@@ -57,11 +57,11 @@ class HasDynamicStoredProperty : ProtocolWithIntProperty {
 }
 
 // CHECK-LABEL: sil shared @$s11modify_objc24HasDynamicStoredPropertyC1xSivM : $@yield_once @convention(method) (@guaranteed HasDynamicStoredProperty) -> @yields @inout Int
-// CHECK: objc_method %0 : $HasDynamicStoredProperty, #HasDynamicStoredProperty.x!getter.1.foreign
+// CHECK: objc_method %0 : $HasDynamicStoredProperty, #HasDynamicStoredProperty.x!getter.uncurried.foreign
 // CHECK: yield
-// CHECK: objc_method %0 : $HasDynamicStoredProperty, #HasDynamicStoredProperty.x!setter.1.foreign
+// CHECK: objc_method %0 : $HasDynamicStoredProperty, #HasDynamicStoredProperty.x!setter.uncurried.foreign
 // CHECK: return
-// CHECK: objc_method %0 : $HasDynamicStoredProperty, #HasDynamicStoredProperty.x!setter.1.foreign
+// CHECK: objc_method %0 : $HasDynamicStoredProperty, #HasDynamicStoredProperty.x!setter.uncurried.foreign
 // CHECK: unwind
 
 // TESTING-LABEL: sil shared [serialized] @$s11modify_objc24HasDynamicStoredPropertyC1xSivM : $@yield_once @convention(method) (@guaranteed HasDynamicStoredProperty) -> @yields @inout Int
@@ -71,11 +71,11 @@ class HasDynamicComputedProperty : ProtocolWithIntProperty {
 }
 
 // CHECK-LABEL: sil shared @$s11modify_objc26HasDynamicComputedPropertyC1xSivM : $@yield_once @convention(method) (@guaranteed HasDynamicComputedProperty) -> @yields @inout Int
-// CHECK: objc_method %0 : $HasDynamicComputedProperty, #HasDynamicComputedProperty.x!getter.1.foreign
+// CHECK: objc_method %0 : $HasDynamicComputedProperty, #HasDynamicComputedProperty.x!getter.uncurried.foreign
 // CHECK: yield
-// CHECK: objc_method %0 : $HasDynamicComputedProperty, #HasDynamicComputedProperty.x!setter.1.foreign
+// CHECK: objc_method %0 : $HasDynamicComputedProperty, #HasDynamicComputedProperty.x!setter.uncurried.foreign
 // CHECK: return
-// CHECK: objc_method %0 : $HasDynamicComputedProperty, #HasDynamicComputedProperty.x!setter.1.foreign
+// CHECK: objc_method %0 : $HasDynamicComputedProperty, #HasDynamicComputedProperty.x!setter.uncurried.foreign
 // CHECK: unwind
 
 // TESTING-LABEL: sil shared [serialized] @$s11modify_objc26HasDynamicComputedPropertyC1xSivM : $@yield_once @convention(method) (@guaranteed HasDynamicComputedProperty) -> @yields @inout Int

@@ -616,9 +616,9 @@ func test_union_1(u: MaybePair) {
   switch u {
   // CHECK: switch_enum [[SUBJECT:%.*]] : $MaybePair,
   // CHECK:   case #MaybePair.Neither!enumelt: [[IS_NEITHER:bb[0-9]+]],
-  // CHECK:   case #MaybePair.Left!enumelt.1: [[IS_LEFT:bb[0-9]+]],
-  // CHECK:   case #MaybePair.Right!enumelt.1: [[IS_RIGHT:bb[0-9]+]],
-  // CHECK:   case #MaybePair.Both!enumelt.1: [[IS_BOTH:bb[0-9]+]]
+  // CHECK:   case #MaybePair.Left!enumelt.uncurried: [[IS_LEFT:bb[0-9]+]],
+  // CHECK:   case #MaybePair.Right!enumelt.uncurried: [[IS_RIGHT:bb[0-9]+]],
+  // CHECK:   case #MaybePair.Both!enumelt.uncurried: [[IS_BOTH:bb[0-9]+]]
 
   // CHECK: [[IS_NEITHER]]:
   // CHECK-NOT: destroy_value
@@ -659,8 +659,8 @@ func test_union_3(u: MaybePair) {
   // CHECK: bb0([[ARG:%.*]] : @guaranteed $MaybePair):
   // CHECK:   switch_enum [[ARG]] : $MaybePair,
   // CHECK:     case #MaybePair.Neither!enumelt: [[IS_NEITHER:bb[0-9]+]],
-  // CHECK:     case #MaybePair.Left!enumelt.1: [[IS_LEFT:bb[0-9]+]],
-  // CHECK:     case #MaybePair.Right!enumelt.1: [[IS_RIGHT:bb[0-9]+]],
+  // CHECK:     case #MaybePair.Left!enumelt.uncurried: [[IS_LEFT:bb[0-9]+]],
+  // CHECK:     case #MaybePair.Right!enumelt.uncurried: [[IS_RIGHT:bb[0-9]+]],
   // CHECK:     default [[DEFAULT:bb[0-9]+]]
   switch u {
   // CHECK: [[IS_NEITHER]]:
@@ -701,9 +701,9 @@ func test_union_4(u: MaybePair) {
   switch u {
   // CHECK: switch_enum {{%.*}} : $MaybePair,
   // CHECK:   case #MaybePair.Neither!enumelt: [[IS_NEITHER:bb[0-9]+]],
-  // CHECK:   case #MaybePair.Left!enumelt.1: [[IS_LEFT:bb[0-9]+]],
-  // CHECK:   case #MaybePair.Right!enumelt.1: [[IS_RIGHT:bb[0-9]+]],
-  // CHECK:   case #MaybePair.Both!enumelt.1: [[IS_BOTH:bb[0-9]+]]
+  // CHECK:   case #MaybePair.Left!enumelt.uncurried: [[IS_LEFT:bb[0-9]+]],
+  // CHECK:   case #MaybePair.Right!enumelt.uncurried: [[IS_RIGHT:bb[0-9]+]],
+  // CHECK:   case #MaybePair.Both!enumelt.uncurried: [[IS_BOTH:bb[0-9]+]]
 
   // CHECK: [[IS_NEITHER]]:
   case .Neither:
@@ -740,9 +740,9 @@ func test_union_5(u: MaybePair) {
   switch u {
   // CHECK: switch_enum {{%.*}} : $MaybePair,
   // CHECK:   case #MaybePair.Neither!enumelt: [[IS_NEITHER:bb[0-9]+]],
-  // CHECK:   case #MaybePair.Left!enumelt.1: [[IS_LEFT:bb[0-9]+]],
-  // CHECK:   case #MaybePair.Right!enumelt.1: [[IS_RIGHT:bb[0-9]+]],
-  // CHECK:   case #MaybePair.Both!enumelt.1: [[IS_BOTH:bb[0-9]+]]
+  // CHECK:   case #MaybePair.Left!enumelt.uncurried: [[IS_LEFT:bb[0-9]+]],
+  // CHECK:   case #MaybePair.Right!enumelt.uncurried: [[IS_RIGHT:bb[0-9]+]],
+  // CHECK:   case #MaybePair.Both!enumelt.uncurried: [[IS_BOTH:bb[0-9]+]]
 
   // CHECK: [[IS_NEITHER]]:
   case .Neither:
@@ -786,9 +786,9 @@ func test_union_addr_only_1(u: MaybeAddressOnlyPair) {
   switch u {
   // CHECK: switch_enum_addr [[ENUM_ADDR:%.*]] : $*MaybeAddressOnlyPair,
   // CHECK:   case #MaybeAddressOnlyPair.Neither!enumelt: [[IS_NEITHER:bb[0-9]+]],
-  // CHECK:   case #MaybeAddressOnlyPair.Left!enumelt.1: [[IS_LEFT:bb[0-9]+]],
-  // CHECK:   case #MaybeAddressOnlyPair.Right!enumelt.1: [[IS_RIGHT:bb[0-9]+]],
-  // CHECK:   case #MaybeAddressOnlyPair.Both!enumelt.1: [[IS_BOTH:bb[0-9]+]]
+  // CHECK:   case #MaybeAddressOnlyPair.Left!enumelt.uncurried: [[IS_LEFT:bb[0-9]+]],
+  // CHECK:   case #MaybeAddressOnlyPair.Right!enumelt.uncurried: [[IS_RIGHT:bb[0-9]+]],
+  // CHECK:   case #MaybeAddressOnlyPair.Both!enumelt.uncurried: [[IS_BOTH:bb[0-9]+]]
 
   // CHECK: [[IS_NEITHER]]:
   case .Neither:
@@ -797,7 +797,7 @@ func test_union_addr_only_1(u: MaybeAddressOnlyPair) {
     a()
 
   // CHECK: [[IS_LEFT]]:
-  // CHECK:   [[P:%.*]] = unchecked_take_enum_data_addr [[ENUM_ADDR]] : $*MaybeAddressOnlyPair, #MaybeAddressOnlyPair.Left!enumelt.1
+  // CHECK:   [[P:%.*]] = unchecked_take_enum_data_addr [[ENUM_ADDR]] : $*MaybeAddressOnlyPair, #MaybeAddressOnlyPair.Left!enumelt.uncurried
   case .Left(_):
   // CHECK:   destroy_addr [[P]]
   // CHECK:   function_ref @$s6switch1byyF
@@ -805,7 +805,7 @@ func test_union_addr_only_1(u: MaybeAddressOnlyPair) {
     b()
 
   // CHECK: [[IS_RIGHT]]:
-  // CHECK:   [[STR_ADDR:%.*]] = unchecked_take_enum_data_addr [[ENUM_ADDR]] : $*MaybeAddressOnlyPair, #MaybeAddressOnlyPair.Right!enumelt.1
+  // CHECK:   [[STR_ADDR:%.*]] = unchecked_take_enum_data_addr [[ENUM_ADDR]] : $*MaybeAddressOnlyPair, #MaybeAddressOnlyPair.Right!enumelt.uncurried
   // CHECK:   [[STR:%.*]] = load [take] [[STR_ADDR]]
   case .Right(_):
   // CHECK:   destroy_value [[STR]] : $String
@@ -814,7 +814,7 @@ func test_union_addr_only_1(u: MaybeAddressOnlyPair) {
     c()
 
   // CHECK: [[IS_BOTH]]:
-  // CHECK:   [[P_STR_TUPLE:%.*]] = unchecked_take_enum_data_addr [[ENUM_ADDR]] : $*MaybeAddressOnlyPair, #MaybeAddressOnlyPair.Both!enumelt.1
+  // CHECK:   [[P_STR_TUPLE:%.*]] = unchecked_take_enum_data_addr [[ENUM_ADDR]] : $*MaybeAddressOnlyPair, #MaybeAddressOnlyPair.Both!enumelt.uncurried
   case .Both(_):
   // CHECK:   destroy_addr [[P_STR_TUPLE]]
   // CHECK:   function_ref @$s6switch1dyyF
@@ -948,7 +948,7 @@ enum LabeledScalarPayload {
 
 // CHECK-LABEL: sil hidden @$s6switch24testLabeledScalarPayloadyypAA0cdE0OF
 func testLabeledScalarPayload(_ lsp: LabeledScalarPayload) -> Any {
-  // CHECK: switch_enum {{%.*}}, case #LabeledScalarPayload.Payload!enumelt.1: bb1
+  // CHECK: switch_enum {{%.*}}, case #LabeledScalarPayload.Payload!enumelt.uncurried: bb1
   switch lsp {
   // CHECK: bb1([[TUPLE:%.*]] : @trivial $(name: Int)):
   // CHECK:   [[X:%.*]] = destructure_tuple [[TUPLE]]
@@ -962,7 +962,7 @@ func testLabeledScalarPayload(_ lsp: LabeledScalarPayload) -> Any {
 // There should be no unreachable generated.
 // CHECK-LABEL: sil hidden @$s6switch19testOptionalPatternyySiSgF
 func testOptionalPattern(_ value : Int?) {
-  // CHECK: switch_enum %0 : $Optional<Int>, case #Optional.some!enumelt.1: bb1, case #Optional.none!enumelt: [[NILBB:bb[0-9]+]]
+  // CHECK: switch_enum %0 : $Optional<Int>, case #Optional.some!enumelt.uncurried: bb1, case #Optional.none!enumelt: [[NILBB:bb[0-9]+]]
   switch value {
   case 1?: a()
   case 2?: b()
@@ -977,7 +977,7 @@ func testOptionalPattern(_ value : Int?) {
 // CHECK-LABEL: sil hidden @$s6switch19testOptionalEnumMixyS2iSgF
 func testOptionalEnumMix(_ a : Int?) -> Int {
   // CHECK: debug_value %0 : $Optional<Int>, let, name "a"
-  // CHECK-NEXT: switch_enum %0 : $Optional<Int>, case #Optional.some!enumelt.1: [[SOMEBB:bb[0-9]+]], case #Optional.none!enumelt: [[NILBB:bb[0-9]+]]
+  // CHECK-NEXT: switch_enum %0 : $Optional<Int>, case #Optional.some!enumelt.uncurried: [[SOMEBB:bb[0-9]+]], case #Optional.none!enumelt: [[NILBB:bb[0-9]+]]
   switch a {
   case let x?:
     return 0
@@ -999,7 +999,7 @@ func testOptionalEnumMix(_ a : Int?) -> Int {
 // CHECK-LABEL: sil hidden @$s6switch26testOptionalEnumMixWithNilyS2iSgF
 func testOptionalEnumMixWithNil(_ a : Int?) -> Int {
   // CHECK: debug_value %0 : $Optional<Int>, let, name "a"
-  // CHECK-NEXT: switch_enum %0 : $Optional<Int>, case #Optional.some!enumelt.1: [[SOMEBB:bb[0-9]+]], case #Optional.none!enumelt: [[NILBB:bb[0-9]+]]
+  // CHECK-NEXT: switch_enum %0 : $Optional<Int>, case #Optional.some!enumelt.uncurried: [[SOMEBB:bb[0-9]+]], case #Optional.none!enumelt: [[NILBB:bb[0-9]+]]
   switch a {
   case let x?:
     return 0

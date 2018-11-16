@@ -26,7 +26,7 @@ class Phoûx : NSObject, Fooable {
 // CHECK-LABEL: $s14objc_witnesses008Phox_xraC3foo{{[_0-9a-zA-Z]*}}F
 // CHECK:      bb0([[IN_ADDR:%.*]] : 
 // CHECK:         [[VALUE:%.*]] = load_borrow [[IN_ADDR]]
-// CHECK:         [[CLS_METHOD:%.*]] = class_method [[VALUE]] : $Phoûx, #Phoûx.foo!1
+// CHECK:         [[CLS_METHOD:%.*]] = class_method [[VALUE]] : $Phoûx, #Phoûx.foo.uncurried
 // CHECK:         apply [[CLS_METHOD]]([[VALUE]])
 // CHECK:         end_borrow [[VALUE]]
 
@@ -65,7 +65,7 @@ protocol Subscriptable {
 // CHECK-LABEL: sil private [transparent] [thunk] @$sSo7NSArrayC14objc_witnesses13SubscriptableA2cDPyypSicigTW : $@convention(witness_method: Subscriptable) (Int, @in_guaranteed NSArray) -> @out Any {
 // CHECK:         function_ref @$sSo7NSArrayCyypSicigTO : $@convention(method) (Int, @guaranteed NSArray) -> @out Any
 // CHECK-LABEL: sil shared [serializable] [thunk] @$sSo7NSArrayCyypSicigTO : $@convention(method) (Int, @guaranteed NSArray) -> @out Any {
-// CHECK:         objc_method {{%.*}} : $NSArray, #NSArray.subscript!getter.1.foreign
+// CHECK:         objc_method {{%.*}} : $NSArray, #NSArray.subscript!getter.uncurried.foreign
 extension NSArray: Subscriptable {}
 
 // witness is a dynamic thunk:
@@ -110,9 +110,9 @@ extension NSObject : Atom {
 }
 
 // CHECK-LABEL: sil shared @$sSo8NSObjectC14objc_witnessesE7valenceSivM : $@yield_once @convention(method) (@guaranteed NSObject) -> @yields @inout Int {
-// CHECK: objc_method %0 : $NSObject, #NSObject.valence!getter.1.foreign
+// CHECK: objc_method %0 : $NSObject, #NSObject.valence!getter.uncurried.foreign
 // CHECK: yield
-// CHECK: objc_method %0 : $NSObject, #NSObject.valence!setter.1.foreign
+// CHECK: objc_method %0 : $NSObject, #NSObject.valence!setter.uncurried.foreign
 // CHECK: }
 
 protocol Atom : class {
