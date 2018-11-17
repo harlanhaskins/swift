@@ -1532,13 +1532,15 @@ static void fixItAvailableAttrRename(InFlightDiagnostic &diag,
                                      SourceRange referenceRange,
                                      const ValueDecl *renamedDecl,
                                      const AvailableAttr *attr,
-                                     const ApplyExpr *call) {
+                                     const Expr *expr) {
   if (isa<AccessorDecl>(renamedDecl))
     return;
 
   ParsedDeclName parsed = swift::parseDeclName(attr->Rename);
   if (!parsed)
     return;
+
+  auto call = dyn_cast_or_null<ApplyExpr>(expr);
 
   bool originallyWasKnownOperatorExpr = false;
   if (call) {
@@ -1706,6 +1708,10 @@ static void fixItAvailableAttrRename(InFlightDiagnostic &diag,
     if (!parsed.ContextName.empty()) {
       baseReplace += parsed.ContextName;
       baseReplace += '.';
+
+      if (expr && parsed.isMember()) {
+        referenceRange = expr->getSourceRange();
+      }
     }
     baseReplace += parsed.BaseName;
     if (parsed.IsFunctionName && parsed.ArgumentLabels.empty() &&
@@ -2065,13 +2071,13 @@ void swift::diagnoseUnavailableOverride(ValueDecl *override,
 /// Emit a diagnostic for references to declarations that have been
 /// marked as unavailable, either through "unavailable" or "obsoleted:".
 bool swift::diagnoseExplicitUnavailability(const ValueDecl *D,
-                                                 SourceRange R,
-                                                 const DeclContext *DC,
-                                                 const ApplyExpr *call) {
+                                           SourceRange R,
+                                           const DeclContext *DC,
+                                           const Expr *expr) {
   return diagnoseExplicitUnavailability(D, R, DC,
                                         [=](InFlightDiagnostic &diag) {
     fixItAvailableAttrRename(diag, R, D, AvailableAttr::isUnavailable(D),
-                             call);
+                             expr);
   });
 }
 
@@ -2353,7 +2359,7 @@ public:
   }
 
   bool diagAvailability(const ValueDecl *D, SourceRange R,
-                        const ApplyExpr *call = nullptr,
+                        const Expr *expr = nullptr,
                         bool AllowPotentiallyUnavailableProtocol = false,
                         bool SignalOnPotentialUnavailability = true);
 
@@ -2420,7 +2426,7 @@ private:
 
     ValueDecl *D = E->getMember().getDecl();
     // Diagnose for the member declaration itself.
-    if (diagAvailability(D, E->getNameLoc().getSourceRange()))
+    if (diagAvailability(D, E->getNameLoc().getSourceRange(), E))
       return;
 
     // Diagnose for appropriate accessors, given the access context.
@@ -2544,11 +2550,14 @@ private:
 /// Diagnose uses of unavailable declarations. Returns true if a diagnostic
 /// was emitted.
 bool AvailabilityWalker::diagAvailability(const ValueDecl *D, SourceRange R,
-                                          const ApplyExpr *call,
+                                          const Expr *expr,
                                           bool AllowPotentiallyUnavailableProtocol,
                                           bool SignalOnPotentialUnavailability) {
   if (!D)
     return false;
+
+  // If this is a call, record that here.
+  auto call = dyn_cast_or_null<const ApplyExpr>(expr);
 
   if (auto *attr = AvailableAttr::isUnavailable(D)) {
     if (diagnoseIncDecRemoval(D, R, attr))
@@ -2563,7 +2572,7 @@ bool AvailabilityWalker::diagAvailability(const ValueDecl *D, SourceRange R,
                                       TreatUsableFromInlineAsPublic))
         return true;
 
-  if (diagnoseExplicitUnavailability(D, R, DC, call))
+  if (diagnoseExplicitUnavailability(D, R, DC, expr))
     return true;
 
   // Diagnose for deprecation

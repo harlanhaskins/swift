@@ -52,7 +52,7 @@ void diagnoseUnavailableOverride(ValueDecl *override,
 bool diagnoseExplicitUnavailability(const ValueDecl *D,
                                     SourceRange R,
                                     const DeclContext *DC,
-                                    const ApplyExpr *call);
+                                    const Expr *call);
 
 /// Emit a diagnostic for references to declarations that have been
 /// marked as unavailable, either through "unavailable" or "obsoleted:".

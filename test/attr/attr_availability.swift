@@ -1049,3 +1049,20 @@ struct SR8634_Struct: Equatable {
   @available(*, deprecated, message: "I must not be raised in synthesized code", renamed: "x")
   let a: Int
 }
+
+enum ErrorCode {
+  static var shinyNewLocation: MyError.Code { fatalError() }
+}
+
+struct MyError {
+  enum Code {
+    @available(*, unavailable, renamed: "MyErrorCode.shinyNewLocation")
+    case oldBustedCase // expected-note {{'oldBustedCase' has been explicitly marked unavailable here}}
+    // expected-note @-1 {{'oldBustedCase' has been explicitly marked unavailable here}}
+  }
+}
+
+func giveMeAnErrorCode(_ code: MyError.Code) {}
+
+giveMeAnErrorCode(MyError.Code.oldBustedCase) // expected-error{{'oldBustedCase' has been renamed to 'MyErrorCode.shinyNewLocation'}} {{20-45=MyErrorCode.shinyNewLocation}}
+giveMeAnErrorCode(.oldBustedCase) // expected-error{{'oldBustedCase' has been renamed to 'MyErrorCode.shinyNewLocation'}} {{19-33=MyErrorCode.shinyNewLocation}}
