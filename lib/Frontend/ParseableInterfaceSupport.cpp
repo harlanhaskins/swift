@@ -150,6 +150,10 @@ ParseableInterfaceModuleLoader::configureSubInvocationAndOutputPaths(
   // is not in a position to fix them.
   SubInvocation.getDiagnosticOptions().SuppressWarnings = true;
 
+  // Optimize emitted modules.
+  // FIXME: Should we maybe serialize optimization modes?
+  SubInvocation.getSILOptions().OptMode = OptimizationMode::ForSpeed;
+
   // Calculate an output filename that includes a hash of relevant key data, and
   // wire up the SubInvocation's InputsAndOutputs to contain both input and
   // output filenames.
@@ -334,17 +338,14 @@ static bool buildSwiftModuleFromSwiftInterface(
     SILOptions &SILOpts = SubInvocation.getSILOptions();
     auto Mod = SubInstance.getMainModule();
     auto SILMod = performSILGeneration(Mod, SILOpts);
-    if (SILMod) {
-      LLVM_DEBUG(llvm::dbgs() << "Running SIL diagnostic passes\n");
-      if (runSILDiagnosticPasses(*SILMod)) {
-        LLVM_DEBUG(llvm::dbgs() << "encountered errors\n");
-        SubError = true;
-        return;
-      }
-      SILMod->verify();
+    if (!SILMod) {
+      LLVM_DEBUG(llvm::dbgs() << "SILGen did not produce a module\n");
+      SubError = true;
+      return;
     }
 
-    LLVM_DEBUG(llvm::dbgs() << "Serializing " << OutPath << "\n");
+    // Setup the callbacks for serialization, which can occur during the
+    // optimization pipeline.
     FrontendOptions &FEOpts = SubInvocation.getFrontendOptions();
     SerializationOptions SerializationOpts;
     std::string OutPathStr = OutPath;
@@ -359,9 +360,17 @@ static bool buildSwiftModuleFromSwiftInterface(
     }
     SerializationOpts.Dependencies = Deps;
     SILMod->setSerializeSILAction([&]() {
-        serialize(Mod, SerializationOpts, SILMod.get());
-      });
+      serialize(Mod, SerializationOpts, SILMod.get());
+    });
+
+    LLVM_DEBUG(llvm::dbgs() << "Running SIL processing passes\n");
+    if (SubInstance.performSILProcessing(SILMod.get())) {
+      LLVM_DEBUG(llvm::dbgs() << "encountered errors\n");
+      SubError = true;
+      return;
+    }
     SILMod->serialize();
+
     SubError = Diags.hadAnyError();
   });
   return !RunSuccess || SubError;
