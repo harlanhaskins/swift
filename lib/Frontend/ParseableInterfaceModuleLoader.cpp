@@ -802,6 +802,13 @@ class ParseableInterfaceModuleLoaderImpl {
   /// with dead entries -- when other factors change, such as the contents of
   /// the .swiftinterface input or its dependencies.
   std::string getCacheHash(const CompilerInvocation &SubInvocation) {
+    llvm::SmallString<128> canonicalScratch;
+    auto canonicalize = [&](StringRef path) -> StringRef {
+      canonicalScratch = path;
+      llvm::sys::fs::real_path(path, canonicalScratch);
+      return canonicalScratch;
+    };
+
     // Start with the compiler version (which will be either tag names or revs).
     // Explicitly don't pass in the "effective" language version -- this would
     // mean modules built in different -swift-version modes would rebuild their
@@ -811,7 +818,7 @@ class ParseableInterfaceModuleLoaderImpl {
     // Simplest representation of input "identity" (not content) is just a
     // pathname, and probably all we can get from the VFS in this regard
     // anyways.
-    H = hash_combine(H, interfacePath);
+    H = hash_combine(H, canonicalize(interfacePath));
 
     // Include the target CPU architecture. In practice, .swiftinterface files
     // will be in architecture-specific subdirectories and would have
@@ -822,7 +829,7 @@ class ParseableInterfaceModuleLoaderImpl {
 
     // The SDK path is going to affect how this module is imported, so include
     // it.
-    H = hash_combine(H, SubInvocation.getSDKPath());
+    H = hash_combine(H, canonicalize(SubInvocation.getSDKPath()));
 
     // Whether or not we're tracking system dependencies affects the
     // invalidation behavior of this cache item.
