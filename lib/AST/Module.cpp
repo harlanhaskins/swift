@@ -1821,6 +1821,12 @@ ModuleDecl::getDeclaringModuleAndBystander() {
   return *(declaringModuleAndBystander = {nullptr, Identifier()});
 }
 
+bool ModuleDecl::isClangOverlayOf(ModuleDecl *potentialUnderlying) {
+  return !isNonSwiftModule() &&
+         potentialUnderlying->isNonSwiftModule() &&
+         getName() == potentialUnderlying->getName();
+}
+
 bool ModuleDecl::isCrossImportOverlayOf(ModuleDecl *other) {
   ModuleDecl *current = this;
   ModuleDecl *otherClang = other->getUnderlyingModuleIfOverlay();
