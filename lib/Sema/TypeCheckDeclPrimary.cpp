@@ -1468,66 +1468,60 @@ static void diagnoseRetroactiveConformances(ExtensionDecl *ext) {
 
   // At this point, we know we're extending a type declared outside this module.
   // We better only be conforming it to protocols declared within this module.
-  llvm::SmallVector<ProtocolDecl *, 8> workList;
+  llvm::SmallPtrSet<ProtocolDecl *, 8> seen;
+  llvm::SmallSetVector<ProtocolDecl *, 8> externalProtocols;
   for (TypeLoc typeLoc : ext->getInherited()) {
     auto proto = 
         dyn_cast_or_null<ProtocolDecl>(typeLoc.getType()->getAnyNominal());
     if (!proto) {
       continue;
     }
+
     if (isModuleQualified(typeLoc.getTypeRepr(), proto->getParentModule())) {
       continue;
     }
-    workList.push_back(proto);
-  }
-
-  // Search through the whole inheritance tree to find protocols that this
-  // extension declares a conformance to.
-
-  llvm::SmallPtrSet<ProtocolDecl *, 8> seen;
-  llvm::SmallSetVector<ProtocolDecl *, 8> externalProtocols;
-  while (!workList.empty()) {
-    auto protoDecl = workList.pop_back_val();
-
-    // First, push the inherited protocols onto the worklist.
-    for (ProtocolDecl *inherited : protoDecl->getInheritedProtocols()) {
-      if (seen.insert(inherited).second) {
-        workList.push_back(inherited);
+    
+    proto->walkInheritedProtocols([&](ProtocolDecl *decl) {
+      // No need to walk a protocol twice.
+      if (!seen.insert(decl).second) {
+        return TypeWalker::Action::SkipChildren;
       }
-    }
 
-    // Get the original conformance of the extended type to this protocol.
-    auto conformanceRef = TypeChecker::conformsToProtocol(
-        extendedType, protoDecl, ext);
-    if (!conformanceRef.isConcrete()) {
-      continue;
-    }
+      // Get the original conformance of the extended type to this protocol.
+      auto conformanceRef = TypeChecker::conformsToProtocol(
+          extendedType, decl, ext);
+      if (!conformanceRef.isConcrete()) {
+        return TypeWalker::Action::Continue;
+      }
 
-    // Check to see if this protocol is one we care about.
-    auto conformance = conformanceRef.getConcrete();
-    auto protoModule = protoDecl->getParentModule();
+      // Check to see if this protocol is one we care about.
+      auto conformance = conformanceRef.getConcrete();
+      auto protoModule = decl->getParentModule();
 
-    // If this protocol comes from the extension's module, skip it.
-    if (protoModule == module) {
-      continue;
-    }
+      // If this protocol comes from the extension's module, skip it.
+      if (protoModule == module) {
+        return TypeWalker::Action::Continue;
+      }
 
-    // If the protocol comes from the underlying clang module of the extension's
-    // module, skip it.
-    if (module->isClangOverlayOf(protoModule)) {
-      continue;
-    }
+      // If the protocol comes from the underlying clang module of the
+      // extension's module, skip it.
+      if (module->isClangOverlayOf(protoModule)) {
+        return TypeWalker::Action::Continue;
+      }
 
-    // If that conformance came from this extension, then we warn. Otherwise
-    // we will have diagnosed it on the extension that actually declares this
-    // specific conformance.
-    if (conformance->getDeclContext() != ext) {
-      continue;
-    }
+      // If that conformance came from this extension, then we warn. Otherwise
+      // we will have diagnosed it on the extension that actually declares this
+      // specific conformance.
+      if (conformance->getDeclContext() != ext) {
+        return TypeWalker::Action::Continue;
+      }
 
-    // If we've come this far, we know this extension is the first declaration
-    // of the conformance of the extended type to this protocol.
-    externalProtocols.insert(protoDecl);
+      // If we've come this far, we know this extension is the first declaration
+      // of the conformance of the extended type to this protocol.
+      externalProtocols.insert(decl);
+
+      return TypeWalker::Action::Continue;
+    });
   }
 
   TypeRepr *extTypeRepr = ext->getExtendedTypeRepr();
@@ -1536,6 +1530,8 @@ static void diagnoseRetroactiveConformances(ExtensionDecl *ext) {
   if (externalProtocols.empty()) {
     return;
   }
+
+  // Diagnose the list of protocols we're introducing a conformance to.
 
   llvm::SmallString<32> protocolList;
 
@@ -1551,6 +1547,9 @@ static void diagnoseRetroactiveConformances(ExtensionDecl *ext) {
       extendedNominalDecl->getName(),
       externalProtocols.size() == 1,
       protocolList.str());
+
+  // Now build up a set of fix-its to force the user to explicitly specify the
+  // declared conformances.
 
   auto diag = ext->diagnose(diag::extension_retroactive_conformance_silence);
 
