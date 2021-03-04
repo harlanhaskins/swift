@@ -1471,7 +1471,7 @@ static void diagnoseRetroactiveConformances(ExtensionDecl *ext) {
   llvm::SmallPtrSet<ProtocolDecl *, 8> seen;
   llvm::SmallSetVector<ProtocolDecl *, 8> externalProtocols;
   for (TypeLoc typeLoc : ext->getInherited()) {
-    auto proto = 
+    auto proto =
         dyn_cast_or_null<ProtocolDecl>(typeLoc.getType()->getAnyNominal());
     if (!proto) {
       continue;
@@ -1480,7 +1480,7 @@ static void diagnoseRetroactiveConformances(ExtensionDecl *ext) {
     if (isModuleQualified(typeLoc.getTypeRepr(), proto->getParentModule())) {
       continue;
     }
-    
+
     proto->walkInheritedProtocols([&](ProtocolDecl *decl) {
       // No need to walk a protocol twice.
       if (!seen.insert(decl).second) {
@@ -1555,7 +1555,7 @@ static void diagnoseRetroactiveConformances(ExtensionDecl *ext) {
 
   // If the extended type name isn't qualified with the module name, add it.
   if (!isModuleQualified(extTypeRepr, extTypeModule)) {
-    llvm::SmallString<12> qualifiedName;
+    llvm::SmallString<32> qualifiedName;
     llvm::raw_svector_ostream os(qualifiedName);
     os << extTypeModule->getName() << "." << extendedNominalDecl->getName();
     diag.fixItReplace(extTypeRepr->getSourceRange(), qualifiedName.str());
@@ -1565,12 +1565,12 @@ static void diagnoseRetroactiveConformances(ExtensionDecl *ext) {
   // to silence the warning. Each one of these gets removed from the
   // externalProtocols list, and that might end up being all of them.
   for (TypeLoc tyLoc : ext->getInherited()) {
-    auto protoDecl = 
+    auto protoDecl =
         dyn_cast_or_null<ProtocolDecl>(tyLoc.getType()->getAnyNominal());
     if (protoDecl && externalProtocols.remove(protoDecl)) {
-      llvm::SmallString<12> qualifiedName;
+      llvm::SmallString<32> qualifiedName;
       llvm::raw_svector_ostream os(qualifiedName);
-      os << protoDecl->getParentModule()->getName() << "." 
+      os << protoDecl->getParentModule()->getName() << "."
         << protoDecl->getName();
       diag.fixItReplace(
           tyLoc.getTypeRepr()->getSourceRange(), qualifiedName.str());
