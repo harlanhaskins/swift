@@ -1415,6 +1415,8 @@ static bool isModuleQualified(TypeRepr *repr, ModuleDecl *module) {
     return false;
   }
 
+  // FIXME(ModQual): This needs to be updated once we have an explicit
+  //                 module qualification syntax.
   return components.front()->getNameRef().isSimpleName(module->getName());
 }
 
