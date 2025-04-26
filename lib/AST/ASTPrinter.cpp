@@ -901,6 +901,7 @@ class PrintAST : public ASTVisitor<PrintAST> {
       FreshOptions.TransformContext = options.TransformContext;
       FreshOptions.CurrentModule = options.CurrentModule;
       FreshOptions.FullyQualifiedTypesIfAmbiguous = options.FullyQualifiedTypesIfAmbiguous;
+      FreshOptions.PrintSpaceBeforeInheritance = options.PrintSpaceBeforeInheritance;
       T.print(Printer, FreshOptions);
       return;
     }
@@ -1768,6 +1769,14 @@ static unsigned getDepthOfRequirement(const Requirement &req) {
   llvm_unreachable("bad RequirementKind");
 }
 
+static void printColonForInheritance(ASTPrinter &printer, const PrintOptions &options)
+{
+  if (options.PrintSpaceBeforeInheritance) {
+    printer << ' ';
+  }
+  printer << ": ";
+}
+
 void PrintAST::printGenericSignature(GenericSignature genericSig,
                                      unsigned flags) {
   ASSERT(!((flags & InnermostOnly) && (flags & PrintInverseRequirements))
@@ -1982,7 +1991,7 @@ void PrintAST::printSingleDepthOfGenericSignature(
                               PrintNameContext::GenericParameter);
 
             if (param->isValue()) {
-              Printer << " : ";
+              printColonForInheritance(Printer, Options);
               printType(param->getValueType());
             }
 
@@ -1995,7 +2004,7 @@ void PrintAST::printSingleDepthOfGenericSignature(
             printType(param);
 
             if (param->isValue()) {
-              Printer << " : ";
+              printColonForInheritance(Printer, Options);
               printType(param->getValueType());
             }
           }
@@ -2039,7 +2048,7 @@ void PrintAST::printSingleDepthOfGenericSignature(
         if (printRequirements)
           Printer << " " << tok::kw_where << " ";
         else
-          Printer << " : ";
+          printColonForInheritance(Printer, Options);
 
         isFirstReq = false;
       } else {
@@ -2088,7 +2097,8 @@ void PrintAST::printSingleDepthOfGenericSignature(
         if (printRequirements)
           Printer << " " << tok::kw_where << " ";
         else
-          Printer << " : ";
+        
+        printColonForInheritance(Printer, Options);
 
         isFirstReq = false;
       } else {
@@ -2174,13 +2184,15 @@ void PrintAST::printRequirement(const Requirement &req) {
     printTransformedType(req.getFirstType());
     Printer << ", ";
     printTransformedType(req.getSecondType());
-    Printer << ")) : Any";
+    Printer << "))";
+    printColonForInheritance(Printer, Options);
+    Printer << "Any";
     return;
   case RequirementKind::Layout:
     if (isPackRequirement)
       Printer << "repeat ";
     printTransformedType(req.getFirstType());
-    Printer << " : ";
+    printColonForInheritance(Printer, Options);
     req.getLayoutConstraint()->print(Printer, Options);
     return;
   case RequirementKind::Conformance:
@@ -2188,7 +2200,7 @@ void PrintAST::printRequirement(const Requirement &req) {
     if (isPackRequirement)
       Printer << "repeat ";
     printTransformedType(req.getFirstType());
-    Printer << " : ";
+    printColonForInheritance(Printer, Options);
     break;
   case RequirementKind::SameType:
     if (isPackRequirement)
@@ -2205,7 +2217,7 @@ void PrintAST::printRequirement(const InverseRequirement &inverse,
   if (!forInherited) {
     Printer.callPrintStructurePre(PrintStructureKind::GenericRequirement);
     printTransformedType(inverse.subject);
-    Printer << " : ";
+    printColonForInheritance(Printer, Options);
     Printer.printStructurePost(PrintStructureKind::GenericRequirement);
   }
 
@@ -2933,10 +2945,7 @@ void PrintAST::printInherited(const Decl *decl) {
   if (TypesToPrint.empty())
     return;
 
-  if (Options.PrintSpaceBeforeInheritance) {
-    Printer << " ";
-  }
-  Printer << ": ";
+  printColonForInheritance(Printer, Options);
 
   interleave(TypesToPrint, [&](InheritedEntry inherited) {
     printTypeLoc(inherited, [&] {
@@ -4630,8 +4639,10 @@ void PrintAST::visitInfixOperatorDecl(InfixOperatorDecl *decl) {
     [&]{
       Printer.printName(decl->getName());
     });
-  if (auto *group = decl->getPrecedenceGroup())
-    Printer << " : " << group->getName();
+  if (auto *group = decl->getPrecedenceGroup()) {
+    printColonForInheritance(Printer, Options);
+    Printer << group->getName();
+  }
 }
 
 void PrintAST::visitPrecedenceGroupDecl(PrecedenceGroupDecl *decl) {
@@ -6339,7 +6350,7 @@ public:
       if (T->isDictionary()) {
         Printer << "[";
         visit(T->getGenericArgs()[0]);
-        Printer << " : ";
+        printColonForInheritance(Printer, Options);
         visit(T->getGenericArgs()[1]);
         Printer << "]";
         return;
@@ -7126,7 +7137,7 @@ public:
     } else {
       Printer << "[";
       visit(T->getKeyType());
-      Printer << " : ";
+      Printer << ": ";
       visit(T->getValueType());
       Printer << "]";
     }
