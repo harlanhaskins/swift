@@ -4248,14 +4248,17 @@ evaluate(Evaluator &evaluator, Decl *D) const {
 evaluator::SideEffect
 TypeCheckCDeclFunctionRequest::evaluate(Evaluator &evaluator,
                                         FuncDecl *FD,
-                                        CDeclAttr *attr) const {
+                                        DeclAttribute *attr) const {
   auto &ctx = FD->getASTContext();
 
-  auto lang = FD->getCDeclKind();
-  assert(lang && "missing @c?");
-  auto kind = lang == ForeignLanguage::ObjectiveC
-                      ? ObjCReason::ExplicitlyUnderscoreCDecl
-                      : ObjCReason::ExplicitlyCDecl;
+  ObjCReason::Kind kind;
+  if (auto *cdecl = dyn_cast<CDeclAttr>(attr)) {
+    kind = cdecl->Underscored ? ObjCReason::ExplicitlyUnderscoreCDecl
+                              : ObjCReason::ExplicitlyCDecl;
+  } else {
+    assert(isa<ObjCAttr>(attr));
+    kind = ObjCReason::ExplicitlyObjC;
+  }
   ObjCReason reason(kind, attr);
 
   std::optional<ForeignAsyncConvention> asyncConvention;

@@ -208,6 +208,11 @@ static bool usesFeatureCAttribute(Decl *decl) {
         return true;
   }
 
+  if (auto *FD = dyn_cast<FuncDecl>(decl);
+      FD && FD->getDeclContext()->isModuleScopeContext() &&
+      !isa<AccessorDecl>(FD) && FD->getAttrs().hasAttribute<ObjCAttr>())
+    return true;
+
   return false;
 }
 

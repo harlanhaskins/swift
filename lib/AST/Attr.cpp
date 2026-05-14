@@ -1365,10 +1365,29 @@ bool DeclAttribute::printImpl(ASTPrinter &Printer, const PrintOptions &Options,
   break;
 
   case DeclAttrKind::ObjC: {
+    auto *objcAttr = cast<ObjCAttr>(this);
+
+    // For older compilers, print '@objc' on a global function as '@_cdecl'.
+    if (Options.SuppressCAttribute) {
+      if (auto *FD = dyn_cast_or_null<FuncDecl>(D);
+          FD && FD->getDeclContext()->isModuleScopeContext() &&
+          !isa<AccessorDecl>(FD)) {
+        llvm::SmallString<32> scratch;
+        StringRef name;
+        if (auto selName = objcAttr->getName())
+          if (!objcAttr->isNameImplicit())
+            name = selName->getString(scratch);
+        if (name.empty())
+          name = cast<ValueDecl>(D)->getBaseIdentifier().str();
+        Printer << "@_cdecl(\"" << name << "\")";
+        break;
+      }
+    }
+
     Printer.printAttrName("@objc");
     llvm::SmallString<32> scratch;
-    if (auto Name = cast<ObjCAttr>(this)->getName()) {
-      if (!cast<ObjCAttr>(this)->isNameImplicit())
+    if (auto Name = objcAttr->getName()) {
+      if (!objcAttr->isNameImplicit())
         Printer << "(" << Name->getString(scratch) << ")";
     }
     break;

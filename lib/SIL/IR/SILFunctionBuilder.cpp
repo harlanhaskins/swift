@@ -172,15 +172,22 @@ void SILFunctionBuilder::addFunctionAttributes(
     F->setOptimizationMode(OA->getMode());
   }
 
-  // @_silgen_name and @_cdecl functions may be called from C code somewhere.
-  if (Attrs.hasAttribute<SILGenNameAttr>() || Attrs.hasAttribute<CDeclAttr>())
+  // @_silgen_name, @c/@_cdecl, and @objc on global functions may be called
+  // from C code.
+  auto *constantFD = dyn_cast_or_null<FuncDecl>(
+      constant ? constant.getDecl() : nullptr);
+  bool isForeignExported =
+      Attrs.hasAttribute<SILGenNameAttr>() ||
+      Attrs.hasAttribute<CDeclAttr>() ||
+      (constantFD && constantFD->getCDeclKind());
+  if (isForeignExported)
     F->setHasCReferences(true);
 
   for (auto *EA : Attrs.getAttributes<ExposeAttr>()) {
     bool shouldExportDecl = true;
-    if (Attrs.hasAttribute<CDeclAttr>()) {
-      // If the function is marked with @c, expose only C compatible
-      // thunk function.
+    if (Attrs.hasAttribute<CDeclAttr>() ||
+        (constantFD && constantFD->getCDeclKind())) {
+      // Expose only the C-compatible thunk, not the Swift entrypoint.
       shouldExportDecl = constant.isNativeToForeignThunk() || constant.isForeign;
     }
     if (EA->getExposureKind() == ExposureKind::Wasm && shouldExportDecl) {

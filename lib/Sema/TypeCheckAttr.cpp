@@ -1574,7 +1574,10 @@ void AttributeChecker::visitObjCAttr(ObjCAttr *attr) {
     else if (attr->hasName() && EED->getParentCase()->getElements().size() > 1)
       error = diag::objc_enum_case_multi;
   } else if (auto *func = dyn_cast<FuncDecl>(D)) {
-    if (!checkObjCDeclContext(D))
+    const bool isGlobalFunc =
+        func->getDeclContext()->isModuleScopeContext() &&
+        !isa<AccessorDecl>(func);
+    if (!checkObjCDeclContext(D) && !isGlobalFunc)
       error = diag::invalid_objc_decl_context;
     else if (auto accessor = dyn_cast<AccessorDecl>(func))
       if (!accessor->isGetterOrSetter()) {
@@ -1611,12 +1614,21 @@ void AttributeChecker::visitObjCAttr(ObjCAttr *attr) {
     attr->setInvalid();
   };
 
+  // A global '@objc' function takes a nullary name (one C identifier, no
+  // selector pieces), like types do.
+  auto isObjCGlobalFunction = [](const Decl *D) {
+    auto *func = dyn_cast<FuncDecl>(D);
+    return func && !isa<AccessorDecl>(func) &&
+           func->getDeclContext()->isModuleScopeContext();
+  };
+
   // If there is a name, check whether the kind of name is
   // appropriate.
   if (auto objcName = attr->getName()) {
     if (isa<ClassDecl>(D) || isa<ProtocolDecl>(D) || isa<VarDecl>(D)
         || isa<EnumDecl>(D) || isa<EnumElementDecl>(D)
-        || isa<ExtensionDecl>(D)) {
+        || isa<ExtensionDecl>(D)
+        || isObjCGlobalFunction(D)) {
       // Types and properties can only have nullary
       // names. Complain and recover by chopping off everything
       // after the first name.

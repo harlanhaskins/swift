@@ -3769,10 +3769,18 @@ public:
       }
     }
 
-    // If the function is exported to C, it must be representable in (Obj-)C.
-    if (auto CDeclAttr = FD->getAttrs().getAttribute<swift::CDeclAttr>()) {
+    // If the function is exported to C or Objective-C, it must be representable
+    // in (Obj-)C.
+    if (auto *CDeclAttr = FD->getAttrs().getAttribute<swift::CDeclAttr>()) {
       evaluateOrDefault(Ctx.evaluator,
                         TypeCheckCDeclFunctionRequest{FD, CDeclAttr},
+                        {});
+    } else if (auto *ObjCAttr = FD->getAttrs().getAttribute<swift::ObjCAttr>();
+               ObjCAttr &&
+               FD->getDeclContext()->isModuleScopeContext() &&
+               !isa<AccessorDecl>(FD)) {
+      evaluateOrDefault(Ctx.evaluator,
+                        TypeCheckCDeclFunctionRequest{FD, ObjCAttr},
                         {});
     }
 

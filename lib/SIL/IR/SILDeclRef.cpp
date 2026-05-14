@@ -1566,9 +1566,10 @@ std::optional<std::string> SILDeclRef::getAsmName() const {
       if (auto VD = dyn_cast<ValueDecl>(decl))
         return std::string(EA->getCName(VD));
 
-    // @c/@_cdecl
-    if (decl->getAttrs().hasAttribute<CDeclAttr>())
-      return std::string(decl->getCDeclName());
+    // @c/@_cdecl, or @objc on a global function.
+    if (auto *FD = dyn_cast<FuncDecl>(decl))
+      if (FD->getCDeclKind())
+        return std::string(decl->getCDeclName());
   }
 
   return std::nullopt;

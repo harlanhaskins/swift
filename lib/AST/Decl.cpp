@@ -2293,6 +2293,12 @@ bool Decl::hasOnlyCEntryPoint() const {
       return true;
   }
 
+  if (auto *FD = dyn_cast<FuncDecl>(this);
+      FD && FD->getDeclContext()->isModuleScopeContext() &&
+      !isa<AccessorDecl>(FD) &&
+      FD->getAttrs().hasAttribute<ObjCAttr>())
+    return true;
+
   return false;
 }
 
@@ -4840,6 +4846,16 @@ StringRef ValueDecl::getCDeclName() const {
       return cdeclAttr->Name;
     else
       return getBaseIdentifier().str();
+  }
+
+  if (auto *FD = dyn_cast<FuncDecl>(this);
+      FD && FD->getDeclContext()->isModuleScopeContext() &&
+      !isa<AccessorDecl>(FD)) {
+    if (auto objcAttr = getAttrs().getAttribute<ObjCAttr>()) {
+      if (auto name = objcAttr->getName())
+        return name->getSelectorPieces().front().str();
+      return getBaseIdentifier().str();
+    }
   }
 
   return "";
@@ -11018,12 +11034,17 @@ bool AbstractFunctionDecl::isObjCInstanceMethod() const {
 }
 
 std::optional<ForeignLanguage> AbstractFunctionDecl::getCDeclKind() const {
-  auto attr = getAttrs().getAttribute<CDeclAttr>();
-  if (!attr)
-    return std::nullopt;
+  if (auto attr = getAttrs().getAttribute<CDeclAttr>())
+    return attr->Underscored ? ForeignLanguage::ObjectiveC
+                             : ForeignLanguage::C;
 
-  return attr->Underscored ? ForeignLanguage::ObjectiveC
-                           : ForeignLanguage::C;
+  if (getAttrs().hasAttribute<ObjCAttr>())
+    if (auto *FD = dyn_cast<FuncDecl>(this);
+        FD && FD->getDeclContext()->isModuleScopeContext() &&
+        !isa<AccessorDecl>(FD))
+      return ForeignLanguage::ObjectiveC;
+
+  return std::nullopt;
 }
 
 bool AbstractFunctionDecl::needsNewVTableEntry() const {
