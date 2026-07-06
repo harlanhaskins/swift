@@ -233,10 +233,41 @@ void swift::runJobInEstablishedExecutorContext(Job *job,
     [[maybe_unused]]
     uint32_t dispatchOpaquePriority = task->flagAsRunning();
 
+    // Task-execution observation: if this task belongs to an observed subtree,
+    // bracket the slice with the started/stopped-running events. We capture the
+    // record and task id up front and retain the record for the duration of the
+    // slice: runInFullyEstablishedContext() may complete the task (freeing it)
+    // or, on the scope's own task, tear the observation down before this slice
+    // ends, so neither the task nor the installed reference can be relied upon
+    // afterwards. The retain keeps the record alive across the stop regardless.
+#if !SWIFT_CONCURRENCY_EMBEDDED
+    void *observationRecord = nullptr;
+    uint64_t observationTaskId = 0;
+    if (LLVM_UNLIKELY(task->isObserved())) {
+      observationRecord = task->getObservationRecord();
+      if (observationRecord) {
+        observationTaskId = task->getTaskId();
+        swift_retain(reinterpret_cast<HeapObject *>(observationRecord));
+        _swift_taskExecutionObservation_onEvent(
+            observationRecord, observationTaskId,
+            static_cast<uint8_t>(TaskExecutionEventKind::StartedRunning));
+      }
+    }
+#endif
+
     auto traceHandle =
         concurrency::trace::job_run_begin(job, serialExecutor, taskExecutor);
     task->runInFullyEstablishedContext();
     concurrency::trace::job_run_end(traceHandle);
+
+#if !SWIFT_CONCURRENCY_EMBEDDED
+    if (LLVM_UNLIKELY(observationRecord)) {
+      _swift_taskExecutionObservation_onEvent(
+          observationRecord, observationTaskId,
+          static_cast<uint8_t>(TaskExecutionEventKind::StoppedRunning));
+      swift_release(reinterpret_cast<HeapObject *>(observationRecord));
+    }
+#endif
 
 #if SWIFT_CONCURRENCY_ENABLE_PRIORITY_ESCALATION
     swift_dispatch_thread_reset_override_self(dispatchOpaquePriority);

@@ -2831,7 +2831,7 @@ public:
     Task_IsChildTask                      = 24,
     Task_IsFuture                         = 25,
     Task_IsGroupChildTask                 = 26,
-    // 27 is currently unused
+    Task_IsObserved                       = 27,
     Task_IsAsyncLetTask                   = 28,
     Task_HasInitialTaskExecutorPreference = 29,
     Task_HasInitialTaskName               = 30,
@@ -2865,6 +2865,9 @@ public:
   FLAGSET_DEFINE_FLAG_ACCESSORS(Task_IsGroupChildTask,
                                 task_isGroupChildTask,
                                 task_setIsGroupChildTask)
+  FLAGSET_DEFINE_FLAG_ACCESSORS(Task_IsObserved,
+                                task_isObserved,
+                                task_setIsObserved)
   FLAGSET_DEFINE_FLAG_ACCESSORS(Task_IsAsyncLetTask,
                                 task_isAsyncLetTask,
                                 task_setIsAsyncLetTask)

@@ -853,6 +853,24 @@ using TaskAllocator = StackAllocator<SlabCapacity, &TaskAllocatorSlabMetadata,
                                      TaskAllocatorConfiguration,
                                      TaskGlobalAllocator>;
 
+/// The observation record installed by withTaskExecutionObservation is an
+/// opaque, reference-counted Swift object (see TaskExecutionObservation.swift).
+/// This trampoline, implemented in Swift, dispatches a scheduling-state
+/// transition to the record's stored callback. `taskId` is the observed task's
+/// stable id (AsyncTask::getTaskId); it is passed by value so the callback
+/// never dereferences a task that may have completed. `kind` is a
+/// TaskExecutionEventKind, kept in sync with the Swift TaskExecutionEvent enum.
+enum class TaskExecutionEventKind : uint8_t {
+  StartedRunning = 0,
+  StoppedRunning = 1,
+  BecameRunnable = 2,
+  Completed = 3,
+};
+
+extern "C" SWIFT_CC(swift)
+void _swift_taskExecutionObservation_onEvent(void *record, uint64_t taskId,
+                                             uint8_t kind);
+
 /// Private storage in an AsyncTask object.
 struct AsyncTask::PrivateStorage {
   /// State inside the AsyncTask whose state is only managed by the exclusivity
@@ -892,6 +910,13 @@ struct AsyncTask::PrivateStorage {
   /// Pointer to the task status dependency record. This is allocated from the
   /// async task stack when it is needed.
   TaskDependencyStatusRecord *dependencyRecord = nullptr;
+
+#if SWIFT_POINTER_IS_4_BYTES
+  /// On 32-bit targets the task-execution-observation record pointer lives
+  /// here, since the AsyncTask header has no Reserved64 slot. On 64-bit targets
+  /// it rides in AsyncTask::Reserved64 instead. See AsyncTask::isObserved().
+  void *observationRecord = nullptr;
+#endif
 
   // The lock used to protect more complicated operations on the task status.
   RecursiveMutex statusLock;
@@ -1030,6 +1055,25 @@ inline AsyncTask::PrivateStorage &AsyncTask::_private() {
 inline const AsyncTask::PrivateStorage &AsyncTask::_private() const {
   return Private.get();
 }
+
+inline void *
+AsyncTask::getObservationRecord() const {
+#if SWIFT_POINTER_IS_8_BYTES
+  return Reserved64;
+#else
+  return _private().observationRecord;
+#endif
+}
+
+inline void
+AsyncTask::setObservationRecord(void *record) {
+#if SWIFT_POINTER_IS_8_BYTES
+  Reserved64 = record;
+#else
+  _private().observationRecord = record;
+#endif
+}
+
 
 inline bool AsyncTask::isCancelled(bool ignoreShield = false) const {
   return _private()._status().load(std::memory_order_relaxed)
@@ -1225,6 +1269,20 @@ AsyncTask::flagAsAndEnqueueOnExecutor(SerialExecutorRef newExecutor) {
       this, static_cast<uint8_t>(Flags.getPriority()), Flags.task_isChildTask(),
       Flags.task_isFuture(), Flags.task_isGroupChildTask(),
       Flags.task_isAsyncLetTask());
+
+  // Task-execution observation: this is the single became-runnable chokepoint
+  // for AsyncTasks (initial creation dispatch, continuation resume, future and
+  // task-group wake, and switch-fallback enqueue all funnel here). Fire the
+  // signal while we still own the task -- once it is enqueued another thread may
+  // pick it up and complete it, freeing `this`.
+#if !SWIFT_CONCURRENCY_EMBEDDED
+  if (LLVM_UNLIKELY(isObserved())) {
+    if (void *observationRecord = getObservationRecord())
+      _swift_taskExecutionObservation_onEvent(
+          observationRecord, getTaskId(),
+          static_cast<uint8_t>(TaskExecutionEventKind::BecameRunnable));
+  }
+#endif
 
   swift_task_enqueue(this, newExecutor);
 #endif /* SWIFT_CONCURRENCY_TASK_TO_THREAD_MODEL */

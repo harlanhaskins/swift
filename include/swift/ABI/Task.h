@@ -336,10 +336,16 @@ public:
 #endif
 
     // Private storage is currently 6 pointers, 16 bytes of non-pointer data,
-    // 8 bytes of padding, the ActiveTaskStatus, and a RecursiveMutex.
+    // 8 bytes of padding, the ActiveTaskStatus, and a RecursiveMutex. On 32-bit
+    // targets it also holds the task-execution-observation record pointer, which
+    // on 64-bit targets rides in AsyncTask::Reserved64 instead.
     static constexpr size_t PrivateStorageSize =
       6 * sizeof(void *) + 16 + 8 + ActiveTaskStatusSize
-      + sizeof(RecursiveMutex);
+      + sizeof(RecursiveMutex)
+#if SWIFT_POINTER_IS_4_BYTES
+      + sizeof(void *)
+#endif
+      ;
 
     char Storage[PrivateStorageSize];
 
@@ -481,6 +487,27 @@ public:
   /// \param ignoreShield if cancellation shield should be ignored. 
   ///        Cancellation shields prevent the observation of the isCancelled flag while active.
   bool isCancelled(bool ignoreShield) const;
+
+  // ==== Task Execution Observation -------------------------------------------
+
+  /// Whether this task belongs to an observed subtree (see
+  /// withTaskExecutionObservation). When true, the run and enqueue chokepoints
+  /// fire the observation callbacks reachable via getObservationRecord().
+  bool isObserved() const {
+    return Flags.task_isObserved();
+  }
+
+  /// The observation record shared by this task's observed subtree, or null.
+  /// Only meaningful when isObserved() is true. The record is an opaque,
+  /// reference-counted Swift object owned by the withTaskExecutionObservation
+  /// scope that installed it (see TaskExecutionObservation.swift). Defined in
+  /// TaskPrivate.h.
+  void *getObservationRecord() const;
+
+  /// Set the observation record pointer for this task. Defined in
+  /// TaskPrivate.h. Does not update the IsObserved flag, nor retain/release the
+  /// record; callers manage both.
+  void setObservationRecord(void *record);
 
   // ==== Task Naming ----------------------------------------------------------
 

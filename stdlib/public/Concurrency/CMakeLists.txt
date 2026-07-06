@@ -215,6 +215,13 @@ else()
   )
 endif()
 
+# Task execution observation depends on `any Actor` isolation and the
+# concurrency runtime callback bridge, neither of which is available in
+# Embedded Swift, so it is only built for the non-embedded library.
+list(APPEND SWIFT_RUNTIME_CONCURRENCY_NONEMBEDDED_SWIFT_SOURCES
+  TaskExecutionObservation.swift
+)
+
 set(LLVM_OPTIONAL_SOURCES
   DispatchGlobalExecutor.cpp
   CooperativeGlobalExecutor.cpp

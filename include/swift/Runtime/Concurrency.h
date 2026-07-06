@@ -654,6 +654,26 @@ SWIFT_EXPORT_FROM(swift_Concurrency) SWIFT_CC(swift)
 void swift_task_removeCancellationHandler(
     CancellationNotificationStatusRecord *record);
 
+/// Begin observing execution of the current task and the structured subtree it
+/// spawns. `record` is an opaque, reference-counted Swift observation record
+/// (see TaskExecutionObservation.swift) at +1; the installed reference is
+/// released by swift_task_stopExecutionObservation. Returns the record that was
+/// previously installed on the current task (borrowed, not retained), or null,
+/// so that nested observations can be restored on removal.
+SWIFT_EXPORT_FROM(swift_Concurrency) SWIFT_CC(swift)
+void *swift_task_startExecutionObservation(void *record);
+
+/// Stop the observation installed by swift_task_startExecutionObservation,
+/// restoring `previous` as the current task's observation record and releasing
+/// the installed +1 reference on `record`.
+SWIFT_EXPORT_FROM(swift_Concurrency) SWIFT_CC(swift)
+void swift_task_stopExecutionObservation(void *record, void *previous);
+
+/// Return the stable id (AsyncTask::getTaskId) of the currently running task,
+/// or 0 if there is no current task.
+SWIFT_EXPORT_FROM(swift_Concurrency) SWIFT_CC(swift)
+uint64_t swift_task_getCurrentTaskId();
+
 /// Create and add an priority escalation record to the task.
 SWIFT_EXPORT_FROM(swift_Concurrency) SWIFT_CC(swift)
 EscalationNotificationStatusRecord*

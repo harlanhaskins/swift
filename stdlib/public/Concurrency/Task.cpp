@@ -1170,6 +1170,18 @@ swift_task_create_commonImpl(size_t rawTaskCreateFlags,
            "Currently we don't have child tasks which force copying task "
            "locals; unexpected attempt to combine the two!");
     task->_private().Local.initializeLinkParent(task, parent);
+
+    // Task-execution observation propagates to structured children: if the
+    // parent belongs to an observed subtree, the child joins the same
+    // observation and shares its record. This must happen before the child is
+    // enqueued below, so its initial became-runnable transition is observed.
+    // Detached and context-discarding tasks have parent == nullptr and reach
+    // this point not at all, so they correctly do not inherit -- their work
+    // outlives the observed scope.
+    if (parent->isObserved()) {
+      task->Flags.task_setIsObserved(true);
+      task->setObservationRecord(parent->getObservationRecord());
+    }
   }
 
   concurrency::trace::task_create(
@@ -1866,6 +1878,42 @@ static void swift_task_removePriorityEscalationHandlerImpl(
     EscalationNotificationStatusRecord *record) {
   removeStatusRecordFromSelf(record);
   swift_task_dealloc(record);
+}
+
+SWIFT_CC(swift)
+void *swift::swift_task_startExecutionObservation(void *record) {
+  AsyncTask *task = swift_task_getCurrent();
+  assert(task && "task-execution observation must be started from within a task");
+
+  // Remember the record that was active so a nested scope can restore it. The
+  // record pointer is only meaningful while the IsObserved flag is set.
+  void *previous = task->isObserved() ? task->getObservationRecord() : nullptr;
+
+  // The task currently running this entry point owns the record pointer; only
+  // this thread mutates its flags, so neither write needs to be atomic.
+  task->setObservationRecord(record);
+  task->Flags.task_setIsObserved(true);
+  return previous;
+}
+
+SWIFT_CC(swift)
+void swift::swift_task_stopExecutionObservation(void *record, void *previous) {
+  AsyncTask *task = swift_task_getCurrent();
+  assert(task && "task-execution observation must be stopped from within a task");
+
+  task->setObservationRecord(previous);
+  task->Flags.task_setIsObserved(previous != nullptr);
+
+  // Drop the +1 the record was installed with. The slice brackets retain the
+  // record for their own duration, so any concurrently running subtree slice
+  // keeps it alive past this point.
+  swift_release(reinterpret_cast<HeapObject *>(record));
+}
+
+SWIFT_CC(swift)
+uint64_t swift::swift_task_getCurrentTaskId() {
+  AsyncTask *task = swift_task_getCurrent();
+  return task ? task->getTaskId() : 0;
 }
 
 SWIFT_CC(swift)
